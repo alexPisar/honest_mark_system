@@ -1,0 +1,54 @@
+﻿<dxr:DXRibbonWindow x:Class="HonestMarkSystem.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+        xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
+        xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HonestMarkSystem"
+        mc:Ignorable="d"
+        Title="ЭДО" WindowState="Maximized" Height="450" Width="800">
+    <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:EventToCommand EventName="Loaded" Command="{Binding RefreshCommand}">
+        </dxmvvm:EventToCommand>
+    </dxmvvm:Interaction.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <dxb:StatusBarControl Grid.Row="0" Caption="Главное меню" Height="60">
+            <dxb:BarButtonItem ToolTip="Обновить список" Command="{Binding RefreshCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical" Margin="10 0">
+                            <Image Source="{dx:DXImage SvgImages/Icon Builder/Actions_Refresh.svg}"/>
+                            <TextBlock Text="Обновить" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
+        </dxb:StatusBarControl>
+        <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList}" 
+                         SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}">
+            <dxg:GridColumn FieldName="IdDocEdo" Header="ID" Width="250"/>
+            <dxg:GridColumn FieldName="EdoProviderName" Header="Имя провайдера" Width="120"/>
+            <dxg:GridColumn FieldName="SenderName" Header="Отправитель" Width="150"/>
+            <dxg:GridColumn FieldName="SenderInn" Header="ИНН отправителя" Width="150"/>
+            <dxg:GridColumn FieldName="ReceiverName" Header="Получатель" Width="150"/>
+            <dxg:GridColumn FieldName="ReceiverInn" Header="ИНН получателя" Width="150"/>
+            <dxg:GridColumn FieldName="DocStatus" Header="Статус документа" Width="120"/>
+            <dxg:GridColumn FieldName="Name" Header="Наименование" Width="150"/>
+            <dxg:GridColumn FieldName="IdDocType" Header="Тип документа" Width="100"/>
+            <dxg:GridColumn FieldName="CreateDate" Header="Дата создания" Width="100"/>
+            <dxg:GridColumn FieldName="ReceiveDate" Header="Дата принятия" Width="100"/>
+            <dxg:GridColumn FieldName="TotalVatAmount" Header="Сумма налога" Width="100"/>
+            <dxg:GridColumn FieldName="TotalPrice" Header="Общая стоимость" Width="120"/>
+            <dxg:GridColumn FieldName="IdDocPurchaising" Header="ID приходного документа" Width="150"/>
+        </dxg:GridControl>
+    </Grid>
+</dxr:DXRibbonWindow>
