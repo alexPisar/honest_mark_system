@@ -68,6 +68,11 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
             this
                 .Property(p => p.IdChannel)
                     .HasColumnName(@"ID_CHANNEL");
+            this
+                .HasOptional(p => p.Customer)
+                .WithMany()
+                .HasForeignKey(p => p.DefaultCustomer);
+
             // Associations:
             OnCreated();
         }

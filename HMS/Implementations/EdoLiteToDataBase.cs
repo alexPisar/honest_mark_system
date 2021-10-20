@@ -81,7 +81,9 @@ namespace HonestMarkSystem.Implementations
 
         public object[] GetPurchasingDocuments()
         {
-            return _abt.DocPurchasings.ToArray();
+            return _abt.DocPurchasings
+                .Where(d => d.Firm != null && d.Firm.Customer != null && d.Firm.Customer.Inn == _orgInn)
+                .ToArray();
         }
 
         public void SaveOrgData(string orgInn, string orgName)

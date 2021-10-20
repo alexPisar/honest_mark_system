@@ -11,7 +11,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HonestMarkSystem"
         mc:Ignorable="d"
-        Title="Выбор закупочного документа" Height="450" Width="800">
+        Title="Выбор закупочного документа" WindowState="Maximized" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -24,6 +24,10 @@
                     <dxg:GridColumn FieldName="Id" Header="ID" Width="120"/>
                     <dxg:GridColumn FieldName="UpdCode" Header="Номер документа ЭДО" Width="150"/>
                     <dxg:GridColumn FieldName="UserName" Header="Имя пользователя" Width="120"/>
+                    <dxg:GridColumn FieldName="CreateDate" Header="Дата создания" Width="120"/>
+                    <dxg:GridColumn FieldName="UpdDate" Header="Дата изменения" Width="120"/>
+                    <dxg:GridColumn FieldName="InvoiceDate" Header="Дата УПД" Width="120"/>
+                    <dxg:GridColumn FieldName="WaybillDate" Header="Дата Накладной" Width="120"/>
                 </dxg:GridControlBand>
                 <dxg:GridControlBand Header="Трейдер документ">
                     <dxg:GridColumn FieldName="DocLink.Id" Header="ID" Width="120"/>
@@ -32,9 +36,15 @@
                 </dxg:GridControlBand>
                 <dxg:GridControlBand Header="Закупщик">
                     <dxg:GridColumn FieldName="Firm.Name" Header="Название"/>
+                    <dxg:GridColumn FieldName="Firm.Customer.Inn" Header="ИНН"/>
                 </dxg:GridControlBand>
                 <dxg:GridControlBand Header="Поставщик">
                     <dxg:GridColumn FieldName="Supplier.Name" Header="Название"/>
+                    <dxg:GridColumn FieldName="Supplier.Customer.Inn" Header="ИНН"/>
+                </dxg:GridControlBand>
+                <dxg:GridControlBand Header="Итог">
+                    <dxg:GridColumn FieldName="Amount" Header="Сумма" />
+                    <dxg:GridColumn FieldName="AmountWithoutVat" Header="Сумма без НДС" />
                 </dxg:GridControlBand>
             </dxg:GridControl.Bands>
         </dxg:GridControl>

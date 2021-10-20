@@ -54,6 +54,10 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 
         #endregion
 
+        #region Navigation Properties
+        public virtual RefCustomer Customer { get; set; }
+        #endregion
+
         #region Extensibility Method Definitions
 
         partial void OnCreated();
