@@ -11,7 +11,6 @@ using DataContextManagementUnit.DataAccess.Contexts.Abt;
 using System.Xml;
 using System.IO;
 using HonestMarkSystem.Implementations;
-using UtilitesLibrary.ModelBase;
 
 namespace HonestMarkSystem.Models
 {
@@ -48,7 +47,7 @@ namespace HonestMarkSystem.Models
                         var docFromDb = (DocEdoPurchasing)_dataBaseAdapter.GetDocumentFromDb(doc);
 
                         if (docFromDb == null)
-                            _dataBaseAdapter.AddDocumentToDataBase(doc);
+                            _dataBaseAdapter.AddDocumentToDataBase(doc, DocumentInOutType.Inbox);
                     }
                     _dataBaseAdapter.Commit();
                 }

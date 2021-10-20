@@ -26,7 +26,7 @@ namespace HonestMarkSystem.Implementations
                 .ToList();
         }
 
-        public object AddDocumentToDataBase(IEdoSystemDocument<string> document)
+        public object AddDocumentToDataBase(IEdoSystemDocument<string> document, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
         {
             var doc = (EdoLiteDocuments)document;
 
@@ -43,10 +43,20 @@ namespace HonestMarkSystem.Implementations
                 IdDocType = doc.DocType
             };
 
-            newDocInDb.SenderInn = doc?.Sender?.Inn.ToString();
-            newDocInDb.SenderName = doc?.Sender?.Name;
-            newDocInDb.ReceiverInn = _orgInn;
-            newDocInDb.ReceiverName = _orgName;
+            if (inOutType == WebSystems.DocumentInOutType.Inbox)
+            {
+                newDocInDb.SenderInn = doc?.Sender?.Inn.ToString();
+                newDocInDb.SenderName = doc?.Sender?.Name;
+                newDocInDb.ReceiverInn = _orgInn;
+                newDocInDb.ReceiverName = _orgName;
+            }
+            else if (inOutType == WebSystems.DocumentInOutType.Outbox)
+            {
+                newDocInDb.SenderInn = _orgInn;
+                newDocInDb.SenderName = _orgName;
+                newDocInDb.ReceiverInn = doc?.Recipient?.Inn.ToString();
+                newDocInDb.ReceiverName = doc?.Recipient?.Name;
+            }
 
             _abt.DocEdoPurchasings.Add(newDocInDb);
             _documents.Add(newDocInDb);

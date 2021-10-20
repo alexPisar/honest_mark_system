@@ -57,6 +57,7 @@
     <Compile Include="Models\EdoLiteDocument.cs" />
     <Compile Include="Models\EdoLiteDocumentList.cs" />
     <Compile Include="Models\EdoLiteDocuments.cs" />
+    <Compile Include="Models\EdoLiteRecipient.cs" />
     <Compile Include="Models\EdoLiteSender.cs" />
     <Compile Include="Models\IDocument.cs" />
     <Compile Include="Models\IEdoSystemDocument.cs" />

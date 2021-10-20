@@ -30,6 +30,9 @@ namespace WebSystems.Models
         [JsonProperty(PropertyName = "sender")]
         public EdoLiteSender Sender { get; set; }
 
+        [JsonProperty(PropertyName = "recipient")]
+        public EdoLiteRecipient Recipient { get; set; }
+
         [JsonProperty(PropertyName = "status")]
         public int Status { get; set; }
 
