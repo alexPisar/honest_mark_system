@@ -20,6 +20,8 @@ namespace HonestMarkSystem.Interfaces
 
         object[] GetAllDocuments();
 
+        object[] GetPurchasingDocuments();
+
         void Rollback();
 
         void Commit();

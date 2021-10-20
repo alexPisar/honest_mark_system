@@ -40,7 +40,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 
         public virtual string ReceiverName { get; set; }
 
-        public virtual decimal? IdDocPurchaising { get; set; }
+        public virtual decimal? IdDocPurchasing { get; set; }
         #endregion
 
         #region Extensibility Method Definitions

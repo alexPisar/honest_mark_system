@@ -121,6 +121,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
             modelBuilder.Configurations.Add(new Mapping.RefCustomerConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocGoodsDetailsLabelsConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocGoodsMarkShipmentConfiguration());
+            modelBuilder.Configurations.Add(new Mapping.DocPurchasingConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocEdoPurchasingConfiguration());
 
             CustomizeMapping(modelBuilder);
@@ -146,6 +147,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual DbSet<RefCustomer> RefCustomers { get; set; }
         public virtual DbSet<DocGoodsDetailsLabels> DocGoodsDetailsLabels { get; set; }
         public virtual DbSet<DocGoodsMarkShipment> DocGoodsMarkShipments { get; set; }
+        public virtual DbSet<DocPurchasing> DocPurchasings { get; set; }
         public virtual DbSet<DocEdoPurchasing> DocEdoPurchasings { get; set; }
     }
 }

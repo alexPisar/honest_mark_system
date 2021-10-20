@@ -21,7 +21,8 @@ namespace HonestMarkSystem.Models
         private IEdoSystem _edoSystem;
         private Interfaces.IEdoDataBaseAdapter<AbtDbContext> _dataBaseAdapter;
 
-        public RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
+        public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
+        public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
 
         public MainViewModel()
         {
@@ -66,6 +67,44 @@ namespace HonestMarkSystem.Models
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>(docs);
             SelectedItem = null;
             UpdateProperties();
+        }
+
+        private void ChangePurchasingDocument()
+        {
+            if(SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ для сопоставления.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var docs = _dataBaseAdapter.GetPurchasingDocuments();
+
+            var docPurchasingWindow = new PurchasingDocumentsWindow();
+            var docPurchasingModel = new PurchasingDocumentsModel(docs.Cast<DocPurchasing>());
+
+            if (SelectedItem.IdDocPurchasing != null)
+                docPurchasingModel.SetChangedDocument(SelectedItem.IdDocPurchasing.Value);
+
+            docPurchasingWindow.DataContext = docPurchasingModel;
+            if(docPurchasingWindow.ShowDialog() == true)
+            {
+                try
+                {
+                    SelectedItem.IdDocPurchasing = docPurchasingModel.SelectedItem.Id;
+                    _dataBaseAdapter.Commit();
+                    OnPropertyChanged("SelectedItem");
+                }
+                catch(Exception ex)
+                {
+                    _dataBaseAdapter.Rollback();
+                    string errorMessage = _log.GetRecursiveInnerException(ex);
+                    _log.Log(errorMessage);
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка сопоставления.", new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
+                }
+            }
         }
 
         private void UpdateProperties()

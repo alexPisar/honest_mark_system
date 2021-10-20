@@ -21,13 +21,25 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <dxb:StatusBarControl Grid.Row="0" Caption="Главное меню" Height="60">
+        <dxb:StatusBarControl Grid.Row="0" Caption="Главное меню" Height="70">
             <dxb:BarButtonItem ToolTip="Обновить список" Command="{Binding RefreshCommand}">
                 <dxb:BarButtonItem.ContentTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Vertical" Margin="10 0">
                             <Image Source="{dx:DXImage SvgImages/Icon Builder/Actions_Refresh.svg}"/>
                             <TextBlock Text="Обновить" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Привязать документ закупок к данному документу"
+                               Command="{Binding ChangePurchasingDocumentCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical" Margin="10 0">
+                            <Image Source="{dx:DXImage SvgImages/Dashboards/InsertListBox.svg}" />
+                            <TextBlock Text="Сопоставление" HorizontalAlignment="Center" />
+                            <TextBlock Text="документов" HorizontalAlignment="Center" />
                         </StackPanel>
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>

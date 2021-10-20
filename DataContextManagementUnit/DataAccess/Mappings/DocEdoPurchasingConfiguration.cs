@@ -73,7 +73,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMaxLength(200);
 
             this
-                .Property(p => p.IdDocPurchaising)
+                .Property(p => p.IdDocPurchasing)
                 .HasColumnName("ID_DOC_PURCHASING");
 
             OnCreated();

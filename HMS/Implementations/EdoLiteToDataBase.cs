@@ -79,6 +79,11 @@ namespace HonestMarkSystem.Implementations
             return _documents.ToArray();
         }
 
+        public object[] GetPurchasingDocuments()
+        {
+            return _abt.DocPurchasings.ToArray();
+        }
+
         public void SaveOrgData(string orgInn, string orgName)
         {
             _orgInn = orgInn;
