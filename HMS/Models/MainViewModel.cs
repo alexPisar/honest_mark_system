@@ -54,6 +54,11 @@ namespace HonestMarkSystem.Models
                 catch(Exception ex)
                 {
                     _dataBaseAdapter.Rollback();
+                    string errorMessage = _log.GetRecursiveInnerException(ex);
+                    _log.Log(errorMessage);
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
                 }
             }
 
