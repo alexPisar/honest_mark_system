@@ -9,7 +9,9 @@ namespace HonestMarkSystem.Interfaces
 {
     public interface IEdoDocumentsView
     {
-        List<IEdoSystemDocument<string>> GetNewDocuments();
+        List<IEdoSystemDocument<string>> GetNewDocuments(out object[] parameters);
+
+        void SaveParameters(params object[] parameters);
 
         void SaveNewDocument(IEdoSystemDocument<string> document);
     }

@@ -35,7 +35,8 @@ namespace HonestMarkSystem.Models
 
         private void Refresh()
         {
-            var documents = GetNewDocuments();
+            object[] parameters;
+            var documents = GetNewDocuments(out parameters);
 
             if (documents.Count > 0)
             {
@@ -51,6 +52,7 @@ namespace HonestMarkSystem.Models
                             _dataBaseAdapter.AddDocumentToDataBase(doc, DocumentInOutType.Inbox);
                     }
                     _dataBaseAdapter.Commit();
+                    SaveParameters(parameters);
                 }
                 catch(Exception ex)
                 {
@@ -113,8 +115,21 @@ namespace HonestMarkSystem.Models
             OnPropertyChanged("SelectedItem");
         }
 
-        public List<IEdoSystemDocument<string>> GetNewDocuments()
+        public void SaveParameters(params object[] parameters)
         {
+            if (_edoSystem.GetType() == typeof(EdoLiteSystem))
+            {
+                ConfigSet.Configs.Config.GetInstance().EdoDocCount = (int)parameters[0];
+                ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime = (DateTime)parameters[1];
+
+                ConfigSet.Configs.Config.GetInstance().Save(ConfigSet.Configs.Config.GetInstance(), ConfigSet.Configs.Config.ConfFileName);
+            }
+        }
+
+        public List<IEdoSystemDocument<string>> GetNewDocuments(out object[] parameters)
+        {
+            parameters = null;
+
             if (_edoSystem.GetType() == typeof(EdoLiteSystem))
             {
                 var docCount = _edoSystem.GetDocumentsCount();
@@ -125,10 +140,8 @@ namespace HonestMarkSystem.Models
                     var documentList = _edoSystem.GetDocuments(DocumentInOutType.Inbox, docCount - edoDocCount,
                         ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime);
 
-                    ConfigSet.Configs.Config.GetInstance().EdoDocCount = docCount;
-                    ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime = DateTime.Now;
+                    parameters = new object[2] { docCount, DateTime.Now };
 
-                    ConfigSet.Configs.Config.GetInstance().Save(ConfigSet.Configs.Config.GetInstance(), ConfigSet.Configs.Config.ConfFileName);
                     return documentList ?? new List<IEdoSystemDocument<string>>();
                 }
                 else
