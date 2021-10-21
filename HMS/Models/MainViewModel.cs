@@ -128,19 +128,16 @@ namespace HonestMarkSystem.Models
 
         public List<IEdoSystemDocument<string>> GetNewDocuments(out object[] parameters)
         {
-            parameters = null;
-
             if (_edoSystem.GetType() == typeof(EdoLiteSystem))
             {
                 var docCount = _edoSystem.GetDocumentsCount();
                 var edoDocCount = ConfigSet.Configs.Config.GetInstance()?.EdoDocCount ?? 0;
 
+                parameters = new object[2] { docCount, DateTime.Now };
                 if (edoDocCount < docCount)
                 {
                     var documentList = _edoSystem.GetDocuments(DocumentInOutType.Inbox, docCount - edoDocCount,
                         ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime);
-
-                    parameters = new object[2] { docCount, DateTime.Now };
 
                     return documentList ?? new List<IEdoSystemDocument<string>>();
                 }
@@ -148,7 +145,10 @@ namespace HonestMarkSystem.Models
                     return new List<IEdoSystemDocument<string>>();
             }
             else
+            {
+                parameters = null;
                 return null;
+            }
         }
 
         public void SaveNewDocument(IEdoSystemDocument<string> document)
