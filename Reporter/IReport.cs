@@ -8,5 +8,8 @@ namespace Reporter
 {
     public abstract class IReport
     {
+        public virtual void Parse(string content) { }
+
+        public abstract void Parse(byte[] content);
     }
 }

@@ -43,12 +43,17 @@
   <ItemGroup>
     <Compile Include="IReport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReporterDll.cs" />
+    <Compile Include="Reports\UniversalTransferBuyerDocument.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOP.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOPPOK_1_997_02_05_01_02.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOPPR_1_997_01_05_01_03.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Reports\" />
+    <ProjectReference Include="..\UtilitesLibrary\UtilitesLibrary.csproj">
+      <Project>{28ec5958-4f6d-440b-bd0f-324dc93bbfc8}</Project>
+      <Name>UtilitesLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
