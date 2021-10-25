@@ -42,7 +42,7 @@ namespace Reporter.Reports
         /// <summary>
         /// ИНН
         /// </summary>
-        public string Inn { get; set; }
+        public string ProviderInn { get; set; }
 
         /// <summary>
         /// Идентификатор оператора электронного документооборота отправителя файла обмена информации покупателя
@@ -52,12 +52,12 @@ namespace Reporter.Reports
         /// <summary>
         /// Идентификатор участника документооборота – отправителя файла обмена информации покупателя
         /// </summary>
-        public string SenderId { get; set; }
+        public string SenderEdoId { get; set; }
 
         /// <summary>
         /// Идентификатор участника документооборота – получателя файла обмена информации покупателя
         /// </summary>
-        public string ReceiverId { get; set; }
+        public string ReceiverEdoId { get; set; }
 
         #endregion
 
@@ -165,7 +165,7 @@ namespace Reporter.Reports
         /// <summary>
         /// Дата документа о расхождениях
         /// </summary>
-        public DateTime DocumentDiscrepancyDate { get; set; }
+        public DateTime? DocumentDiscrepancyDate { get; set; } = null;
 
         /// <summary>
         /// Идентификатор файла обмена документа о расхождениях, сформированного покупателем
@@ -250,27 +250,27 @@ namespace Reporter.Reports
         /// <summary>
         /// Должность
         /// </summary>
-        public string Position { get; set; }
+        public string SignerPosition { get; set; }
 
         /// <summary>
         /// Иные сведения, идентифицирующие физическое лицо
         /// </summary>
-        public string OtherInfo { get; set; }
+        public string SignerOtherInfo { get; set; }
 
         /// <summary>
         /// Фамилия
         /// </summary>
-        public string Surname { get; set; }
+        public string SignerSurname { get; set; }
 
         /// <summary>
         /// Имя
         /// </summary>
-        public string Name { get; set; }
+        public string SignerName { get; set; }
 
         /// <summary>
         /// Отчество
         /// </summary>
-        public string Patronymic { get; set; }
+        public string SignerPatronymic { get; set; }
         #endregion
         #endregion
         #endregion
@@ -288,10 +288,10 @@ namespace Reporter.Reports
             if(infoAboutParticipants != null)
             {
                 EdoProviderOrgName = infoAboutParticipants?.СвОЭДОтпр?.НаимОрг;
-                Inn = infoAboutParticipants?.СвОЭДОтпр?.ИННЮЛ;
+                ProviderInn = infoAboutParticipants?.СвОЭДОтпр?.ИННЮЛ;
                 EdoId = infoAboutParticipants?.СвОЭДОтпр?.ИдЭДО;
-                SenderId = infoAboutParticipants.ИдОтпр;
-                ReceiverId = infoAboutParticipants.ИдПол;
+                SenderEdoId = infoAboutParticipants.ИдОтпр;
+                ReceiverEdoId = infoAboutParticipants.ИдПол;
             }
 
             var buyerInfo = xsdDocument?.ИнфПок;
@@ -440,11 +440,11 @@ namespace Reporter.Reports
                     var jInfo = (ФайлИнфПокПодписантЮЛ)signerInfo.Item;
                     JuridicalInn = jInfo.ИННЮЛ;
                     SignerOrgName = jInfo.НаимОрг;
-                    OtherInfo = jInfo.ИныеСвед;
-                    Position = jInfo.Должн;
-                    Surname = jInfo.ФИО?.Фамилия;
-                    Name = jInfo.ФИО?.Имя;
-                    Patronymic = jInfo.ФИО?.Отчество;
+                    SignerOtherInfo = jInfo.ИныеСвед;
+                    SignerPosition = jInfo.Должн;
+                    SignerSurname = jInfo.ФИО?.Фамилия;
+                    SignerName = jInfo.ФИО?.Имя;
+                    SignerPatronymic = jInfo.ФИО?.Отчество;
                 }
 
                 if (signerInfo.ОблПолн == ФайлИнфПокПодписантОблПолн.Item1)
@@ -473,6 +473,213 @@ namespace Reporter.Reports
             var xmlString = Encoding.GetEncoding(1251).GetString(content);
             Parse(xmlString);
         }
+        #endregion
+
+        #region GetXmlContentMethods
+
+        public string GetXmlContent()
+        {
+            var xsdDocument = new Файл();
+
+            xsdDocument.ИдФайл = FileName;
+            xsdDocument.ВерсПрог = EdoProgramVersion;
+
+            //Сведения об участниках документооборота
+            xsdDocument.СвУчДокОбор = new ФайлСвУчДокОбор();
+            xsdDocument.СвУчДокОбор.СвОЭДОтпр = new ФайлСвУчДокОборСвОЭДОтпр();
+            xsdDocument.СвУчДокОбор.СвОЭДОтпр.НаимОрг = EdoProviderOrgName;
+            xsdDocument.СвУчДокОбор.СвОЭДОтпр.ИННЮЛ = ProviderInn;
+            xsdDocument.СвУчДокОбор.СвОЭДОтпр.ИдЭДО = EdoId;
+            xsdDocument.СвУчДокОбор.ИдОтпр = SenderEdoId;
+            xsdDocument.СвУчДокОбор.ИдПол = ReceiverEdoId;
+
+            xsdDocument.ИнфПок = new ФайлИнфПок();
+            xsdDocument.ИнфПок.ВремИнфПок = CreateBuyerFileDate.ToString("hh.mm.ss");
+            xsdDocument.ИнфПок.ДатаИнфПок = CreateBuyerFileDate.ToString("dd.MM.yyyy");
+            xsdDocument.ИнфПок.НаимЭконСубСост = FinSubjectCreator;
+            xsdDocument.ИнфПок.ОснДоверОргСост = ReasonOfCreateFile;
+
+            xsdDocument.ИнфПок.ИдИнфПрод = new ФайлИнфПокИдИнфПрод();
+            xsdDocument.ИнфПок.ИдИнфПрод.ИдФайлИнфПр = SellerFileId;
+            xsdDocument.ИнфПок.ИдИнфПрод.ВремФайлИнфПр = CreateSellerFileDate.ToString("hh.mm.ss");
+            xsdDocument.ИнфПок.ИдИнфПрод.ДатаФайлИнфПр = CreateSellerFileDate.ToString("dd.MM.yyyy");
+            xsdDocument.ИнфПок.ИдИнфПрод.ЭП = new string[] { Signature };
+
+            xsdDocument.ИнфПок.СодФХЖ4 = new ФайлИнфПокСодФХЖ4();
+            xsdDocument.ИнфПок.СодФХЖ4.НаимДокОпрПр = DocName;
+            xsdDocument.ИнфПок.СодФХЖ4.Функция = Function;
+            xsdDocument.ИнфПок.СодФХЖ4.НомСчФИнфПр = SellerInvoiceNumber;
+            xsdDocument.ИнфПок.СодФХЖ4.ДатаСчФИнфПр = SellerInvoiceDate.ToString("dd.MM.yyyy");
+            xsdDocument.ИнфПок.СодФХЖ4.ВидОперации = OperationType;
+
+            xsdDocument.ИнфПок.СодФХЖ4.СвПрин = new ФайлИнфПокСодФХЖ4СвПрин();
+            xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СодОпер = ContentOperationText;
+            xsdDocument.ИнфПок.СодФХЖ4.СвПрин.ДатаПрин = DateReceive.ToString("dd.MM.yyyy");
+
+            xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер = new ФайлИнфПокСодФХЖ4СвПринКодСодОпер();
+            if (AcceptResult == AcceptResultEnum.GoodsAcceptedWithoutDiscrepancy)
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.КодИтога = ФайлИнфПокСодФХЖ4СвПринКодСодОперКодИтога.Item1;
+            else if(AcceptResult == AcceptResultEnum.GoodsAcceptedWithDiscrepancy)
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.КодИтога = ФайлИнфПокСодФХЖ4СвПринКодСодОперКодИтога.Item2;
+            else if (AcceptResult == AcceptResultEnum.GoodsNotAccepted)
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.КодИтога = ФайлИнфПокСодФХЖ4СвПринКодСодОперКодИтога.Item3;
+            xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.НаимДокРасх = DocumentDiscrepancyName;
+            if (DocumentDiscrepancyType == DocumentDiscrepancyTypeEnum.DocumentWithDiscrepancy)
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.ВидДокРасх = ФайлИнфПокСодФХЖ4СвПринКодСодОперВидДокРасх.Item2;
+            else if(DocumentDiscrepancyType == DocumentDiscrepancyTypeEnum.DocumentAboutDiscrepancy)
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.ВидДокРасх = ФайлИнфПокСодФХЖ4СвПринКодСодОперВидДокРасх.Item3;
+            xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.НомДокРасх = DocumentDiscrepancyNumber;
+            xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.ДатаДокРасх = DocumentDiscrepancyDate?.ToString("dd.MM.yyyy");
+            xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.ИдФайлДокРасх = IdDocumentDiscrepancy;
+            
+            if(AnotherPerson != null)
+            {
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин = new ФайлИнфПокСодФХЖ4СвПринСвЛицПрин();
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо();
+                var anotherPersonItem = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо)xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item;
+                if (AnotherPerson.OrganizationRepresentative != null)
+                {
+                    anotherPersonItem.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин();
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).Должность = AnotherPerson.OrganizationRepresentative.Position;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ИныеСвед = AnotherPerson.OrganizationRepresentative.OtherInfo;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).НаимОргПрин = AnotherPerson.OrganizationRepresentative.OrgName;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ОснДоверОргПрин = AnotherPerson.OrganizationRepresentative.ReasonOrgTrust;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ОснПолнПредПрин = AnotherPerson.OrganizationRepresentative.ReasonTrustPerson;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ФИО = new ФИОТип
+                    {
+                        Фамилия = AnotherPerson.OrganizationRepresentative.Surname,
+                        Имя = AnotherPerson.OrganizationRepresentative.Name,
+                        Отчество = AnotherPerson.OrganizationRepresentative.Patronymic
+                    };
+                }
+                else if(AnotherPerson.TrustedIndividual != null)
+                {
+                    anotherPersonItem.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин();
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)anotherPersonItem.Item).ОснДоверФЛ = AnotherPerson.TrustedIndividual.ReasonOfTrust;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)anotherPersonItem.Item).ИныеСвед = AnotherPerson.TrustedIndividual.OtherInfo;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)anotherPersonItem.Item).ФИО = new ФИОТип
+                    {
+                        Фамилия = AnotherPerson.TrustedIndividual.Surname,
+                        Имя = AnotherPerson.TrustedIndividual.Name,
+                        Отчество = AnotherPerson.TrustedIndividual.Patronymic
+                    };
+                }
+            }
+            else if (OrganizationEmployee != null)
+            {
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин = new ФайлИнфПокСодФХЖ4СвПринСвЛицПрин();
+                xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок();
+                var orgEmployeeItem = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок)xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item;
+                orgEmployeeItem.Должность = OrganizationEmployee.Position;
+                orgEmployeeItem.ИныеСвед = OrganizationEmployee.OtherInfo;
+                orgEmployeeItem.ОснПолн = OrganizationEmployee.BasisOfAuthority;
+                orgEmployeeItem.ФИО = new ФИОТип
+                {
+                    Фамилия = OrganizationEmployee.Surname,
+                    Имя = OrganizationEmployee.Name,
+                    Отчество = OrganizationEmployee.Patronymic
+                };
+            }
+
+            if (!string.IsNullOrEmpty(FileInformationFieldId) && !string.IsNullOrEmpty(TextInformationId))
+            {
+                xsdDocument.ИнфПок.СодФХЖ4.ИнфПолФХЖ4 = new ФайлИнфПокСодФХЖ4ИнфПолФХЖ4();
+                xsdDocument.ИнфПок.СодФХЖ4.ИнфПолФХЖ4.ИдФайлИнфПол = FileInformationFieldId;
+                xsdDocument.ИнфПок.СодФХЖ4.ИнфПолФХЖ4.ТекстИнф = new ФайлИнфПокСодФХЖ4ИнфПолФХЖ4ТекстИнф[]
+                {
+                    new ФайлИнфПокСодФХЖ4ИнфПолФХЖ4ТекстИнф
+                    {
+                        Идентиф = TextInformationId,
+                        Значен = TextInformation
+                    }
+                };
+            }
+
+            xsdDocument.ИнфПок.Подписант = new ФайлИнфПокПодписант[] 
+            {
+                new ФайлИнфПокПодписант
+                {
+                    ОснПолн = BasisOfAuthority,
+                    ОснПолнОрг = BasisOfAuthorityOrganization
+                }
+            };
+
+            var signer = xsdDocument.ИнфПок.Подписант.First();
+
+            if (ScopeOfAuthority == ScopeOfAuthorityEnum.PersonWhoMadeOperation)
+            {
+                signer.ОблПолн = ФайлИнфПокПодписантОблПолн.Item1;
+            }
+            else if(ScopeOfAuthority == ScopeOfAuthorityEnum.PersonWhoMadeOperationAndResponsibleForItsExecution)
+            {
+                signer.ОблПолн = ФайлИнфПокПодписантОблПолн.Item2;
+            }
+            else if (ScopeOfAuthority == ScopeOfAuthorityEnum.PersonWhoResponsibleForRegistrationExecution)
+            {
+                signer.ОблПолн = ФайлИнфПокПодписантОблПолн.Item3;
+            }
+
+            if(SignerStatus == SignerStatusEnum.EmployeeOfAnotherAuthorizedOrganization)
+            {
+                signer.Статус = ФайлИнфПокПодписантСтатус.Item3;
+            }
+            else if(SignerStatus == SignerStatusEnum.Individual)
+            {
+                signer.Статус = ФайлИнфПокПодписантСтатус.Item4;
+            }
+            else if (SignerStatus == SignerStatusEnum.EmployeeOfBuyerOrganization)
+            {
+                signer.Статус = ФайлИнфПокПодписантСтатус.Item5;
+            }
+            else if (SignerStatus == SignerStatusEnum.EmployeeOfOrganizationCompilerInformationExchangeFile)
+            {
+                signer.Статус = ФайлИнфПокПодписантСтатус.Item6;
+            }
+
+            if(Individual != null)
+            {
+                signer.Item = new СвФЛТип();
+                ((СвФЛТип)signer.Item).ИННФЛ = Individual.Inn;
+                ((СвФЛТип)signer.Item).ИныеСвед = Individual.OtherInfo;
+                ((СвФЛТип)signer.Item).ФИО = new ФИОТип
+                {
+                    Фамилия = Individual.Surname,
+                    Имя = Individual.Name,
+                    Отчество = Individual.Patronymic
+                };
+            }
+            else if(JuridicalEntity != null)
+            {
+                signer.Item = new СвИПТип();
+                ((СвИПТип)signer.Item).ИННФЛ = JuridicalEntity.Inn;
+                ((СвИПТип)signer.Item).ИныеСвед = JuridicalEntity.OtherInfo;
+                ((СвИПТип)signer.Item).СвГосРегИП = JuridicalEntity.CertificateOfFederalRegistration;
+                ((СвИПТип)signer.Item).ФИО = new ФИОТип
+                {
+                    Фамилия = JuridicalEntity.Surname,
+                    Имя = JuridicalEntity.Name,
+                    Отчество = JuridicalEntity.Patronymic
+                };
+            }
+            else
+            {
+                signer.Item = new ФайлИнфПокПодписантЮЛ();
+                ((ФайлИнфПокПодписантЮЛ)signer.Item).ИННЮЛ = JuridicalInn;
+                ((ФайлИнфПокПодписантЮЛ)signer.Item).НаимОрг = SignerOrgName;
+                ((ФайлИнфПокПодписантЮЛ)signer.Item).Должн = SignerPosition;
+                ((ФайлИнфПокПодписантЮЛ)signer.Item).ИныеСвед = SignerOtherInfo;
+                ((ФайлИнфПокПодписантЮЛ)signer.Item).ФИО = new ФИОТип
+                {
+                    Фамилия = SignerSurname,
+                    Имя = SignerName,
+                    Отчество = SignerPatronymic
+                };
+            }
+
+            string xml = Xml.SerializeEntity<Файл>(xsdDocument);
+            return xml;
+        }
+
         #endregion
     }
 }
