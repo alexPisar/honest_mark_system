@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Reporter
 {
-    public abstract class IReport
+    public interface IReport
     {
-        public virtual void Parse(string content) { }
+        void Parse(string content);
 
-        public abstract void Parse(byte[] content);
+        void Parse(byte[] content);
     }
 }

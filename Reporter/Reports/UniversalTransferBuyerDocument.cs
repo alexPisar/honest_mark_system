@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UtilitesLibrary.Service;
+using UtilitesLibrary.ModelBase;
 using Reporter.Enums;
 using Reporter.Entities;
 using Reporter.XsdClasses.OnNschfdoppok;
 
 namespace Reporter.Reports
 {
-    public class UniversalTransferBuyerDocument : IReport
+    public class UniversalTransferBuyerDocument : ViewModelBase, IReport
     {
         #region Properties
         #region Общая информация
@@ -276,7 +277,7 @@ namespace Reporter.Reports
         #endregion
 
         #region Parse Methods
-        public override void Parse(string content)
+        public void Parse(string content)
         {
             var xsdDocument = Xml.DeserializeEntity<Файл>(content);
 
@@ -468,7 +469,7 @@ namespace Reporter.Reports
             }
         }
 
-        public override void Parse(byte[] content)
+        public void Parse(byte[] content)
         {
             var xmlString = Encoding.GetEncoding(1251).GetString(content);
             Parse(xmlString);

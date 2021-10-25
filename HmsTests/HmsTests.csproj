@@ -70,6 +70,10 @@
       <Project>{e2d943fa-8f50-4de9-80bb-b91b4fad8de2}</Project>
       <Name>Reporter</Name>
     </ProjectReference>
+    <ProjectReference Include="..\UtilitesLibrary\UtilitesLibrary.csproj">
+      <Project>{28ec5958-4f6d-440b-bd0f-324dc93bbfc8}</Project>
+      <Name>UtilitesLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\WebSystems\WebSystems.csproj">
       <Project>{21a9c3be-2a12-4d83-b6c8-7e12e0f06a1a}</Project>
       <Name>WebSystems</Name>
