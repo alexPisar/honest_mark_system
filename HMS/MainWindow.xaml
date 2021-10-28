@@ -44,6 +44,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Подписать и отправить документ" Command="{Binding SignAndSendCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/Business Objects/BO_Document.svg}"/>
+                            <TextBlock Text="Подписать" HorizontalAlignment="Center" />
+                            <TextBlock Text="и отправить" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
         </dxb:StatusBarControl>
         <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList}" 
                          SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}">

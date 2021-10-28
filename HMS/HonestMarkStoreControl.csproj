@@ -169,10 +169,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BuyerSignWindow.xaml.cs">
+      <DependentUpon>BuyerSignWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Models\PurchasingDocumentsModel.cs" />
     <Compile Include="PurchasingDocumentsWindow.xaml.cs">
       <DependentUpon>PurchasingDocumentsWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="BuyerSignWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CertsChangeWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -242,7 +249,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ConfigSet\ConfigSet.csproj">
@@ -252,6 +261,10 @@
     <ProjectReference Include="..\DataContextManagementUnit\DataContextManagementUnit.csproj">
       <Project>{05620572-ab35-4f90-99e7-5504bb4b7d57}</Project>
       <Name>DataContextManagementUnit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Reporter\Reporter.csproj">
+      <Project>{e2d943fa-8f50-4de9-80bb-b91b4fad8de2}</Project>
+      <Name>Reporter</Name>
     </ProjectReference>
     <ProjectReference Include="..\UtilitesLibrary\UtilitesLibrary.csproj">
       <Project>{28ec5958-4f6d-440b-bd0f-324dc93bbfc8}</Project>

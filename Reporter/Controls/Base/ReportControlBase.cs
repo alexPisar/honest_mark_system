@@ -5,33 +5,127 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using UtilitesLibrary.Service;
-using System.ComponentModel.DataAnnotations;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Scripting;
+using System.Text.RegularExpressions;
 
 namespace Reporter.Controls.Base
 {
     public class ReportControlBase : UserControl
     {
+        public List<string> ErrorsList { get; set; }
+
         protected override void OnContentChanged(object oldContent, object newContent)
         {
             base.OnContentChanged(oldContent, newContent);
         }
 
-        public virtual IReport Report { get; }
-
-        protected virtual Dictionary<TEnum, string> GetEnumValues<TEnum>()
+        private bool ValidationControl(object control, ScriptOptions options)
         {
-            var names = typeof(TEnum).GetEnumValues();
-
-            var dictionary = new Dictionary<TEnum, string>();
-            foreach (var name in names)
+            var panelControl = control as Panel;
+            if(panelControl != null)
             {
-                var member = typeof(TEnum).GetMembers().SingleOrDefault(x => x.Name == name.ToString());
-                var descAttribute = member.GetCustomAttributes(typeof(DisplayAttribute), false)?.FirstOrDefault();
-                var nameStr = ((DisplayAttribute)descAttribute).Description;
-                dictionary.Add((TEnum)name, nameStr);
+                bool result = true;
+
+                foreach (var p in panelControl.Children)
+                    result = ValidationControl(p, options) && result;
+
+                return result;
             }
 
-            return dictionary;
+            var contentControl = control as ContentControl;
+            if(contentControl != null)
+            {
+                return ValidationControl(contentControl.Content, options);
+            }
+
+            if (control.GetType() == typeof(ReportComboBox))
+            {
+                var repComboBox = control as ReportComboBox;
+                int? value = null;
+
+                if (repComboBox.SelectedValue != null)
+                    value = (int)repComboBox.SelectedValue;
+
+                if (repComboBox.IsRequired && (value == null || value == 0))
+                {
+                    repComboBox.Background = System.Windows.Media.Brushes.Pink;
+                    ErrorsList.Add($"Не заполнено поле '{repComboBox.FieldName}'");
+                    return false;
+                }
+
+                if (!string.IsNullOrEmpty(repComboBox.Expression))
+                {
+                    bool result = CSharpScript.EvaluateAsync<bool>(repComboBox.Expression, options, Report).Result;
+
+                    if (!result)
+                        ErrorsList.Add(repComboBox.ErrorMessage);
+
+                    return result;
+                }
+
+                return true;
+            }
+
+            var itemsControl = control as ItemsControl;
+            if(itemsControl != null)
+            {
+                bool result = true;
+
+                foreach (var item in itemsControl.Items)
+                    result = ValidationControl(item, options) && result;
+
+                return result;
+            }
+
+            if(control.GetType() == typeof(ReportTextBox))
+            {
+                var repTextBox = control as ReportTextBox;
+
+                if(repTextBox.IsRequired && string.IsNullOrEmpty(repTextBox.Text))
+                {
+                    repTextBox.Background = System.Windows.Media.Brushes.Pink;
+                    ErrorsList.Add($"Не заполнено поле '{repTextBox.FieldName}'");
+                    return false;
+                }
+
+                if (!string.IsNullOrEmpty(repTextBox.Mask))
+                {
+                    var result = Regex.IsMatch(repTextBox.Text ?? "", repTextBox.Mask);
+
+                    if (!result)
+                        ErrorsList.Add($"Значение поля '{repTextBox.FieldName}' не соответствует формату.");
+
+                    return result;
+                }
+
+                if (!string.IsNullOrEmpty(repTextBox.Expression))
+                {
+                    bool result = CSharpScript.EvaluateAsync<bool>(repTextBox.Expression, options, Report).Result;
+
+                    if (!result)
+                        ErrorsList.Add(repTextBox.ErrorMessage);
+
+                    return result;
+                }
+
+                return true;
+            }
+
+            return true;
+        }
+
+        public virtual IReport Report { get; }
+
+        public virtual bool ValidateReport()
+        {
+            ErrorsList = new List<string>();
+            var options = ScriptOptions.Default.WithImports(nameof(Reporter)).AddReferences(this.GetType().Assembly);
+            options = options.AddImports("Reporter.Enums").AddImports("Reporter.Reports");
+
+            var contentControl = this.Content;
+
+            return ValidationControl(contentControl, options);
         }
     }
 }
