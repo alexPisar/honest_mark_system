@@ -26,7 +26,7 @@ namespace Reporter.Controls
         public UniversalTransferBuyerDocumentControl()
         {
             InitializeComponent();
-            signerOrgTabItem.IsSelected = true;
+            //signerOrgTabItem.IsSelected = true;
             DataContext = new UniversalTransferBuyerDocument();
             SignerIndividual = new IndividualEntity();
             SignerJuridicalEntity = new JuridicalEntity();

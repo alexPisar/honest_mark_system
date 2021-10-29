@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Reporter.Entities
 {
-    public class JuridicalEntity
+    public class JuridicalEntity : Base.IReportEntity<JuridicalEntity>
     {
         /// <summary>
         /// ИНН

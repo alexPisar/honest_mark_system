@@ -208,6 +208,8 @@ namespace Reporter.Reports
         #endregion
 
         #region Подписант
+        public object SignerEntity { get; set; }
+
         /// <summary>
         /// Физическое лицо
         /// </summary>

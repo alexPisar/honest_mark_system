@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Reporter.Entities
 {
-    public class IndividualEntity
+    public class IndividualEntity : Base.IReportEntity<IndividualEntity>
     {
         /// <summary>
         /// ИНН

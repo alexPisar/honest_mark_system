@@ -110,7 +110,7 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        private async void SignAndSend()
+        private void SignAndSend()
         {
             var signWindow = new BuyerSignWindow();
             signWindow.ShowDialog();
