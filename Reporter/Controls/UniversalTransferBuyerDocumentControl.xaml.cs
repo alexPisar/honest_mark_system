@@ -26,7 +26,6 @@ namespace Reporter.Controls
         public UniversalTransferBuyerDocumentControl()
         {
             InitializeComponent();
-            signerOrgTabItem.IsSelected = true;
             DataContext = new UniversalTransferBuyerDocument();
         }
 
@@ -54,6 +53,22 @@ namespace Reporter.Controls
         private void ChangeButton_Click(object sender, RoutedEventArgs e)
         {
             OnChangeButtonClick?.Invoke(sender, e);
+        }
+
+        public override void SetDefaults()
+        {
+            signerOrgTabItem.IsSelected = true;
+            anotherPersonTabItem.IsSelected = true;
+            orgRepresentativeTabItem.IsSelected = true;
+            ((AnotherPerson)anotherPersonTabItem.DataContext).Item = orgRepresentativeTabItem.DataContext;
+            ((UniversalTransferBuyerDocument)DataContext).OrganizationEmployeeOrAnotherPerson = anotherPersonTabItem.DataContext;
+
+            receiverTabControl.Loaded += (object sender, RoutedEventArgs e) => {
+                anotherPersonTabItem.IsSelected = true;
+                orgRepresentativeTabItem.IsSelected = true;
+            };
+            ((UniversalTransferBuyerDocument)DataContext).OnPropertyChanged("OrganizationEmployeeOrAnotherPerson");
+            ((UniversalTransferBuyerDocument)DataContext).OnPropertyChanged("OrganizationEmployeeOrAnotherPerson.Item");
         }
     }
 }

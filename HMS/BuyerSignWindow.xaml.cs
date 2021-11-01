@@ -60,5 +60,26 @@ namespace HonestMarkSystem
                 errorsWindow.ShowDialog();
             }
         }
+
+        public void SetDefaultParameters(string subject, DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing dataBaseObject)
+        {
+            reportControl.SetDefaults();
+
+            var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil();
+            var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
+            Report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+            Report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+            Report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
+            Report.SignerOrgName = cryptoUtil.ParseCertAttribute(subject, "CN");
+            Report.JuridicalInn = cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0');
+            Report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
+
+            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).OrgName = Report.SignerOrgName;
+            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Position = Report.SignerPosition;
+            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Surname = Report.SignerSurname;
+            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Name = Report.SignerName;
+            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Patronymic = Report.SignerPatronymic;
+            Report.OnAllPropertyChanged();
+        }
     }
 }

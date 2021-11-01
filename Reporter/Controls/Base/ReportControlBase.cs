@@ -133,5 +133,10 @@ namespace Reporter.Controls.Base
 
             return ValidationControl(contentControl, options);
         }
+
+        public virtual void SetDefaults()
+        {
+
+        }
     }
 }

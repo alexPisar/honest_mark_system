@@ -112,7 +112,15 @@ namespace HonestMarkSystem.Models
 
         private void SignAndSend()
         {
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ для подписания.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             var signWindow = new BuyerSignWindow();
+            signWindow.SetDefaultParameters(_edoSystem.GetCertSubject(), SelectedItem);
             signWindow.ShowDialog();
             signWindow.OnAllPropertyChanged();
 
