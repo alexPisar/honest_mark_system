@@ -9,10 +9,11 @@
              xmlns:ent="clr-namespace:Reporter.Entities"
              xmlns:local="clr-namespace:Reporter.Controls"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="800">
+             d:DesignHeight="900" d:DesignWidth="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -53,21 +54,105 @@
                 </StackPanel>
             </StackPanel>
         </GroupBox>
-        <GroupBox Header="Подписант" Grid.Row="2"  Margin="10,0">
+        <GroupBox Header="Сведения о лице, принявшем товары (груз)" Grid.Row="2" Height="300">
+            <base:ReportSwitchTabControl x:Name="receiverTabControl" SelectedValue="{Binding OrganizationEmployeeOrAnotherPerson, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <base:ReportSwitchTabItem Header="Работник организации покупателя" x:Name="orgEmployeeTabItem" DataEntityObject="{ent:OrganizationEmployee}">
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Width="135" Margin="10 5">Должность</TextBlock>
+                            <base:ReportTextBox Margin="5 5" Width="210" Text="{Binding Path=Position, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Width="135" Margin="10 5">Основание полномочий</TextBlock>
+                            <base:ReportTextBox Margin="5 5" Width="250" Text="{Binding Path=BasisOfAuthority, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Width="135" Margin="10 5">Иные сведения</TextBlock>
+                            <base:ReportTextBox Margin="5 5" Width="380" Text="{Binding Path=OtherInfo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <TextBlock Width="60" Margin="5 5">Фамилия</TextBlock>
+                            <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Surname, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Width="30" Margin="5 5">Имя</TextBlock>
+                            <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Width="50" Margin="5 5">Отчество</TextBlock>
+                            <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Patronymic, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </base:ReportSwitchTabItem>
+                <base:ReportSwitchTabItem Header="Иное лицо, которому доверено принятие груза" x:Name="anotherPersonTabItem" DataEntityObject="{ent:AnotherPerson}">
+                    <StackPanel Orientation="Vertical">
+                        <base:ReportSwitchTabControl SelectedValue="{Binding Item, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <base:ReportSwitchTabItem Header="Представитель организации" x:Name="orgRepresentativeTabItem" DataEntityObject="{ent:OrganizationRepresentative}">
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="160" Margin="10 5">Наименование организации</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="210" Text="{Binding Path=OrgName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                                        <TextBlock Width="90" Margin="10 5">Должность</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="210" Text="{Binding Path=Position, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="135" Margin="10 5">Иные сведения</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="380" Text="{Binding Path=OtherInfo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="415" Margin="10 5">Основание, по которому организации доверено принятие товаров</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="280" Text="{Binding Path=ReasonOrgTrust, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="415" Margin="10 5">Основание полномочий представителя организации на принятие товаров</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="280" Text="{Binding Path=ReasonTrustPerson, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                        <TextBlock Width="60" Margin="5 5">Фамилия</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Surname, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock Width="30" Margin="5 5">Имя</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Width="50" Margin="5 5">Отчество</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Patronymic, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </base:ReportSwitchTabItem>
+                            <base:ReportSwitchTabItem Header="Физическое лицо" x:Name="trustedIndividualTabItem" DataEntityObject="{ent:TrustedIndividual}">
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="360" Margin="10 5">Основание, по которому физ. лицу доверено принятие товаров</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="340" Text="{Binding Path=ReasonOfTrust, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="200" Margin="10 5">Иная информация</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="400" Text="{Binding Path=OtherInfo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></base:ReportTextBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                        <TextBlock Width="60" Margin="5 5">Фамилия</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Surname, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock Width="30" Margin="5 5">Имя</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Width="50" Margin="5 5">Отчество</TextBlock>
+                                        <base:ReportTextBox Margin="5 5" Width="150" Text="{Binding Path=Patronymic, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </base:ReportSwitchTabItem>
+                        </base:ReportSwitchTabControl>
+                    </StackPanel>
+                </base:ReportSwitchTabItem>
+            </base:ReportSwitchTabControl>
+        </GroupBox>
+        <GroupBox Header="Подписант" Grid.Row="3"  Margin="10,0">
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <TextBlock Width="135" Margin="10 5">Область полномочий</TextBlock>
+                    <TextBlock Width="130" Margin="10 5">Область полномочий</TextBlock>
                     <base:ReportComboBox Margin="5 5" Width="220" EnumType="{x:Type en:ScopeOfAuthorityEnum}" SelectedValue="{Binding Path=ScopeOfAuthority, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                          IsRequired="True" FieldName="Область полномочий" />
-                    <TextBlock Width="135" Margin="10 5">Статус</TextBlock>
+                    <TextBlock Width="130" Margin="10 5">Статус</TextBlock>
                     <base:ReportComboBox Margin="5 5" Width="220" EnumType="{x:Type en:SignerStatusEnum}" SelectedValue="{Binding Path=SignerStatus, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                          IsRequired="True" FieldName="Статус подписанта"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <TextBlock Width="135" Margin="10 5">Основания полномочий <LineBreak />(доверия)</TextBlock>
+                    <TextBlock Width="130" Margin="10 5">Основания полномочий <LineBreak />(доверия)</TextBlock>
                     <base:ReportTextBox Margin="5 10" Width="220" Text="{Binding Path=BasisOfAuthority, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           IsRequired="True" FieldName="Основания полномочий"/>
-                    <TextBlock Width="135" Margin="10 5">Основания полномочий <LineBreak />(доверия) орг.</TextBlock>
+                    <TextBlock Width="130" Margin="10 5">Основания полномочий <LineBreak />(доверия) орг.</TextBlock>
                     <base:ReportTextBox Margin="5 10" Width="220" Text="{Binding Path=BasisOfAuthorityOrganization, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
                 <base:ReportSwitchTabControl x:Name="signerTabControl" Height="155" SelectedValue="{Binding Path=SignerEntity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
@@ -75,16 +160,16 @@
                         <TabItem Header="Юр.лицо" x:Name="signerOrgTabItem">
                             <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <TextBlock Width="135" Margin="5 5">ИНН организации</TextBlock>
+                                    <TextBlock Width="120" Margin="5 5">ИНН организации</TextBlock>
                                     <base:ReportTextBox Margin="5 5" Width="220" Text="{Binding Path=JuridicalInn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                     Mask="\d{10}" MaskType="RegEx" FieldName="ИНН организации подписанта"/>
-                                    <TextBlock Width="135" Margin="10 5">Наименование</TextBlock>
+                                    <TextBlock Width="120" Margin="10 5">Наименование</TextBlock>
                                     <base:ReportTextBox Margin="5 5" Width="220" Text="{Binding Path=SignerOrgName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <TextBlock Width="135" Margin="5 5">Должность</TextBlock>
+                                    <TextBlock Width="120" Margin="5 5">Должность</TextBlock>
                                     <base:ReportTextBox Margin="5 5" Width="220" Text="{Binding Path=SignerPosition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Width="135" Margin="10 5">Иные сведения</TextBlock>
+                                    <TextBlock Width="120" Margin="10 5">Иные сведения</TextBlock>
                                     <base:ReportTextBox Margin="5 5" Width="220" Text="{Binding Path=SignerOtherInfo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
@@ -100,9 +185,10 @@
                         <base:ReportSwitchTabItem Header="Инд.предприниматель" x:Name="signerJurTabItem" DataEntityObject="{ent:JuridicalEntity}">
                             <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <TextBlock Width="135" Margin="5 5">ИНН</TextBlock>
-                                    <base:ReportTextBox Margin="5 10" Width="220" Text="{Binding Path=Inn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Width="135" Margin="10 5">Реквизиты свидетельства <LineBreak />о гос. регистрации</TextBlock>
+                                    <TextBlock Width="100" Margin="5 5">ИНН</TextBlock>
+                                    <base:ReportTextBox Margin="5 10" Width="220" Text="{Binding Path=Inn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Mask="\d{12}" MaskType="RegEx" FieldName="ИНН подписанта (инд. предпринимателя)" />
+                                    <TextBlock Width="141" Margin="10 5">Реквизиты свидетельства <LineBreak />о гос. регистрации</TextBlock>
                                     <base:ReportTextBox Margin="5 10" Width="220" Text="{Binding Path=CertificateOfFederalRegistration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
@@ -122,9 +208,10 @@
                         <base:ReportSwitchTabItem Header="Физ.лицо" x:Name="signerIndividualTabItem" DataEntityObject="{ent:IndividualEntity}">
                             <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <TextBlock Width="135" Margin="5 5">ИНН</TextBlock>
-                                    <base:ReportTextBox Margin="5 10" Width="220" Text="{Binding Path=Inn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Width="135" Margin="10 5">Иные сведения</TextBlock>
+                                    <TextBlock Width="120" Margin="5 5">ИНН</TextBlock>
+                                    <base:ReportTextBox Margin="5 10" Width="220" Text="{Binding Path=Inn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                       Mask="\d{12}" MaskType="RegEx" FieldName="ИНН подписнта (физ. лица)" />
+                                    <TextBlock Width="120" Margin="10 5">Иные сведения</TextBlock>
                                     <base:ReportTextBox Margin="5 10" Width="220" Text="{Binding Path=OtherInfo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
@@ -141,7 +228,7 @@
                 </base:ReportSwitchTabControl>
             </StackPanel>
         </GroupBox>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="3">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
             <Button Content="Подписать и отправить" Margin="5 5" Click="ChangeButton_Click"></Button>
             <Button Content="Отмена" Margin="5 5" Click="CancelButton_Click"></Button>
         </StackPanel>

@@ -17,7 +17,7 @@ namespace Reporter.Controls.Base
 
         private void ChangeItem(object sender, SelectionChangedEventArgs e)
         {
-            if(SelectedItem.GetType() == typeof(ReportSwitchTabItem))
+            if(SelectedItem?.GetType() == typeof(ReportSwitchTabItem))
             {
                 var item = SelectedItem as ReportSwitchTabItem;
 

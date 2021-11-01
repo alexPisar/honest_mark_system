@@ -12,7 +12,6 @@ namespace WebSystems.WebClients
 {
     public class EdoLiteClient : WebClientSingleInstance<EdoLiteClient>
     {
-        private X509Certificate2 _certificate;
         private string _token;
         private ServiceManager _webService;
 
@@ -41,7 +40,6 @@ namespace WebSystems.WebClients
             if (cache?.Token != null && cache?.TokenExpirationDate > DateTime.Now)
             {
                 _token = cache.Token;
-                _certificate = certificate;
                 return true;
             }
 
@@ -78,7 +76,6 @@ namespace WebSystems.WebClients
                 TokenExpirationDate = DateTime.Now.AddHours(12)
             };
             cache.Save(cache, certificate.Thumbprint);
-            _certificate = certificate;
 
             return true;
         }

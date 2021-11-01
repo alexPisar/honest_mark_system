@@ -25,10 +25,10 @@ namespace HonestMarkSystem.Models
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
 
-        public MainViewModel()
+        public MainViewModel(IEdoSystem edoSystem, Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter)
         {
-            _edoSystem = new EdoLiteSystem();
-            _dataBaseAdapter = new EdoLiteToDataBase();
+            _edoSystem = edoSystem;
+            _dataBaseAdapter = dataBaseAdapter;
             _dataBaseAdapter.InitializeContext();
 
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>();

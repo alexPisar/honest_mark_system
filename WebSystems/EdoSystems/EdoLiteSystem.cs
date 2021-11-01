@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace WebSystems.EdoSystems
 {
     public class EdoLiteSystem : IEdoSystem
     {
-        public EdoLiteSystem()
+        public EdoLiteSystem(X509Certificate2 certificate) : base(certificate)
         {
             _webClient = WebClients.EdoLiteClient.GetInstance();
         }
@@ -47,6 +48,14 @@ namespace WebSystems.EdoSystems
                 fileBytes = webClient.GetOutgoingDocumentContent(document.EdoId);
 
             return fileBytes;
+        }
+
+        public override bool Authorization()
+        {
+            if (_certificate == null)
+                throw new Exception("Не задан сертификат для авторизации");
+
+            return ((WebClients.EdoLiteClient)_webClient).Authorization(_certificate);
         }
     }
 }

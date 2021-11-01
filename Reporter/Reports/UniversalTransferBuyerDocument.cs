@@ -176,14 +176,9 @@ namespace Reporter.Reports
 
         #region Сведения о лице, принявшем товары (груз)
         /// <summary>
-        /// Работник организации покупателя
+        /// Работник организации покупателя или иное лицо
         /// </summary>
-        public OrganizationEmployee OrganizationEmployee { get; set; }
-
-        /// <summary>
-        /// Иное лицо
-        /// </summary>
-        public AnotherPerson AnotherPerson { get; set; }
+        public object OrganizationEmployeeOrAnotherPerson { get; set; }
         #endregion
         #endregion
 
@@ -208,17 +203,11 @@ namespace Reporter.Reports
         #endregion
 
         #region Подписант
+
+        /// <summary>
+        /// Физическое лицо или индивидуальный предприниматель
+        /// </summary>
         public object SignerEntity { get; set; }
-
-        /// <summary>
-        /// Физическое лицо
-        /// </summary>
-        public IndividualEntity Individual { get; set; }
-
-        /// <summary>
-        /// Индивидуальный предприниматель
-        /// </summary>
-        public JuridicalEntity JuridicalEntity { get; set; }
 
         /// <summary>
         /// Область полномочий
@@ -375,41 +364,43 @@ namespace Reporter.Reports
                 if(personInfo.Item.GetType() == typeof(ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок))
                 {
                     var orgPersonInfo = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок)personInfo.Item;
-                    OrganizationEmployee = new OrganizationEmployee();
-                    OrganizationEmployee.BasisOfAuthority = orgPersonInfo.ОснПолн;
-                    OrganizationEmployee.Position = orgPersonInfo.Должность;
-                    OrganizationEmployee.OtherInfo = orgPersonInfo.ИныеСвед;
-                    OrganizationEmployee.Surname = orgPersonInfo.ФИО?.Фамилия;
-                    OrganizationEmployee.Name = orgPersonInfo.ФИО?.Имя;
-                    OrganizationEmployee.Patronymic = orgPersonInfo.ФИО?.Отчество;
+                    OrganizationEmployeeOrAnotherPerson = new OrganizationEmployee();
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).BasisOfAuthority = orgPersonInfo.ОснПолн;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).Position = orgPersonInfo.Должность;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).OtherInfo = orgPersonInfo.ИныеСвед;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).Surname = orgPersonInfo.ФИО?.Фамилия;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).Name = orgPersonInfo.ФИО?.Имя;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).Patronymic = orgPersonInfo.ФИО?.Отчество;
                 }
                 else if (personInfo.Item.GetType() == typeof(ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо))
                 {
                     var otherPerson = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо)personInfo.Item;
-                    AnotherPerson = new AnotherPerson();
+                    OrganizationEmployeeOrAnotherPerson = new AnotherPerson();
 
                     if (otherPerson.Item?.GetType() == typeof(ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин))
                     {
                         var otherIndividualPerson = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)otherPerson.Item;
-                        AnotherPerson.TrustedIndividual = new TrustedIndividual();
-                        AnotherPerson.TrustedIndividual.ReasonOfTrust = otherIndividualPerson.ОснДоверФЛ;
-                        AnotherPerson.TrustedIndividual.OtherInfo = otherIndividualPerson.ИныеСвед;
-                        AnotherPerson.TrustedIndividual.Surname = otherIndividualPerson?.ФИО?.Фамилия;
-                        AnotherPerson.TrustedIndividual.Name = otherIndividualPerson?.ФИО?.Имя;
-                        AnotherPerson.TrustedIndividual.Patronymic = otherIndividualPerson?.ФИО?.Отчество;
+                        var trustedIndividual = new TrustedIndividual();
+                        trustedIndividual.ReasonOfTrust = otherIndividualPerson.ОснДоверФЛ;
+                        trustedIndividual.OtherInfo = otherIndividualPerson.ИныеСвед;
+                        trustedIndividual.Surname = otherIndividualPerson?.ФИО?.Фамилия;
+                        trustedIndividual.Name = otherIndividualPerson?.ФИО?.Имя;
+                        trustedIndividual.Patronymic = otherIndividualPerson?.ФИО?.Отчество;
+                        ((AnotherPerson)OrganizationEmployeeOrAnotherPerson).Item = trustedIndividual;
                     }
                     else if (otherPerson.Item?.GetType() == typeof(ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин))
                     {
                         var otherOrgPerson = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)otherPerson.Item;
-                        AnotherPerson.OrganizationRepresentative = new OrganizationRepresentative();
-                        AnotherPerson.OrganizationRepresentative.OrgName = otherOrgPerson.НаимОргПрин;
-                        AnotherPerson.OrganizationRepresentative.Position = otherOrgPerson.Должность;
-                        AnotherPerson.OrganizationRepresentative.OtherInfo = otherOrgPerson.ИныеСвед;
-                        AnotherPerson.OrganizationRepresentative.ReasonOrgTrust = otherOrgPerson.ОснДоверОргПрин;
-                        AnotherPerson.OrganizationRepresentative.ReasonTrustPerson = otherOrgPerson.ОснПолнПредПрин;
-                        AnotherPerson.OrganizationRepresentative.Surname = otherOrgPerson.ФИО?.Фамилия;
-                        AnotherPerson.OrganizationRepresentative.Name = otherOrgPerson.ФИО?.Имя;
-                        AnotherPerson.OrganizationRepresentative.Patronymic = otherOrgPerson.ФИО?.Отчество;
+                        var organizationRepresentative = new OrganizationRepresentative();
+                        organizationRepresentative.OrgName = otherOrgPerson.НаимОргПрин;
+                        organizationRepresentative.Position = otherOrgPerson.Должность;
+                        organizationRepresentative.OtherInfo = otherOrgPerson.ИныеСвед;
+                        organizationRepresentative.ReasonOrgTrust = otherOrgPerson.ОснДоверОргПрин;
+                        organizationRepresentative.ReasonTrustPerson = otherOrgPerson.ОснПолнПредПрин;
+                        organizationRepresentative.Surname = otherOrgPerson.ФИО?.Фамилия;
+                        organizationRepresentative.Name = otherOrgPerson.ФИО?.Имя;
+                        organizationRepresentative.Patronymic = otherOrgPerson.ФИО?.Отчество;
+                        ((AnotherPerson)OrganizationEmployeeOrAnotherPerson).Item = organizationRepresentative;
                     }
                 }
             }
@@ -420,23 +411,23 @@ namespace Reporter.Reports
                 if(signerInfo.Item.GetType() == typeof(СвИПТип))
                 {
                     var jeInfo = (СвИПТип)signerInfo.Item;
-                    JuridicalEntity = new JuridicalEntity();
-                    JuridicalEntity.Inn = jeInfo.ИННФЛ;
-                    JuridicalEntity.CertificateOfFederalRegistration = jeInfo.СвГосРегИП;
-                    JuridicalEntity.OtherInfo = jeInfo.ИныеСвед;
-                    JuridicalEntity.Surname = jeInfo.ФИО?.Фамилия;
-                    JuridicalEntity.Name = jeInfo.ФИО?.Имя;
-                    JuridicalEntity.Patronymic = jeInfo.ФИО?.Отчество;
+                    SignerEntity = new JuridicalEntity();
+                    ((JuridicalEntity)SignerEntity).Inn = jeInfo.ИННФЛ;
+                    ((JuridicalEntity)SignerEntity).CertificateOfFederalRegistration = jeInfo.СвГосРегИП;
+                    ((JuridicalEntity)SignerEntity).OtherInfo = jeInfo.ИныеСвед;
+                    ((JuridicalEntity)SignerEntity).Surname = jeInfo.ФИО?.Фамилия;
+                    ((JuridicalEntity)SignerEntity).Name = jeInfo.ФИО?.Имя;
+                    ((JuridicalEntity)SignerEntity).Patronymic = jeInfo.ФИО?.Отчество;
                 }
                 else if(signerInfo.Item.GetType() == typeof(СвФЛТип))
                 {
                     var indInfo = (СвФЛТип)signerInfo.Item;
-                    Individual = new IndividualEntity();
-                    Individual.Inn = indInfo.ИННФЛ;
-                    Individual.OtherInfo = indInfo.ИныеСвед;
-                    Individual.Surname = indInfo.ФИО?.Фамилия;
-                    Individual.Name = indInfo.ФИО?.Имя;
-                    Individual.Patronymic = indInfo.ФИО?.Отчество;
+                    SignerEntity = new IndividualEntity();
+                    ((IndividualEntity)SignerEntity).Inn = indInfo.ИННФЛ;
+                    ((IndividualEntity)SignerEntity).OtherInfo = indInfo.ИныеСвед;
+                    ((IndividualEntity)SignerEntity).Surname = indInfo.ФИО?.Фамилия;
+                    ((IndividualEntity)SignerEntity).Name = indInfo.ФИО?.Имя;
+                    ((IndividualEntity)SignerEntity).Patronymic = indInfo.ФИО?.Отчество;
                 }
                 else if (signerInfo.Item.GetType() == typeof(ФайлИнфПокПодписантЮЛ))
                 {
@@ -535,52 +526,56 @@ namespace Reporter.Reports
             xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.ДатаДокРасх = DocumentDiscrepancyDate?.ToString("dd.MM.yyyy");
             xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.ИдФайлДокРасх = IdDocumentDiscrepancy;
             
-            if(AnotherPerson != null)
+            if(OrganizationEmployeeOrAnotherPerson?.GetType() == typeof(AnotherPerson))
             {
+                var anotherPerson = OrganizationEmployeeOrAnotherPerson as AnotherPerson;
                 xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин = new ФайлИнфПокСодФХЖ4СвПринСвЛицПрин();
                 xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо();
                 var anotherPersonItem = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо)xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item;
-                if (AnotherPerson.OrganizationRepresentative != null)
+                if (anotherPerson?.Item?.GetType() == typeof(OrganizationRepresentative))
                 {
+                    var organizationRepresentative = anotherPerson.Item as OrganizationRepresentative;
                     anotherPersonItem.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин();
-                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).Должность = AnotherPerson.OrganizationRepresentative.Position;
-                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ИныеСвед = AnotherPerson.OrganizationRepresentative.OtherInfo;
-                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).НаимОргПрин = AnotherPerson.OrganizationRepresentative.OrgName;
-                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ОснДоверОргПрин = AnotherPerson.OrganizationRepresentative.ReasonOrgTrust;
-                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ОснПолнПредПрин = AnotherPerson.OrganizationRepresentative.ReasonTrustPerson;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).Должность = organizationRepresentative.Position;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ИныеСвед = organizationRepresentative.OtherInfo;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).НаимОргПрин = organizationRepresentative.OrgName;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ОснДоверОргПрин = organizationRepresentative.ReasonOrgTrust;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ОснПолнПредПрин = organizationRepresentative.ReasonTrustPerson;
                     ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин)anotherPersonItem.Item).ФИО = new ФИОТип
                     {
-                        Фамилия = AnotherPerson.OrganizationRepresentative.Surname,
-                        Имя = AnotherPerson.OrganizationRepresentative.Name,
-                        Отчество = AnotherPerson.OrganizationRepresentative.Patronymic
+                        Фамилия = organizationRepresentative.Surname,
+                        Имя = organizationRepresentative.Name,
+                        Отчество = organizationRepresentative.Patronymic
                     };
                 }
-                else if(AnotherPerson.TrustedIndividual != null)
+                else if(anotherPerson?.Item?.GetType() == typeof(TrustedIndividual))
                 {
+                    var trustedIndividual = anotherPerson.Item as TrustedIndividual;
                     anotherPersonItem.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин();
-                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)anotherPersonItem.Item).ОснДоверФЛ = AnotherPerson.TrustedIndividual.ReasonOfTrust;
-                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)anotherPersonItem.Item).ИныеСвед = AnotherPerson.TrustedIndividual.OtherInfo;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)anotherPersonItem.Item).ОснДоверФЛ = trustedIndividual.ReasonOfTrust;
+                    ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)anotherPersonItem.Item).ИныеСвед = trustedIndividual.OtherInfo;
                     ((ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин)anotherPersonItem.Item).ФИО = new ФИОТип
                     {
-                        Фамилия = AnotherPerson.TrustedIndividual.Surname,
-                        Имя = AnotherPerson.TrustedIndividual.Name,
-                        Отчество = AnotherPerson.TrustedIndividual.Patronymic
+                        Фамилия = trustedIndividual.Surname,
+                        Имя = trustedIndividual.Name,
+                        Отчество = trustedIndividual.Patronymic
                     };
                 }
             }
-            else if (OrganizationEmployee != null)
+            else if (OrganizationEmployeeOrAnotherPerson?.GetType() == typeof(OrganizationEmployee))
             {
+                var organizationEmployee = OrganizationEmployeeOrAnotherPerson as OrganizationEmployee;
                 xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин = new ФайлИнфПокСодФХЖ4СвПринСвЛицПрин();
                 xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок();
                 var orgEmployeeItem = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок)xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item;
-                orgEmployeeItem.Должность = OrganizationEmployee.Position;
-                orgEmployeeItem.ИныеСвед = OrganizationEmployee.OtherInfo;
-                orgEmployeeItem.ОснПолн = OrganizationEmployee.BasisOfAuthority;
+                orgEmployeeItem.Должность = organizationEmployee.Position;
+                orgEmployeeItem.ИныеСвед = organizationEmployee.OtherInfo;
+                orgEmployeeItem.ОснПолн = organizationEmployee.BasisOfAuthority;
                 orgEmployeeItem.ФИО = new ФИОТип
                 {
-                    Фамилия = OrganizationEmployee.Surname,
-                    Имя = OrganizationEmployee.Name,
-                    Отчество = OrganizationEmployee.Patronymic
+                    Фамилия = organizationEmployee.Surname,
+                    Имя = organizationEmployee.Name,
+                    Отчество = organizationEmployee.Patronymic
                 };
             }
 
@@ -639,32 +634,7 @@ namespace Reporter.Reports
                 signer.Статус = ФайлИнфПокПодписантСтатус.Item6;
             }
 
-            if(Individual != null)
-            {
-                signer.Item = new СвФЛТип();
-                ((СвФЛТип)signer.Item).ИННФЛ = Individual.Inn;
-                ((СвФЛТип)signer.Item).ИныеСвед = Individual.OtherInfo;
-                ((СвФЛТип)signer.Item).ФИО = new ФИОТип
-                {
-                    Фамилия = Individual.Surname,
-                    Имя = Individual.Name,
-                    Отчество = Individual.Patronymic
-                };
-            }
-            else if(JuridicalEntity != null)
-            {
-                signer.Item = new СвИПТип();
-                ((СвИПТип)signer.Item).ИННФЛ = JuridicalEntity.Inn;
-                ((СвИПТип)signer.Item).ИныеСвед = JuridicalEntity.OtherInfo;
-                ((СвИПТип)signer.Item).СвГосРегИП = JuridicalEntity.CertificateOfFederalRegistration;
-                ((СвИПТип)signer.Item).ФИО = new ФИОТип
-                {
-                    Фамилия = JuridicalEntity.Surname,
-                    Имя = JuridicalEntity.Name,
-                    Отчество = JuridicalEntity.Patronymic
-                };
-            }
-            else
+            if(SignerEntity == null)
             {
                 signer.Item = new ФайлИнфПокПодписантЮЛ();
                 ((ФайлИнфПокПодписантЮЛ)signer.Item).ИННЮЛ = JuridicalInn;
@@ -676,6 +646,33 @@ namespace Reporter.Reports
                     Фамилия = SignerSurname,
                     Имя = SignerName,
                     Отчество = SignerPatronymic
+                };
+            }
+            else if(SignerEntity.GetType() == typeof(IndividualEntity))
+            {
+                var individual = SignerEntity as IndividualEntity;
+                signer.Item = new СвФЛТип();
+                ((СвФЛТип)signer.Item).ИННФЛ = individual.Inn;
+                ((СвФЛТип)signer.Item).ИныеСвед = individual.OtherInfo;
+                ((СвФЛТип)signer.Item).ФИО = new ФИОТип
+                {
+                    Фамилия = individual.Surname,
+                    Имя = individual.Name,
+                    Отчество = individual.Patronymic
+                };
+            }
+            else if(SignerEntity.GetType() == typeof(JuridicalEntity))
+            {
+                var juridicalEntity = SignerEntity as JuridicalEntity;
+                signer.Item = new СвИПТип();
+                ((СвИПТип)signer.Item).ИННФЛ = juridicalEntity.Inn;
+                ((СвИПТип)signer.Item).ИныеСвед = juridicalEntity.OtherInfo;
+                ((СвИПТип)signer.Item).СвГосРегИП = juridicalEntity.CertificateOfFederalRegistration;
+                ((СвИПТип)signer.Item).ФИО = new ФИОТип
+                {
+                    Фамилия = juridicalEntity.Surname,
+                    Имя = juridicalEntity.Name,
+                    Отчество = juridicalEntity.Patronymic
                 };
             }
 

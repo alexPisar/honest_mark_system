@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Reporter.Entities
 {
-    public class OrganizationEmployee
+    public class OrganizationEmployee : Base.IReportEntity<OrganizationEmployee>
     {
         /// <summary>
         /// Должность

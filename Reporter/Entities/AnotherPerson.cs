@@ -6,16 +6,11 @@ using System.Threading.Tasks;
 
 namespace Reporter.Entities
 {
-    public class AnotherPerson
+    public class AnotherPerson : Base.IReportEntity<AnotherPerson>
     {
         /// <summary>
-        /// Представитель организации, которой доверено принятие товаров (груза)
+        /// Представитель организации, или физическое лицо, которому доверено принятие товаров (груза)
         /// </summary>
-        public OrganizationRepresentative OrganizationRepresentative { get; set; }
-
-        /// <summary>
-        /// Физическое лицо, которому доверено принятие товаров (груза)
-        /// </summary>
-        public TrustedIndividual TrustedIndividual { get; set; }
+        public object Item { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Reporter.Entities
 {
-    public class TrustedIndividual
+    public class TrustedIndividual : Base.IReportEntity<TrustedIndividual>
     {
         /// <summary>
         /// Основание, по которому физическому лицу доверено принятие товаров (груза)

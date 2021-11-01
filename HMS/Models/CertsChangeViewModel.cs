@@ -5,14 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using UtilitesLibrary.ModelBase;
 using System.Security.Cryptography.X509Certificates;
+using DataContextManagementUnit.DataAccess.Contexts.Abt;
 using WebSystems.WebClients;
 using UtilitesLibrary.Service;
+using WebSystems;
+using WebSystems.EdoSystems;
 
 namespace HonestMarkSystem.Models
 {
     public class CertsChangeViewModel : ListViewModel<X509Certificate2>, Interfaces.IAuthView
     {
         public RelayCommand CertsChangeViewLoaded => new RelayCommand(o => { SetAuthCertsList(); });
+
+        public IEdoSystem EdoSystem { get; set; }
 
         private void UpdateProperties()
         {
@@ -40,8 +45,8 @@ namespace HonestMarkSystem.Models
                     return false;
                 }
 
-                var edoWebClient = EdoLiteClient.GetInstance();
-                bool result = edoWebClient.Authorization(SelectedItem);
+                EdoSystem = new EdoLiteSystem(SelectedItem);
+                bool result = EdoSystem.Authorization();
                 return result;
             }
             catch(System.Net.WebException webEx)

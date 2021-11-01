@@ -69,13 +69,14 @@ namespace HmsTests
             #region ИнЛицо
             #region ПредОргПрин
 
-            document.AnotherPerson = new Reporter.Entities.AnotherPerson();
-            document.AnotherPerson.OrganizationRepresentative = new Reporter.Entities.OrganizationRepresentative();
-            document.AnotherPerson.OrganizationRepresentative.Position = "Директор";
-            document.AnotherPerson.OrganizationRepresentative.OrgName = "ООО \"ВЛАМУР\"";
-            document.AnotherPerson.OrganizationRepresentative.Surname = "Мигеркин";
-            document.AnotherPerson.OrganizationRepresentative.Name = "Николай";
-            document.AnotherPerson.OrganizationRepresentative.Patronymic = "Игоревич";
+            document.OrganizationEmployeeOrAnotherPerson = new Reporter.Entities.AnotherPerson();
+            var organizationRepresentative = new Reporter.Entities.OrganizationRepresentative();
+            organizationRepresentative.Position = "Директор";
+            organizationRepresentative.OrgName = "ООО \"ВЛАМУР\"";
+            organizationRepresentative.Surname = "Мигеркин";
+            organizationRepresentative.Name = "Николай";
+            organizationRepresentative.Patronymic = "Игоревич";
+            ((Reporter.Entities.AnotherPerson)document.OrganizationEmployeeOrAnotherPerson).Item = organizationRepresentative;
 
             #endregion
             #endregion

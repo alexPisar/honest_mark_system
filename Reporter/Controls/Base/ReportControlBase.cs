@@ -67,6 +67,12 @@ namespace Reporter.Controls.Base
                 return true;
             }
 
+            if(control.GetType() == typeof(ReportSwitchTabControl))
+            {
+                var reportSwitchControl = control as ReportSwitchTabControl;
+                return ValidationControl(reportSwitchControl.SelectedItem, options);
+            }
+
             var itemsControl = control as ItemsControl;
             if(itemsControl != null)
             {
