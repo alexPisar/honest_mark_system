@@ -70,7 +70,7 @@ namespace HonestMarkSystem
             Report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
             Report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
             Report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
-            Report.SignerOrgName = cryptoUtil.ParseCertAttribute(subject, "CN");
+            Report.SignerOrgName = cryptoUtil.ParseCertAttribute(subject, "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
             Report.JuridicalInn = cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0');
             Report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
 
@@ -79,6 +79,12 @@ namespace HonestMarkSystem
             ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Surname = Report.SignerSurname;
             ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Name = Report.SignerName;
             ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Patronymic = Report.SignerPatronymic;
+
+            Report.BasisOfAuthority = "Должностные обязанности";
+            Report.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoResponsibleForRegistrationExecution;
+            Report.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;
+            Report.AcceptResult = Reporter.Enums.AcceptResultEnum.GoodsAcceptedWithoutDiscrepancy;
+            Report.FinSubjectCreator = $"{Report.SignerOrgName}, ИНН: {Report.JuridicalInn}";
             Report.OnAllPropertyChanged();
         }
     }

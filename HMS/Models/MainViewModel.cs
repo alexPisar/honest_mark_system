@@ -36,8 +36,29 @@ namespace HonestMarkSystem.Models
 
         private void Refresh()
         {
-            object[] parameters;
-            var documents = GetNewDocuments(out parameters);
+            object[] parameters = null;
+
+            List<IEdoSystemDocument<string>> documents = new List<IEdoSystemDocument<string>>();
+            try
+            {
+                documents = GetNewDocuments(out parameters);
+            }
+            catch(System.Net.WebException webEx)
+            {
+                string errorMessage = _log.GetRecursiveInnerException(webEx);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошола ошибка получения документов на удалённом сервере.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = _log.GetRecursiveInnerException(ex);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошола ошибка получения документов.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
 
             if (documents.Count > 0)
             {
