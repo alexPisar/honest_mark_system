@@ -76,6 +76,45 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .Property(p => p.IdDocPurchasing)
                 .HasColumnName("ID_DOC_PURCHASING");
 
+            this
+                .Property(p => p.SenderEdoId)
+                .HasColumnName("SENDER_EDO_ID")
+                .HasMaxLength(100);
+
+            this
+                .Property(p => p.ReceiverEdoId)
+                .HasColumnName("RECEIVER_EDO_ID")
+                .HasMaxLength(100);
+
+            this
+                .Property(p => p.SenderEdoOrgName)
+                .HasColumnName("SENDER_EDO_ORG_NAME")
+                .HasMaxLength(200);
+
+            this
+                .Property(p => p.SenderEdoOrgInn)
+                .HasColumnName("SENDER_EDO_ORG_INN")
+                .HasMaxLength(20);
+
+            this
+                .Property(p => p.SenderEdoOrgId)
+                .HasColumnName("SENDER_EDO_ORG_ID")
+                .HasMaxLength(10);
+
+            this
+                .Property(p => p.FileName)
+                .HasColumnName("FILE_NAME")
+                .HasMaxLength(500);
+
+            this
+                .Property(p => p.IsSigned)
+                .HasColumnName("IS_SIGNED");
+
+            this
+                .Property(p => p.SignatureFileName)
+                .HasColumnName("SIGNATURE_FILE_NAME")
+                .HasMaxLength(500);
+
             OnCreated();
         }
 

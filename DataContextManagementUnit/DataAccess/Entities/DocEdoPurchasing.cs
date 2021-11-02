@@ -41,6 +41,22 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual string ReceiverName { get; set; }
 
         public virtual decimal? IdDocPurchasing { get; set; }
+
+        public virtual string SenderEdoId { get; set; }
+
+        public virtual string ReceiverEdoId { get; set; }
+
+        public virtual string SenderEdoOrgName { get; set; }
+
+        public virtual string SenderEdoOrgInn { get; set; }
+
+        public virtual string SenderEdoOrgId { get; set; }
+
+        public virtual string FileName { get; set; }
+
+        public virtual short? IsSigned { get; set; }
+
+        public virtual string SignatureFileName { get; set; }
         #endregion
 
         #region Extensibility Method Definitions
