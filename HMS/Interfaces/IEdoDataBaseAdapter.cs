@@ -12,7 +12,7 @@ namespace HonestMarkSystem.Interfaces
     {
         void InitializeContext();
 
-        object AddDocumentToDataBase(IEdoSystemDocument<string> document, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None);
+        object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None);
 
         bool ExistsDocumentInDataBase(IEdoSystemDocument<string> document);
 

@@ -14,6 +14,8 @@ namespace WebSystems
         public abstract List<Models.IEdoSystemDocument<string>> GetDocuments(DocumentInOutType inOutType = DocumentInOutType.None, int docCount = 0, DateTime? fromDate = null, DateTime? toDate = null);
         public abstract byte[] GetDocumentContent(Models.IEdoSystemDocument<string> document, DocumentInOutType inOutType = DocumentInOutType.None);
 
+        public abstract string ProgramVersion { get; }
+
         public IEdoSystem(X509Certificate2 certificate)
         {
             _certificate = certificate;

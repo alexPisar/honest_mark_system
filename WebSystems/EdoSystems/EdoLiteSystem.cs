@@ -14,6 +14,8 @@ namespace WebSystems.EdoSystems
             _webClient = WebClients.EdoLiteClient.GetInstance();
         }
 
+        public override string ProgramVersion => "EDOLite 1.0";
+
         public override List<Models.IEdoSystemDocument<string>> GetDocuments(DocumentInOutType inOutType = DocumentInOutType.None, int docCount = 0, DateTime? fromDate = null, DateTime? toDate = null)
         {
             var webClient = (WebClients.EdoLiteClient)_webClient;

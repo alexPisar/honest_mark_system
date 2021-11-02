@@ -58,6 +58,28 @@ namespace Reporter.Reports
         public string ReceiverEdoId { get; set; }
 
         #endregion
+
+        #region Документ
+        /// <summary>
+        /// Дата и время формирования файла обмена счета-фактуры (информации продавца)
+        /// </summary>
+        public DateTime CreateDate { get; set; }
+
+        /// <summary>
+        /// Функция
+        /// </summary>
+        public string Function { get; set; }
+
+        /// <summary>
+        /// Наименование первичного документа, определенное организацией (согласованное сторонами сделки)
+        /// </summary>
+        public string DocName { get; set; }
+
+        /// <summary>
+        /// Порядковый номер счета-фактуры (строка 1 счета-фактуры), документа об отгрузке товаров (выполнении работ), передаче имущественных прав (документа об оказании услуг)
+        /// </summary>
+        public string DocNumber { get; set; }
+        #endregion
         #endregion
 
         public void Parse(byte[] content)
@@ -82,6 +104,27 @@ namespace Reporter.Reports
                 EdoId = infoAboutParticipants?.СвОЭДОтпр?.ИдЭДО;
                 SenderEdoId = infoAboutParticipants.ИдОтпр;
                 ReceiverEdoId = infoAboutParticipants.ИдПол;
+            }
+
+            var document = xsdDocument.Документ;
+            if (document != null)
+            {
+                if (!(string.IsNullOrEmpty(document.ДатаИнфПр) || string.IsNullOrEmpty(document.ВремИнфПр)))
+                    CreateDate = DateTime.ParseExact($"{document.ДатаИнфПр} {document.ВремИнфПр}", "dd.MM.yyyy HH.mm.ss", System.Globalization.CultureInfo.InvariantCulture);
+
+                if (document.Функция == ФайлДокументФункция.СЧФ)
+                    Function = "СЧФ";
+                else if (document.Функция == ФайлДокументФункция.СЧФДОП)
+                    Function = "СЧФДОП";
+                else if (document.Функция == ФайлДокументФункция.ДОП)
+                    Function = "ДОП";
+                else if (document.Функция == ФайлДокументФункция.СвРК)
+                    Function = "СвРК";
+                else if (document.Функция == ФайлДокументФункция.СвЗК)
+                    Function = "СвЗК";
+
+                DocName = document.НаимДокОпр;
+                DocNumber = document.СвСчФакт?.НомерСчФ;
             }
         }
     }

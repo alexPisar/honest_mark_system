@@ -20,14 +20,16 @@ namespace HonestMarkSystem.Models
 
         private IEdoSystem _edoSystem;
         private Interfaces.IEdoDataBaseAdapter<AbtDbContext> _dataBaseAdapter;
+        private UtilitesLibrary.Service.CryptoUtil _cryptoUtil;
 
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
 
-        public MainViewModel(IEdoSystem edoSystem, Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter)
+        public MainViewModel(IEdoSystem edoSystem, Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter, UtilitesLibrary.Service.CryptoUtil cryptoUtil)
         {
             _edoSystem = edoSystem;
+            _cryptoUtil = cryptoUtil;
             _dataBaseAdapter = dataBaseAdapter;
             _dataBaseAdapter.InitializeContext();
 
@@ -66,12 +68,13 @@ namespace HonestMarkSystem.Models
                 {
                     foreach (var doc in documents)
                     {
-                        SaveNewDocument(doc);
+                        byte[] docContentBytes;
+                        SaveNewDocument(doc, out docContentBytes);
 
                         var docFromDb = (DocEdoPurchasing)_dataBaseAdapter.GetDocumentFromDb(doc);
 
                         if (docFromDb == null)
-                            _dataBaseAdapter.AddDocumentToDataBase(doc, DocumentInOutType.Inbox);
+                            _dataBaseAdapter.AddDocumentToDataBase(doc, docContentBytes, DocumentInOutType.Inbox);
                     }
                     _dataBaseAdapter.Commit();
                     SaveParameters(parameters);
@@ -147,8 +150,17 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            var signWindow = new BuyerSignWindow();
+            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
+            {
+                System.Windows.MessageBox.Show(
+                    "Не найден файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var signWindow = new BuyerSignWindow(_cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
             signWindow.SetDefaultParameters(_edoSystem.GetCertSubject(), SelectedItem);
+            signWindow.Report.EdoProgramVersion = _edoSystem.ProgramVersion;
+
             if (signWindow.ShowDialog() == true)
             {
                 signWindow.OnAllPropertyChanged();
@@ -199,7 +211,7 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        public void SaveNewDocument(IEdoSystemDocument<string> document)
+        public void SaveNewDocument(IEdoSystemDocument<string> document, out byte[] fileBytes)
         {
             if(!Directory.Exists(edoFilesPath))
                 Directory.CreateDirectory(edoFilesPath);
@@ -207,7 +219,7 @@ namespace HonestMarkSystem.Models
             string dirPath = $"{edoFilesPath}//{document.EdoId}";
             Directory.CreateDirectory(dirPath);
 
-            var fileBytes = _edoSystem.GetDocumentContent(document, DocumentInOutType.Inbox);
+            fileBytes = _edoSystem.GetDocumentContent(document, DocumentInOutType.Inbox);
 
             if (_edoSystem.GetType() == typeof(EdoLiteSystem))
                 if (document.DocType == (int)EdoLiteDocumentType.DpUkdDis || document.DocType == (int)EdoLiteDocumentType.DpUkdDisInfoBuyer

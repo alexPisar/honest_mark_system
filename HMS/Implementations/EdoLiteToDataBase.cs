@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DataContextManagementUnit.DataAccess.Contexts.Abt;
 using HonestMarkSystem.Interfaces;
 using WebSystems.Models;
+using Reporter.Reports;
 
 namespace HonestMarkSystem.Implementations
 {
@@ -26,9 +27,12 @@ namespace HonestMarkSystem.Implementations
                 .ToList();
         }
 
-        public object AddDocumentToDataBase(IEdoSystemDocument<string> document, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
+        public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
         {
             var doc = (EdoLiteDocuments)document;
+
+            var reporterDll = new Reporter.ReporterDll();
+            var report = reporterDll.ParseDocument<UniversalTransferSellerDocument>(content);
 
             var newDocInDb = new DocEdoPurchasing()
             {
@@ -40,7 +44,13 @@ namespace HonestMarkSystem.Implementations
                 Name = doc.Number,
                 TotalPrice = doc.TotalPrice,
                 TotalVatAmount = doc.TotalVatAmount,
-                IdDocType = doc.DocType
+                IdDocType = doc.DocType,
+                SenderEdoId = report.SenderEdoId,
+                ReceiverEdoId = report.ReceiverEdoId,
+                SenderEdoOrgName = report.EdoProviderOrgName,
+                SenderEdoOrgInn = report.ProviderInn,
+                SenderEdoOrgId = report.EdoId,
+                FileName = report.FileName
             };
 
             if (inOutType == WebSystems.DocumentInOutType.Inbox)

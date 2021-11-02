@@ -292,7 +292,7 @@ namespace Reporter.Reports
                 return;
 
             if(!string.IsNullOrEmpty(buyerInfo.ДатаИнфПок))
-                CreateBuyerFileDate = DateTime.ParseExact($"{buyerInfo.ДатаИнфПок} {buyerInfo.ВремИнфПок}", "dd.MM.yyyy hh.mm.ss", System.Globalization.CultureInfo.InvariantCulture);
+                CreateBuyerFileDate = DateTime.ParseExact($"{buyerInfo.ДатаИнфПок} {buyerInfo.ВремИнфПок}", "dd.MM.yyyy HH.mm.ss", System.Globalization.CultureInfo.InvariantCulture);
 
             FinSubjectCreator = buyerInfo.НаимЭконСубСост;
             ReasonOfCreateFile = buyerInfo.ОснДоверОргСост;
@@ -305,7 +305,7 @@ namespace Reporter.Reports
                 Signature = sellerInfo.ЭП?.FirstOrDefault();
 
                 if (!string.IsNullOrEmpty(sellerInfo.ДатаФайлИнфПр))
-                    CreateSellerFileDate = DateTime.ParseExact($"{sellerInfo.ДатаФайлИнфПр} {sellerInfo.ВремФайлИнфПр}", "dd.MM.yyyy hh.mm.ss", System.Globalization.CultureInfo.InvariantCulture);
+                    CreateSellerFileDate = DateTime.ParseExact($"{sellerInfo.ДатаФайлИнфПр} {sellerInfo.ВремФайлИнфПр}", "dd.MM.yyyy HH.mm.ss", System.Globalization.CultureInfo.InvariantCulture);
             }
 
             var contentOfEconomicLife = buyerInfo?.СодФХЖ4;
@@ -488,14 +488,14 @@ namespace Reporter.Reports
             xsdDocument.СвУчДокОбор.ИдПол = ReceiverEdoId;
 
             xsdDocument.ИнфПок = new ФайлИнфПок();
-            xsdDocument.ИнфПок.ВремИнфПок = CreateBuyerFileDate.ToString("hh.mm.ss");
+            xsdDocument.ИнфПок.ВремИнфПок = CreateBuyerFileDate.ToString("HH.mm.ss");
             xsdDocument.ИнфПок.ДатаИнфПок = CreateBuyerFileDate.ToString("dd.MM.yyyy");
             xsdDocument.ИнфПок.НаимЭконСубСост = FinSubjectCreator;
             xsdDocument.ИнфПок.ОснДоверОргСост = ReasonOfCreateFile;
 
             xsdDocument.ИнфПок.ИдИнфПрод = new ФайлИнфПокИдИнфПрод();
             xsdDocument.ИнфПок.ИдИнфПрод.ИдФайлИнфПр = SellerFileId;
-            xsdDocument.ИнфПок.ИдИнфПрод.ВремФайлИнфПр = CreateSellerFileDate.ToString("hh.mm.ss");
+            xsdDocument.ИнфПок.ИдИнфПрод.ВремФайлИнфПр = CreateSellerFileDate.ToString("HH.mm.ss");
             xsdDocument.ИнфПок.ИдИнфПрод.ДатаФайлИнфПр = CreateSellerFileDate.ToString("dd.MM.yyyy");
             xsdDocument.ИнфПок.ИдИнфПрод.ЭП = new string[] { Signature };
 

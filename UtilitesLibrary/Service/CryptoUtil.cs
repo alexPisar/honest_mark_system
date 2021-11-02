@@ -76,5 +76,10 @@ namespace UtilitesLibrary.Service
                 return result;
             }
         }
+
+        public byte[] Sign(byte[] fileContent, bool isDetached)
+        {
+            return _crypto.Sign(fileContent, isDetached);
+        }
     }
 }

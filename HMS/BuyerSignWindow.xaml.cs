@@ -21,12 +21,16 @@ namespace HonestMarkSystem
     public partial class BuyerSignWindow : Window
     {
         private string _prefixFileName = "ON_NSCHFDOPPOKMARK";
+        private string _filePath;
+        private UtilitesLibrary.Service.CryptoUtil _cryptoUtil;
 
-        public BuyerSignWindow()
+        public BuyerSignWindow(UtilitesLibrary.Service.CryptoUtil cryptoUtil, string filePath)
         {
             InitializeComponent();
             reportControl.OnCancelButtonClick += CancelButtonClick;
             reportControl.OnChangeButtonClick += SendButtonClick;
+            _cryptoUtil = cryptoUtil;
+            _filePath = filePath;
         }
 
         public void OnAllPropertyChanged()
@@ -53,6 +57,9 @@ namespace HonestMarkSystem
 
             if (validationResult)
             {
+                var docSellerContent = System.IO.File.ReadAllBytes(_filePath);
+                Report.Signature = GetSignatureStringForReport(docSellerContent);
+
                 DialogResult = true;
                 Close();
             }
@@ -61,6 +68,13 @@ namespace HonestMarkSystem
                 var errorsWindow = new ErrorsWindow("Ошибка валидации", reportControl.ErrorsList);
                 errorsWindow.ShowDialog();
             }
+        }
+
+        private string GetSignatureStringForReport(byte[] fileBytes)
+        {
+            var signature = _cryptoUtil.Sign(fileBytes, true);
+            var signatureAsBase64 = Convert.ToBase64String(signature);
+            return signatureAsBase64;
         }
 
         public void SetDefaultParameters(string subject, DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing dataBaseObject)
@@ -95,6 +109,17 @@ namespace HonestMarkSystem
             Report.SenderEdoId = dataBaseObject.ReceiverEdoId;
             Report.ReceiverEdoId = dataBaseObject.SenderEdoId;
             Report.FileName = $"{_prefixFileName}_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+
+            var reporterDll = new Reporter.ReporterDll();
+            var docSellerContent = System.IO.File.ReadAllBytes(_filePath);
+            var sellerReport = reporterDll.ParseDocument<UniversalTransferSellerDocument>(docSellerContent);
+
+            Report.CreateSellerFileDate = sellerReport.CreateDate;
+            Report.DocName = sellerReport.DocName;
+            Report.Function = sellerReport.Function;
+            Report.SellerInvoiceNumber = sellerReport.DocNumber;
+            Report.DateReceive = DateTime.Now;
+            Report.SellerInvoiceDate = sellerReport.CreateDate;
 
             Report.OnAllPropertyChanged();
         }
