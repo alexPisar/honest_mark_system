@@ -20,6 +20,8 @@ namespace HonestMarkSystem
     /// </summary>
     public partial class BuyerSignWindow : Window
     {
+        private string _prefixFileName = "ON_NSCHFDOPPOKMARK";
+
         public BuyerSignWindow()
         {
             InitializeComponent();
@@ -85,6 +87,15 @@ namespace HonestMarkSystem
             Report.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;
             Report.AcceptResult = Reporter.Enums.AcceptResultEnum.GoodsAcceptedWithoutDiscrepancy;
             Report.FinSubjectCreator = $"{Report.SignerOrgName}, ИНН: {Report.JuridicalInn}";
+
+            Report.SellerFileId = dataBaseObject.FileName;
+            Report.EdoProviderOrgName = dataBaseObject.SenderEdoOrgName;
+            Report.ProviderInn = dataBaseObject.SenderEdoOrgInn;
+            Report.EdoId = dataBaseObject.SenderEdoOrgId;
+            Report.SenderEdoId = dataBaseObject.ReceiverEdoId;
+            Report.ReceiverEdoId = dataBaseObject.SenderEdoId;
+            Report.FileName = $"{_prefixFileName}_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+
             Report.OnAllPropertyChanged();
         }
     }

@@ -140,12 +140,21 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if(SelectedItem.IsSigned == 1)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ ранее уже был подписан и отправлен.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             var signWindow = new BuyerSignWindow();
             signWindow.SetDefaultParameters(_edoSystem.GetCertSubject(), SelectedItem);
-            signWindow.ShowDialog();
-            signWindow.OnAllPropertyChanged();
+            if (signWindow.ShowDialog() == true)
+            {
+                signWindow.OnAllPropertyChanged();
 
-            var report = signWindow.Report;
+                var report = signWindow.Report;
+            }
         }
 
         private void UpdateProperties()
