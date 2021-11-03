@@ -13,7 +13,14 @@ namespace Reporter.Controls.Base
 {
     public class ReportControlBase : UserControl
     {
-        public List<string> ErrorsList { get; set; }
+        protected virtual string UrlXmlValidation { get; }
+
+        private XmlValidation _validationXmlObj = new XmlValidation();
+
+        public List<string> ErrorsValidationReport { get; set; }
+
+        public List<string> ErrorsValidationXml => _validationXmlObj.Errors;
+        public List<string> WarningsValidationXml => _validationXmlObj.Warnings;
 
         protected override void OnContentChanged(object oldContent, object newContent)
         {
@@ -50,7 +57,7 @@ namespace Reporter.Controls.Base
                 if (repComboBox.IsRequired && (value == null || value == 0))
                 {
                     repComboBox.Background = System.Windows.Media.Brushes.Pink;
-                    ErrorsList.Add($"Не заполнено поле '{repComboBox.FieldName}'");
+                    ErrorsValidationReport.Add($"Не заполнено поле '{repComboBox.FieldName}'");
                     return false;
                 }
 
@@ -59,7 +66,7 @@ namespace Reporter.Controls.Base
                     bool result = CSharpScript.EvaluateAsync<bool>(repComboBox.Expression, options, Report).Result;
 
                     if (!result)
-                        ErrorsList.Add(repComboBox.ErrorMessage);
+                        ErrorsValidationReport.Add(repComboBox.ErrorMessage);
 
                     return result;
                 }
@@ -91,7 +98,7 @@ namespace Reporter.Controls.Base
                 if(repTextBox.IsRequired && string.IsNullOrEmpty(repTextBox.Text))
                 {
                     repTextBox.Background = System.Windows.Media.Brushes.Pink;
-                    ErrorsList.Add($"Не заполнено поле '{repTextBox.FieldName}'");
+                    ErrorsValidationReport.Add($"Не заполнено поле '{repTextBox.FieldName}'");
                     return false;
                 }
 
@@ -100,7 +107,7 @@ namespace Reporter.Controls.Base
                     var result = Regex.IsMatch(repTextBox.Text ?? "", repTextBox.Mask);
 
                     if (!result)
-                        ErrorsList.Add($"Значение поля '{repTextBox.FieldName}' не соответствует формату.");
+                        ErrorsValidationReport.Add($"Значение поля '{repTextBox.FieldName}' не соответствует формату.");
 
                     return result;
                 }
@@ -110,7 +117,7 @@ namespace Reporter.Controls.Base
                     bool result = CSharpScript.EvaluateAsync<bool>(repTextBox.Expression, options, Report).Result;
 
                     if (!result)
-                        ErrorsList.Add(repTextBox.ErrorMessage);
+                        ErrorsValidationReport.Add(repTextBox.ErrorMessage);
 
                     return result;
                 }
@@ -125,13 +132,21 @@ namespace Reporter.Controls.Base
 
         public virtual bool ValidateReport()
         {
-            ErrorsList = new List<string>();
+            ErrorsValidationReport = new List<string>();
             var options = ScriptOptions.Default.WithImports(nameof(Reporter)).AddReferences(this.GetType().Assembly);
             options = options.AddImports("Reporter.Enums").AddImports("Reporter.Reports");
 
             var contentControl = this.Content;
 
             return ValidationControl(contentControl, options);
+        }
+
+        public bool ValidateXml()
+        {
+            var xml = Report.GetXmlContent();
+
+            var xmlStream = new System.IO.StringReader(xml);
+            return _validationXmlObj.ValidationXmlByXsd(xmlStream, UrlXmlValidation);
         }
 
         public virtual void SetDefaults()

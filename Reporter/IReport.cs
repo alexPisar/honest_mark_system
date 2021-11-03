@@ -11,5 +11,7 @@ namespace Reporter
         void Parse(string content);
 
         void Parse(byte[] content);
+
+        string GetXmlContent();
     }
 }

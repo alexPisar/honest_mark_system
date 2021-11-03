@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Reporter.Reports;
+using UtilitesLibrary.Service;
 
 namespace HonestMarkSystem
 {
@@ -23,10 +24,10 @@ namespace HonestMarkSystem
         private string _prefixBuyerFileName = "ON_NSCHFDOPPOK";
         private string _prefixSellerFileName = "ON_NSCHFDOPPR";
         private string _filePath;
-        private UtilitesLibrary.Service.CryptoUtil _cryptoUtil;
-        private UtilitesLibrary.Service.UtilityLog _log = UtilitesLibrary.Service.UtilityLog.GetInstance();
+        private CryptoUtil _cryptoUtil;
+        private UtilityLog _log = UtilityLog.GetInstance();
 
-        public BuyerSignWindow(UtilitesLibrary.Service.CryptoUtil cryptoUtil, string filePath)
+        public BuyerSignWindow(CryptoUtil cryptoUtil, string filePath)
         {
             InitializeComponent();
             reportControl.OnCancelButtonClick += CancelButtonClick;
@@ -62,13 +63,22 @@ namespace HonestMarkSystem
             {
                 var docSellerContent = System.IO.File.ReadAllBytes(_filePath);
                 Report.Signature = GetSignatureStringForReport(docSellerContent);
+                Report.DateReceive = DateTime.Now;
 
-                DialogResult = true;
-                Close();
+                if (reportControl.ValidateXml())
+                {
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    var errorsWindow = new ErrorsWindow("Ошибка валидации файла по xsd схеме.", reportControl.ErrorsValidationXml);
+                    errorsWindow.ShowDialog();
+                }
             }
             else
             {
-                var errorsWindow = new ErrorsWindow("Ошибка валидации", reportControl.ErrorsList);
+                var errorsWindow = new ErrorsWindow("Ошибка валидации", reportControl.ErrorsValidationReport);
                 errorsWindow.ShowDialog();
             }
         }
@@ -129,14 +139,13 @@ namespace HonestMarkSystem
 
             Report.CreateBuyerFileDate = DateTime.Now;
 
-            var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil();
-            var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
+            var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
             Report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
             Report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
-            Report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
-            Report.SignerOrgName = cryptoUtil.ParseCertAttribute(subject, "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
-            Report.JuridicalInn = cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0');
-            Report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
+            Report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+            Report.SignerOrgName = _cryptoUtil.ParseCertAttribute(subject, "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
+            Report.JuridicalInn = _cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0');
+            Report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
 
             ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).OrgName = Report.SignerOrgName;
             ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Position = Report.SignerPosition;

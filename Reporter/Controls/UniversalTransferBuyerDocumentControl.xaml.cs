@@ -23,6 +23,8 @@ namespace Reporter.Controls
     /// </summary>
     public partial class UniversalTransferBuyerDocumentControl : Base.ReportControlBase
     {
+        protected override string UrlXmlValidation => "https://data.nalog.ru/html/sites/www.new.nalog.ru/xsd/ON_NSCHFDOPPOK_1_997_02_05_01_02.xsd";
+
         public UniversalTransferBuyerDocumentControl()
         {
             InitializeComponent();

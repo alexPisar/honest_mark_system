@@ -82,6 +82,7 @@ namespace Reporter.Reports
         #endregion
         #endregion
 
+        #region Parse Methods
         public void Parse(byte[] content)
         {
             var xmlString = Encoding.GetEncoding(1251).GetString(content);
@@ -127,5 +128,13 @@ namespace Reporter.Reports
                 DocNumber = document.СвСчФакт?.НомерСчФ;
             }
         }
+        #endregion
+
+        #region GetXmlContent
+        public string GetXmlContent()
+        {
+            return null;
+        }
+        #endregion
     }
 }
