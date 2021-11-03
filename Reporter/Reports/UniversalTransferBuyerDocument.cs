@@ -676,7 +676,7 @@ namespace Reporter.Reports
                 };
             }
 
-            string xml = Xml.SerializeEntity<Файл>(xsdDocument);
+            string xml = Xml.SerializeEntity<Файл>(xsdDocument, Encoding.GetEncoding(1251));
             return xml;
         }
 

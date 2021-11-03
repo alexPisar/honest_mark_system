@@ -165,7 +165,10 @@ namespace HonestMarkSystem.Models
             {
                 signWindow.OnAllPropertyChanged();
 
-                var report = signWindow.Report;
+                var xml = signWindow.Report.GetXmlContent();
+                var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
+                var signature = _cryptoUtil.Sign(fileBytes, true);
+                var signatureAsBase64 = Convert.ToBase64String(signature);
             }
         }
 
