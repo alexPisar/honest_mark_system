@@ -169,6 +169,24 @@ namespace HonestMarkSystem.Models
                 var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
                 var signature = _cryptoUtil.Sign(fileBytes, true);
                 var signatureAsBase64 = Convert.ToBase64String(signature);
+
+                File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signWindow.Report.FileName}.xml", fileBytes);
+                File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signWindow.Report.FileName}.xml.sig", signature);
+
+                var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+
+                string localPath = directory.Name;
+                while (directory.Parent != null)
+                {
+                    directory = directory.Parent;
+
+                    if(directory.Parent == null)
+                        localPath = $"{directory.Name.Replace(":\\", ":")}/{localPath}";
+                    else
+                        localPath = $"{directory.Name}/{localPath}";
+                }
+
+                string content = $"@/{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{signWindow.Report.FileName}.xml";
             }
         }
 
