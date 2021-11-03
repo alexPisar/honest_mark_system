@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HonestMarkSystem"
         xmlns:util="clr-namespace:UtilitesLibrary.Controls;assembly=UtilitesLibrary"
-        mc:Ignorable="d"
-        Title="Загрузка" Closed="LoadWindow_Closed" Loaded="LoadWindow_Loaded" Height="140" Width="360">
+        mc:Ignorable="d" ResizeMode="NoResize"
+        Title="Загрузка" Closed="LoadWindow_Closed" Loaded="LoadWindow_Loaded" Height="140" Width="390">
     <Grid>
         <util:LoadControl x:Name="loadControl"></util:LoadControl>
     </Grid>

@@ -19,10 +19,13 @@ namespace HonestMarkSystem
     /// </summary>
     public partial class LoadWindow : Window
     {
-        public LoadWindow(string loadText)
+        public LoadWindow(string loadText = null)
         {
             InitializeComponent();
-            loadControl.LoadText = loadText;
+
+            if(!string.IsNullOrEmpty(loadText))
+                loadControl.LoadText = loadText;
+
             loadControl.OkButtonClick += this.OkButtonClick;
         }
 

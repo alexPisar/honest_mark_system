@@ -14,7 +14,7 @@ namespace UtilitesLibrary.ModelBase
 
         public LoadModel()
         {
-            PathToImage = "pack://siteoforigin:,,,/Resources/download.gif";
+            PathToImage = "/UtilitesLibrary;component/Resources/download.gif";
             OkEnable = false;
             Text = "Подождите, идёт загрузка данных";
         }

@@ -6,7 +6,7 @@
              xmlns:gif="http://wpfanimatedgif.codeplex.com"
              xmlns:local="clr-namespace:UtilitesLibrary.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="135" d:DesignWidth="360">
+             d:DesignHeight="135" d:DesignWidth="390">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="4*"/>
@@ -17,7 +17,7 @@
             <Grid Height="50" Width="50" Margin="5 5">
                 <Image gif:ImageBehavior.AnimatedSource="{Binding PathToImage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             </Grid>
-            <Button x:Name="OK" Content="OK" HorizontalAlignment="Right" Margin="10 10" VerticalAlignment="Top" Width="53" Height="21" IsEnabled="{Binding OkEnable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Click="OK_Click" RenderTransformOrigin="0.445,1.939"/>
+            <Button x:Name="OK" Content="OK" HorizontalAlignment="Right" Margin="10 10" VerticalAlignment="Top" Width="47" Height="21" IsEnabled="{Binding OkEnable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Click="OK_Click" RenderTransformOrigin="0.445,1.939"/>
         </StackPanel>
     </Grid>
 </UserControl>

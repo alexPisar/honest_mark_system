@@ -20,15 +20,18 @@ namespace HonestMarkSystem
     /// </summary>
     public partial class BuyerSignWindow : Window
     {
-        private string _prefixFileName = "ON_NSCHFDOPPOKMARK";
+        private string _prefixBuyerFileName = "ON_NSCHFDOPPOK";
+        private string _prefixSellerFileName = "ON_NSCHFDOPPR";
         private string _filePath;
         private UtilitesLibrary.Service.CryptoUtil _cryptoUtil;
+        private UtilitesLibrary.Service.UtilityLog _log = UtilitesLibrary.Service.UtilityLog.GetInstance();
 
         public BuyerSignWindow(UtilitesLibrary.Service.CryptoUtil cryptoUtil, string filePath)
         {
             InitializeComponent();
             reportControl.OnCancelButtonClick += CancelButtonClick;
             reportControl.OnChangeButtonClick += SendButtonClick;
+            reportControl.OnSaveButtonClick += SaveButtonClick;
             _cryptoUtil = cryptoUtil;
             _filePath = filePath;
         }
@@ -70,6 +73,49 @@ namespace HonestMarkSystem
             }
         }
 
+        private void SaveButtonClick(object sender, RoutedEventArgs e)
+        {
+            var changePathDialog = new Microsoft.Win32.SaveFileDialog();
+            changePathDialog.Title = "Сохранение файла";
+            changePathDialog.Filter = "XML Files|*.xml";
+
+            try
+            {
+                var docSellerContent = System.IO.File.ReadAllBytes(_filePath);
+                Report.Signature = GetSignatureStringForReport(docSellerContent);
+                Report.DateReceive = DateTime.Now;
+                changePathDialog.FileName = Report.FileName;
+
+                if (changePathDialog.ShowDialog() ?? false)
+                {
+                    var xml = Report.GetXmlContent();
+                    var content = Encoding.GetEncoding(1251).GetBytes(xml);
+                    System.IO.File.WriteAllBytes(changePathDialog.FileName, content);
+
+                    var loadWindow = new LoadWindow();
+                    loadWindow.AfterSuccessfullLoading("Файл успешно сохранён.");
+                    loadWindow.ShowDialog();
+
+                    _log.Log("Файл Xml покупателя успешно сохранён.");
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorWindow = new ErrorsWindow(
+                        "Произошла ошибка сохранения файла УПД покупателя.",
+                        new List<string>(
+                            new string[]
+                            {
+                                    ex.Message,
+                                    ex.StackTrace
+                            }
+                            ));
+
+                errorWindow.ShowDialog();
+                _log.Log("Exception: " + _log.GetRecursiveInnerException(ex));
+            }
+        }
+
         private string GetSignatureStringForReport(byte[] fileBytes)
         {
             var signature = _cryptoUtil.Sign(fileBytes, true);
@@ -80,6 +126,8 @@ namespace HonestMarkSystem
         public void SetDefaultParameters(string subject, DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing dataBaseObject)
         {
             reportControl.SetDefaults();
+
+            Report.CreateBuyerFileDate = DateTime.Now;
 
             var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil();
             var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
@@ -108,7 +156,13 @@ namespace HonestMarkSystem
             Report.EdoId = dataBaseObject.SenderEdoOrgId;
             Report.SenderEdoId = dataBaseObject.ReceiverEdoId;
             Report.ReceiverEdoId = dataBaseObject.SenderEdoId;
-            Report.FileName = $"{_prefixFileName}_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+
+            if(dataBaseObject.FileName.StartsWith($"{_prefixSellerFileName}MARK"))
+                Report.FileName = $"{_prefixBuyerFileName}MARK_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+            else if(dataBaseObject.FileName.StartsWith($"{_prefixSellerFileName}PROS"))
+                Report.FileName = $"{_prefixBuyerFileName}PROS_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+            else
+                Report.FileName = $"{_prefixBuyerFileName}_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
 
             var reporterDll = new Reporter.ReporterDll();
             var docSellerContent = System.IO.File.ReadAllBytes(_filePath);
@@ -118,7 +172,6 @@ namespace HonestMarkSystem
             Report.DocName = sellerReport.DocName;
             Report.Function = sellerReport.Function;
             Report.SellerInvoiceNumber = sellerReport.DocNumber;
-            Report.DateReceive = DateTime.Now;
             Report.SellerInvoiceDate = sellerReport.CreateDate;
 
             Report.OnAllPropertyChanged();

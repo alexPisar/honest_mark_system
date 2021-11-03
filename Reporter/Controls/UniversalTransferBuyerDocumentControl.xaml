@@ -230,6 +230,7 @@
         </GroupBox>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
             <Button Content="Подписать и отправить" Margin="5 5" Click="ChangeButton_Click"></Button>
+            <Button Content="Сохранить" Margin="5 5" Click="SaveButton_Click"></Button>
             <Button Content="Отмена" Margin="5 5" Click="CancelButton_Click"></Button>
         </StackPanel>
     </Grid>

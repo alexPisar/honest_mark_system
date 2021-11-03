@@ -31,7 +31,7 @@ namespace UtilitesLibrary.Controls
         private void SetSuccessFullLoad(string text = null)
         {
             ((ModelBase.LoadModel)DataContext).Text = text ?? "Загрузка завершена успешно.";
-            ((ModelBase.LoadModel)DataContext).PathToImage = "pack://siteoforigin:,,,/Resources/ok.png";
+            ((ModelBase.LoadModel)DataContext).PathToImage = "/UtilitesLibrary;component/Resources/OK.png";
             ((ModelBase.LoadModel)DataContext).OkEnable = true;
             ((ModelBase.LoadModel)DataContext).OnAllPropertyChanged();
         }

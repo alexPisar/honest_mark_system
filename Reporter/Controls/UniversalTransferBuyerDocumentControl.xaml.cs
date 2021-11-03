@@ -31,6 +31,7 @@ namespace Reporter.Controls
 
         public EventHandler<RoutedEventArgs> OnCancelButtonClick;
         public EventHandler<RoutedEventArgs> OnChangeButtonClick;
+        public EventHandler<RoutedEventArgs> OnSaveButtonClick;
 
         public override IReport Report
         {
@@ -69,6 +70,11 @@ namespace Reporter.Controls
             };
             ((UniversalTransferBuyerDocument)DataContext).OnPropertyChanged("OrganizationEmployeeOrAnotherPerson");
             ((UniversalTransferBuyerDocument)DataContext).OnPropertyChanged("OrganizationEmployeeOrAnotherPerson.Item");
+        }
+
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            OnSaveButtonClick?.Invoke(sender, e);
         }
     }
 }
