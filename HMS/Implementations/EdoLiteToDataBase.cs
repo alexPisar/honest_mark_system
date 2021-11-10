@@ -126,15 +126,16 @@ namespace HonestMarkSystem.Implementations
                     .FirstOrDefault(b => b.BarCode == barCode && b.IsPrimary == false)?
                     .IdGood;
 
+                if (idGood == null)
+                    throw new Exception($"Товара со штрихкодом {barCode} нет в базе данных.");
+
                 var label = new DocGoodsDetailsLabels
                 {
                     IdDoc = idDoc,
                     DmLabel = markedCode,
+                    IdGood = idGood.Value,
                     InsertDateTime = DateTime.Now
                 };
-
-                if (idGood != null)
-                    label.IdGood = idGood.Value;
 
                 _abt.DocGoodsDetailsLabels.Add(label);
             }
