@@ -112,8 +112,15 @@ namespace HonestMarkSystem.Implementations
             if(docPurchasing.IdDocLink == null)
                 throw new Exception("Для документа закупок не найден трейдер документ.");
 
+            var idDoc = docPurchasing.IdDocLink.Value;
+
             foreach(var code in markedCodesByBar)
             {
+                var markedCode = code.Key;
+
+                if (_abt.DocGoodsDetailsLabels.FirstOrDefault(l => l.IdDoc == idDoc && l.DmLabel == markedCode) != null)
+                    continue;
+
                 var barCode = code.Value;
                 var idGood = _abt.RefBarCodes?
                     .FirstOrDefault(b => b.BarCode == barCode && b.IsPrimary == false)?
@@ -121,8 +128,8 @@ namespace HonestMarkSystem.Implementations
 
                 var label = new DocGoodsDetailsLabels
                 {
-                    IdDoc = docPurchasing.IdDocLink.Value,
-                    DmLabel = code.Key,
+                    IdDoc = idDoc,
+                    DmLabel = markedCode,
                     InsertDateTime = DateTime.Now
                 };
 
