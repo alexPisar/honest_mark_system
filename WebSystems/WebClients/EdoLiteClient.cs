@@ -147,5 +147,35 @@ namespace WebSystems.WebClients
             var fileBytes = Encoding.GetEncoding(1251).GetBytes(docContentStr);
             return fileBytes;
         }
+
+        public string LoadTitleDocument(string content, string idDocument, string signature)
+        {
+            var authData = new Dictionary<string, string>();
+            authData.Add("Authorization", $"Bearer {_token}");
+
+            var requestData = new Dictionary<object, string>();
+
+            requestData.Add(
+                new Models.FileParameter("content")
+                {
+                    ContentType = "application/xml",
+                    ContentDispositionType = "form-data"
+                }, 
+                content);
+
+            requestData.Add("doc_id", idDocument);
+            requestData.Add("signature", signature);
+
+            string result = _webService.PostRequest($"{Properties.Settings.Default.UrlAddressEdoLite}/api/v1/incoming-documents/xml/upd/title",
+                requestData, null, "multipart/form-data", authData, Encoding.GetEncoding(1251));
+
+            var resultStatus = _webService.GetStatusCode();
+
+            if (resultStatus != "200" && resultStatus != "201")
+                throw new Exception($"Произошла ошибка с кодом {resultStatus}.\n" +
+                    $"Описание: {result}");
+
+            return result;
+        }
     }
 }

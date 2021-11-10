@@ -189,6 +189,7 @@
     <Compile Include="Entities\JuridicalEntity.cs" />
     <Compile Include="Entities\OrganizationEmployee.cs" />
     <Compile Include="Entities\OrganizationRepresentative.cs" />
+    <Compile Include="Entities\Product.cs" />
     <Compile Include="Entities\TrustedIndividual.cs" />
     <Compile Include="Enums\AcceptResultEnum.cs" />
     <Compile Include="Enums\DocumentDiscrepancyTypeEnum.cs" />
@@ -217,6 +218,14 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="XSD\ON_NSCHFDOPPOK_1_997_02_05_01_02.xsd">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="XSD\ON_NSCHFDOPPR_1_997_01_05_01_03.xsd">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />

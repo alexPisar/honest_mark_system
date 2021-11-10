@@ -59,5 +59,13 @@ namespace WebSystems.EdoSystems
 
             return ((WebClients.EdoLiteClient)_webClient).Authorization(_certificate);
         }
+
+        public override object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters)
+        {
+            string reference = parameters[0] as string;
+            var signatureAsBase64 = Convert.ToBase64String(signature);
+
+            return ((WebClients.EdoLiteClient)_webClient).LoadTitleDocument(reference, documentId, signatureAsBase64);
+        }
     }
 }

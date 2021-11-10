@@ -59,6 +59,7 @@
     <Compile Include="Models\EdoLiteDocuments.cs" />
     <Compile Include="Models\EdoLiteRecipient.cs" />
     <Compile Include="Models\EdoLiteSender.cs" />
+    <Compile Include="Models\FileParameter.cs" />
     <Compile Include="Models\IDocument.cs" />
     <Compile Include="Models\IEdoSystemDocument.cs" />
     <Compile Include="Models\MarkCodeInfo.cs" />
@@ -74,6 +75,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="ServiceManager.cs" />
+    <Compile Include="Systems\HonestMarkSystem.cs" />
     <Compile Include="WebClientSingleInstance.cs" />
     <Compile Include="WebClients\EdoLiteClient.cs" />
     <Compile Include="WebClients\HonestMarkClient.cs" />

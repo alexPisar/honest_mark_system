@@ -19,6 +19,8 @@ namespace HonestMarkSystem.Models
 
         public IEdoSystem EdoSystem { get; set; }
 
+        public WebSystems.Systems.HonestMarkSystem MarkSystem { get; set; }
+
         private void UpdateProperties()
         {
             OnPropertyChanged("ItemsList");
@@ -47,6 +49,10 @@ namespace HonestMarkSystem.Models
 
                 EdoSystem = new EdoLiteSystem(SelectedItem);
                 bool result = EdoSystem.Authorization();
+
+                MarkSystem = new WebSystems.Systems.HonestMarkSystem(SelectedItem);
+                result = result && MarkSystem.Authorization();
+
                 return result;
             }
             catch(System.Net.WebException webEx)

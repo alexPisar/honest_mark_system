@@ -59,5 +59,11 @@ namespace WebSystems.Models
 
         [JsonProperty(PropertyName = "producerName")]
         public string ProducerName { get; set; }
+
+        [JsonProperty(PropertyName = "child")]
+        public string[] Children { get; set; }
+
+        [JsonProperty(PropertyName = "parent")]
+        public string Parent { get; set; }
     }
 }

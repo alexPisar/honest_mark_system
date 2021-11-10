@@ -24,6 +24,7 @@ namespace HonestMarkSystem
         private string _prefixBuyerFileName = "ON_NSCHFDOPPOK";
         private string _prefixSellerFileName = "ON_NSCHFDOPPR";
         private string _filePath;
+        private byte[] _docSellerContent;
         private CryptoUtil _cryptoUtil;
         private UtilityLog _log = UtilityLog.GetInstance();
 
@@ -49,6 +50,16 @@ namespace HonestMarkSystem
             }
         }
 
+        public byte[] DocSellerContent
+        {
+            get {
+                if (_docSellerContent == null)
+                    _docSellerContent = System.IO.File.ReadAllBytes(_filePath);
+
+                return _docSellerContent;
+            }
+        }
+
         private void CancelButtonClick(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
@@ -61,8 +72,7 @@ namespace HonestMarkSystem
 
             if (validationResult)
             {
-                var docSellerContent = System.IO.File.ReadAllBytes(_filePath);
-                Report.Signature = GetSignatureStringForReport(docSellerContent);
+                Report.Signature = GetSignatureStringForReport(DocSellerContent);
                 Report.DateReceive = DateTime.Now;
 
                 if (reportControl.ValidateXml())
@@ -91,8 +101,7 @@ namespace HonestMarkSystem
 
             try
             {
-                var docSellerContent = System.IO.File.ReadAllBytes(_filePath);
-                Report.Signature = GetSignatureStringForReport(docSellerContent);
+                Report.Signature = GetSignatureStringForReport(DocSellerContent);
                 Report.DateReceive = DateTime.Now;
                 changePathDialog.FileName = Report.FileName;
 
@@ -174,8 +183,7 @@ namespace HonestMarkSystem
                 Report.FileName = $"{_prefixBuyerFileName}_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
 
             var reporterDll = new Reporter.ReporterDll();
-            var docSellerContent = System.IO.File.ReadAllBytes(_filePath);
-            var sellerReport = reporterDll.ParseDocument<UniversalTransferSellerDocument>(docSellerContent);
+            var sellerReport = reporterDll.ParseDocument<UniversalTransferSellerDocument>(DocSellerContent);
 
             Report.CreateSellerFileDate = sellerReport.CreateDate;
             Report.DocName = sellerReport.DocName;

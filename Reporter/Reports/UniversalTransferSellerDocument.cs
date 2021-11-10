@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UtilitesLibrary.Service;
+using Reporter.Entities;
 using Reporter.XsdClasses.OnNschfdoppr;
 
 namespace Reporter.Reports
@@ -80,6 +81,16 @@ namespace Reporter.Reports
         /// </summary>
         public string DocNumber { get; set; }
         #endregion
+
+        #region Сведения таблицы счета-фактуры (содержание факта хозяйственной жизни 2 - наименование и другая информация об отгруженных товарах (выполненных работах, оказанных услугах), о переданных имущественных правах
+        #region Сведения о товарах
+        public List<Product> Products { get; set; }
+        #endregion
+
+        #region Всего к оплате
+
+        #endregion
+        #endregion
         #endregion
 
         #region Parse Methods
@@ -126,6 +137,35 @@ namespace Reporter.Reports
 
                 DocName = document.НаимДокОпр;
                 DocNumber = document.СвСчФакт?.НомерСчФ;
+
+                var goods = document.ТаблСчФакт?.СведТов ?? new ФайлДокументТаблСчФактСведТов[] { };
+                Products = new List<Product>();
+
+                foreach (var good in goods)
+                {
+                    var product = new Product()
+                    {
+                        Description = good.НаимТов,
+                        Quantity = good.КолТов
+                    };
+
+                    product.MarkedCodes = new List<string>();
+                    product.TransportPackingIdentificationCode = new List<string>();
+
+                    if (good?.ДопСведТов?.НомСредИдентТов != null)
+                    {
+                        foreach (var code in good.ДопСведТов.НомСредИдентТов)
+                        {
+                            if (!string.IsNullOrEmpty(code.ИдентТрансУпак))
+                                product.TransportPackingIdentificationCode.Add(code.ИдентТрансУпак);
+
+                            if(code.Items != null)
+                                product.MarkedCodes.AddRange(code.Items);
+                        }
+                    }
+
+                    Products.Add(product);
+                }
             }
         }
         #endregion

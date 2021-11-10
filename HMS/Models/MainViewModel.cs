@@ -21,20 +21,27 @@ namespace HonestMarkSystem.Models
         private IEdoSystem _edoSystem;
         private Interfaces.IEdoDataBaseAdapter<AbtDbContext> _dataBaseAdapter;
         private UtilitesLibrary.Service.CryptoUtil _cryptoUtil;
+        private WebSystems.Systems.HonestMarkSystem _honestMarkSystem;
 
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
 
-        public MainViewModel(IEdoSystem edoSystem, Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter, UtilitesLibrary.Service.CryptoUtil cryptoUtil)
+        public MainViewModel(IEdoSystem edoSystem,
+            WebSystems.Systems.HonestMarkSystem honestMarkSystem, 
+            Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter, 
+            UtilitesLibrary.Service.CryptoUtil cryptoUtil)
         {
             _edoSystem = edoSystem;
+            _honestMarkSystem = honestMarkSystem;
             _cryptoUtil = cryptoUtil;
             _dataBaseAdapter = dataBaseAdapter;
             _dataBaseAdapter.InitializeContext();
 
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>();
         }
+
+        public System.Windows.Window Owner { get; set; }
 
         private void Refresh()
         {
@@ -134,7 +141,7 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        private void SignAndSend()
+        private async void SignAndSend()
         {
             if (SelectedItem == null)
             {
@@ -147,6 +154,13 @@ namespace HonestMarkSystem.Models
             {
                 System.Windows.MessageBox.Show(
                     "Данный документ ранее уже был подписан и отправлен.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if(SelectedItem.IdDocPurchasing == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ не сопоставлен с документом закупок.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
@@ -165,29 +179,102 @@ namespace HonestMarkSystem.Models
             {
                 signWindow.OnAllPropertyChanged();
 
-                var xml = signWindow.Report.GetXmlContent();
-                var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
-                var signature = _cryptoUtil.Sign(fileBytes, true);
-                var signatureAsBase64 = Convert.ToBase64String(signature);
+                LoadWindow loadWindow = new LoadWindow("Подождите, идёт загрузка данных");
 
-                File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signWindow.Report.FileName}.xml", fileBytes);
-                File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signWindow.Report.FileName}.xml.sig", signature);
+                if (this.Owner != null)
+                    loadWindow.Owner = this.Owner;
 
-                var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+                var reportForSend = signWindow.Report;
+                var docSellerContent = signWindow.DocSellerContent;
+                var loadContext = loadWindow.GetLoadContext();
 
-                string localPath = directory.Name;
-                while (directory.Parent != null)
+                string errorMessage = null;
+                string titleErrorText = null;
+
+                loadWindow.Show();
+
+                await Task.Run(() => 
                 {
-                    directory = directory.Parent;
+                    try
+                    {
+                        var xml = reportForSend.GetXmlContent();
+                        var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
+                        var signature = _cryptoUtil.Sign(fileBytes, true);
 
-                    if(directory.Parent == null)
-                        localPath = $"{directory.Name.Replace(":\\", ":")}/{localPath}";
-                    else
-                        localPath = $"{directory.Name}/{localPath}";
+                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{reportForSend.FileName}.xml", fileBytes);
+                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{reportForSend.FileName}.xml.sig", signature);
+
+                        var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+
+                        loadContext.SetLoadingText("Сохранение в базе данных");
+                        SaveMarkedCodesToDataBase(docSellerContent);
+
+                        loadContext.SetLoadingText("Подписание и отправка");
+                        if (_edoSystem.GetType() == typeof(EdoLiteSystem))
+                        {
+                            string localPath = directory.Name;
+                            while (directory.Parent != null)
+                            {
+                                directory = directory.Parent;
+
+                                if (directory.Parent == null)
+                                    localPath = $"{directory.Name.Replace(":\\", ":")}/{localPath}";
+                                else
+                                    localPath = $"{directory.Name}/{localPath}";
+                            }
+
+                            string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{reportForSend.FileName}.xml";
+                            _edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, content);
+
+                            SelectedItem.SignatureFileName = reportForSend.FileName;
+                        }
+
+                        _dataBaseAdapter.Commit();
+                        loadContext.SetSuccessFullLoad("Данные были успешно загружены.");
+                    }
+                    catch (System.Net.WebException webEx)
+                    {
+                        _dataBaseAdapter.Rollback();
+                        errorMessage = _log.GetRecursiveInnerException(webEx);
+                        titleErrorText = "Произошла ошибка отправки на удалённом сервере.";
+                    }
+                    catch (Exception ex)
+                    {
+                        _dataBaseAdapter.Rollback();
+                        errorMessage = _log.GetRecursiveInnerException(ex);
+                        titleErrorText = "Произошла ошибка отправки.";
+                    }
+                });
+
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    loadWindow.Close();
+                    _log.Log(errorMessage);
+                    var errorsWindow = new ErrorsWindow(titleErrorText, new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
                 }
-
-                string content = $"@/{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{signWindow.Report.FileName}.xml";
             }
+        }
+
+        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent)
+        {
+            var reporterDll = new Reporter.ReporterDll();
+            var report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
+
+            if (report.Products == null || report.Products.Count == 0)
+                return;
+
+            var markedCodes = new List<KeyValuePair<string, string>>();
+            foreach (var product in report.Products)
+            {
+                if(product.MarkedCodes != null && product.MarkedCodes.Count > 0)
+                    _honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
+
+                if (product.TransportPackingIdentificationCode != null && product.TransportPackingIdentificationCode.Count > 0)
+                    _honestMarkSystem.GetCodesByThePiece(product.TransportPackingIdentificationCode, markedCodes);
+            }
+
+            _dataBaseAdapter.SaveMarkedCodes(SelectedItem.IdDocPurchasing.Value, markedCodes.ToArray());
         }
 
         private void UpdateProperties()

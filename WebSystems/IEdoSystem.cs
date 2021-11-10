@@ -40,5 +40,7 @@ namespace WebSystems
         {
             return _certificate?.Subject;
         }
+
+        public abstract object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters);
     }
 }

@@ -102,6 +102,37 @@ namespace HonestMarkSystem.Implementations
             _orgName = orgName;
         }
 
+        public void SaveMarkedCodes(decimal idDocPurchasing, KeyValuePair<string, string>[] markedCodesByBar)
+        {
+            var docPurchasing = _abt.DocPurchasings.FirstOrDefault(d => d.Id == idDocPurchasing);
+
+            if (docPurchasing == null)
+                throw new Exception("Не найден документ закупок в базе.");
+
+            if(docPurchasing.IdDocLink == null)
+                throw new Exception("Для документа закупок не найден трейдер документ.");
+
+            foreach(var code in markedCodesByBar)
+            {
+                var barCode = code.Value;
+                var idGood = _abt.RefBarCodes?
+                    .FirstOrDefault(b => b.BarCode == barCode && b.IsPrimary == false)?
+                    .IdGood;
+
+                var label = new DocGoodsDetailsLabels
+                {
+                    IdDoc = docPurchasing.IdDocLink.Value,
+                    DmLabel = code.Key,
+                    InsertDateTime = DateTime.Now
+                };
+
+                if (idGood != null)
+                    label.IdGood = idGood.Value;
+
+                _abt.DocGoodsDetailsLabels.Add(label);
+            }
+        }
+
         public void Commit()
         {
             _abt.SaveChanges();

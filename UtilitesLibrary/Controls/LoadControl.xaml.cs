@@ -28,14 +28,6 @@ namespace UtilitesLibrary.Controls
             DataContext = new ModelBase.LoadModel();
         }
 
-        private void SetSuccessFullLoad(string text = null)
-        {
-            ((ModelBase.LoadModel)DataContext).Text = text ?? "Загрузка завершена успешно.";
-            ((ModelBase.LoadModel)DataContext).PathToImage = "/UtilitesLibrary;component/Resources/OK.png";
-            ((ModelBase.LoadModel)DataContext).OkEnable = true;
-            ((ModelBase.LoadModel)DataContext).OnAllPropertyChanged();
-        }
-
         public string LoadText
         {
             get {
@@ -43,15 +35,14 @@ namespace UtilitesLibrary.Controls
             }
 
             set {
-                ((ModelBase.LoadModel)DataContext).Text = value;
-                ((ModelBase.LoadModel)DataContext).OnPropertyChanged("Text");
+                ((ModelBase.LoadModel)DataContext).SetLoadingText(value);
             }
         }
 
         public string TextAfterSuccessLoading
         {
             set {
-                SetSuccessFullLoad(value);
+                ((ModelBase.LoadModel)DataContext).SetSuccessFullLoad(value);
             }
         }
 

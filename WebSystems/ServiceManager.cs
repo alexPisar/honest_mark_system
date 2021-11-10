@@ -28,57 +28,133 @@ namespace WebSystems
             return _statusCode;
         }
 
-        public string PostRequest(string url, string contentData, string cookie = null, string contentType = null,
+        public string PostRequest(string url, object contentData, string cookie = null, string contentType = null,
             Dictionary<string, string> headers = null, Encoding encoding = null)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-
-            request.Method = "POST";
-
-            if (string.IsNullOrEmpty(contentType))
-                request.ContentType = "application/x-www-form-urlencoded";
-            else
-                request.ContentType = contentType;
-
-            if (_webProxy != null)
-                request.Proxy = _webProxy;
-
-            if (cookie != null)
-                request.Headers.Add("Cookie", $"{cookie}");
-
-            if (headers != null)
+            if (contentType == "multipart/form-data")
             {
-                foreach (var header in headers)
-                    request.Headers.Add(header.Key, header.Value);
-            }
+                var multipartContentData = contentData as Dictionary<object, string>;
 
-            var requestStream = request.GetRequestStream();
+                var requestContent = new System.Net.Http.MultipartFormDataContent();
+                var fileStreamList = new List<System.IO.FileStream>();
 
-            var contentDataBytes = System.Text.Encoding.UTF8.GetBytes(contentData);
-
-            requestStream.Write(contentDataBytes, 0, contentDataBytes.Length);
-
-            var response = request.GetResponse();
-
-            string result;
-
-            if (encoding != null)
-            {
-                using (var sr = new System.IO.StreamReader(response.GetResponseStream(), encoding))
+                try
                 {
-                    result = sr.ReadToEnd();
+                    foreach (var parameter in multipartContentData)
+                    {
+                        if (parameter.Key?.GetType() == typeof(Models.FileParameter))
+                        {
+                            var fileParameter = parameter.Key as Models.FileParameter;
+
+                            System.Net.Http.HttpContent fileContent;
+                            var stream = new System.IO.FileStream(parameter.Value, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+
+                            fileStreamList.Add(stream);
+                            fileContent = new System.Net.Http.StreamContent(stream);
+
+                            string fileName = string.IsNullOrEmpty(fileParameter.FileName) 
+                                ? parameter.Value : fileParameter.FileName;
+
+                            fileContent.Headers.ContentDisposition = 
+                                new System.Net.Http.Headers.ContentDispositionHeaderValue(fileParameter.ContentDispositionType)
+                                {
+                                    Name = fileParameter.Name,
+                                    FileName = fileName
+                                };
+
+                            fileContent.Headers.ContentType = 
+                                System.Net.Http.Headers.MediaTypeHeaderValue.Parse(fileParameter.ContentType);
+
+                            requestContent.Add(fileContent, fileParameter.Name, fileName);
+                            
+                        }
+                        else if (parameter.Key?.GetType() == typeof(string))
+                        {
+                            var stringContent = new System.Net.Http.StringContent(parameter.Value);
+                            requestContent.Add(stringContent, (string)parameter.Key);
+                        }
+                    }
+
+                    System.Net.Http.HttpClient client;
+                    if (_webProxy != null)
+                    {
+                        System.Net.Http.HttpClientHandler httpClientHandler = new System.Net.Http.HttpClientHandler()
+                        {
+                            Proxy = _webProxy,
+                            PreAuthenticate = true,
+                            UseDefaultCredentials = false,
+                        };
+
+                        client = new System.Net.Http.HttpClient(httpClientHandler);
+                    }
+                    else
+                        client = new System.Net.Http.HttpClient();
+
+                    if (headers != null)
+                        foreach (var header in headers)
+                            client.DefaultRequestHeaders.Add(header.Key, header.Value);
+
+                    var res = client.PostAsync(url, requestContent).Result;
+                    _statusCode = ((int)res.StatusCode).ToString();
+                    return res.Content.ReadAsStringAsync().Result;
+                }
+                finally
+                {
+                    foreach (var fileStream in fileStreamList)
+                        fileStream.Close();
                 }
             }
             else
             {
-                using (var sr = new System.IO.StreamReader(response.GetResponseStream()))
-                {
-                    result = sr.ReadToEnd();
-                }
-            }
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
-            _statusCode = ((int?)((HttpWebResponse)response)?.StatusCode)?.ToString();
-            return result;
+                request.Method = "POST";
+
+                if (string.IsNullOrEmpty(contentType))
+                    request.ContentType = "application/x-www-form-urlencoded";
+                else
+                    request.ContentType = contentType;
+
+                if (_webProxy != null)
+                    request.Proxy = _webProxy;
+
+                if (cookie != null)
+                    request.Headers.Add("Cookie", $"{cookie}");
+
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                        request.Headers.Add(header.Key, header.Value);
+                }
+
+                var requestStream = request.GetRequestStream();
+
+                var contentDataBytes = System.Text.Encoding.UTF8.GetBytes(contentData as string);
+
+                requestStream.Write(contentDataBytes, 0, contentDataBytes.Length);
+
+                var response = request.GetResponse();
+
+                string result;
+
+                if (encoding != null)
+                {
+                    using (var sr = new System.IO.StreamReader(response.GetResponseStream(), encoding))
+                    {
+                        result = sr.ReadToEnd();
+                    }
+                }
+                else
+                {
+                    using (var sr = new System.IO.StreamReader(response.GetResponseStream()))
+                    {
+                        result = sr.ReadToEnd();
+                    }
+                }
+
+                _statusCode = ((int?)((HttpWebResponse)response)?.StatusCode)?.ToString();
+                return result;
+            }
         }
 
         public T PostRequest<T>(string url, string contentData, string cookie = null, string contentType = null,

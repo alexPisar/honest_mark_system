@@ -39,6 +39,16 @@ namespace HonestMarkSystem
             loadControl.TextAfterSuccessLoading = text;
         }
 
+        public void SetLoadingText(string text)
+        {
+            loadControl.LoadText = text;
+        }
+
+        public UtilitesLibrary.ModelBase.LoadModel GetLoadContext()
+        {
+            return (UtilitesLibrary.ModelBase.LoadModel)loadControl.DataContext;
+        }
+
         private void LoadWindow_Closed(object sender, EventArgs e)
         {
             if (Owner != null)

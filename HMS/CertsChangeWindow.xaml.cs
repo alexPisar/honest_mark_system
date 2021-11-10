@@ -31,9 +31,11 @@ namespace HonestMarkSystem
             if (((Models.CertsChangeViewModel)DataContext).Authentification())
             {
                 var mainWindow = new MainWindow();
-                var mainModel = new Models.MainViewModel(((Models.CertsChangeViewModel)DataContext).EdoSystem, 
+                var mainModel = new Models.MainViewModel(((Models.CertsChangeViewModel)DataContext).EdoSystem,
+                    ((Models.CertsChangeViewModel)DataContext).MarkSystem, 
                     new Implementations.EdoLiteToDataBase(), 
                     new UtilitesLibrary.Service.CryptoUtil(((Models.CertsChangeViewModel)DataContext).SelectedItem));
+                mainModel.Owner = mainWindow;
 
                 var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil();
                 var orgName = cryptoUtil.ParseCertAttribute(((Models.CertsChangeViewModel)DataContext).SelectedItem.Subject, "CN");

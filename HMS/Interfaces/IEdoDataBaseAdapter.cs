@@ -22,6 +22,8 @@ namespace HonestMarkSystem.Interfaces
 
         object[] GetPurchasingDocuments();
 
+        void SaveMarkedCodes(decimal idDocPurchasing, KeyValuePair<string, string>[] markedCodesByBar);
+
         void Rollback();
 
         void Commit();
