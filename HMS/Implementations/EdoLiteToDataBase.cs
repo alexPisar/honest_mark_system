@@ -114,11 +114,13 @@ namespace HonestMarkSystem.Implementations
 
             var idDoc = docPurchasing.IdDocLink.Value;
 
-            foreach(var code in markedCodesByBar)
+            var docGoodsDetailsLabels = _abt.DocGoodsDetailsLabels.Where(l => l.IdDoc == idDoc);
+
+            foreach (var code in markedCodesByBar)
             {
                 var markedCode = code.Key;
 
-                if (_abt.DocGoodsDetailsLabels.FirstOrDefault(l => l.IdDoc == idDoc && l.DmLabel == markedCode) != null)
+                if (docGoodsDetailsLabels?.FirstOrDefault(l => l.DmLabel == markedCode) != null)
                     continue;
 
                 var barCode = code.Value;
