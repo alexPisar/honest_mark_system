@@ -677,7 +677,7 @@ namespace Reporter.Reports
             }
 
             string xml = Xml.SerializeEntity<Файл>(xsdDocument, Encoding.GetEncoding(1251));
-            return xml;
+            return $"<?xml version=\"1.0\" encoding=\"windows-1251\"?>{xml}";
         }
 
         #endregion

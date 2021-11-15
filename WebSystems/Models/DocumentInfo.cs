@@ -72,8 +72,8 @@ namespace WebSystems.Models
         [JsonProperty(PropertyName = "errors")]
         public string[] Errors { get; set; }
 
-        [JsonProperty(PropertyName = "docErrors")]
-        public string[] DocErrors { get; set; }
+        //[JsonProperty(PropertyName = "docErrors")]
+        //public string[] DocErrors { get; set; }
 
         [JsonProperty(PropertyName = "errorMessage")]
         public string ErrorMessage { get; set; }

@@ -40,7 +40,6 @@ namespace HonestMarkSystem.Implementations
                 EdoProviderName = providerName,
                 CreateDate = doc.CreateDateTime,
                 ReceiveDate = doc.Date,
-                DocStatus = doc.Status,
                 Name = doc.Number,
                 TotalPrice = doc.TotalPrice,
                 TotalVatAmount = doc.TotalVatAmount,
@@ -52,6 +51,29 @@ namespace HonestMarkSystem.Implementations
                 SenderEdoOrgId = report.EdoId,
                 FileName = report.FileName
             };
+
+            if (doc.Status == (int)WebSystems.EdoLiteDocumentStatus.SignedAndSend)
+            {
+                newDocInDb.DocStatus = (int)WebSystems.DocEdoStatus.Processed;
+            }
+            else if (doc.Status == (int)WebSystems.EdoLiteDocumentStatus.Delivered
+                || doc.Status == (int)WebSystems.EdoLiteDocumentStatus.Viewed)
+            {
+                newDocInDb.DocStatus = (int)WebSystems.DocEdoStatus.NoSignatureRequired;
+            }
+            else if (doc.Status == (int)WebSystems.EdoLiteDocumentStatus.Sent)
+            {
+                newDocInDb.DocStatus = (int)WebSystems.DocEdoStatus.Sent;
+            }
+            else if (doc.Status == (int)WebSystems.EdoLiteDocumentStatus.SignatureError
+                || doc.Status == (int)WebSystems.EdoLiteDocumentStatus.DeliveryError)
+            {
+                newDocInDb.DocStatus = (int)WebSystems.DocEdoStatus.ProcessingError;
+            }
+            else
+            {
+                newDocInDb.DocStatus = (int)WebSystems.DocEdoStatus.New;
+            }
 
             if (inOutType == WebSystems.DocumentInOutType.Inbox)
             {

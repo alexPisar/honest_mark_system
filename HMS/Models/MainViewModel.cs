@@ -100,6 +100,52 @@ namespace HonestMarkSystem.Models
             var docs = _dataBaseAdapter.GetAllDocuments().Cast<DocEdoPurchasing>();
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>(docs);
             SelectedItem = null;
+
+            try
+            {
+                var processingDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.Sent).ToList();
+
+                foreach (var processingDocument in processingDocuments)
+                {
+                    var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
+
+                    if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
+                        processingDocument.DocStatus = (int)DocEdoStatus.Processed;
+                    else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
+                    {
+                        processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
+
+                        var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
+
+                        var errors = failedOperations.SelectMany(f => f.Errors);
+
+                        var errorsList = new List<string>();
+                        foreach(var error in errors)
+                        {
+                            if (!string.IsNullOrEmpty(error.Text))
+                                errorsList.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
+                            else if (!string.IsNullOrEmpty(error?.Error?.Detail))
+                                errorsList.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
+                            else
+                                errorsList.Add($"Произошла ошибка с кодом:{error.Code}\n");
+                        }
+                        processingDocument.ErrorMessage = string.Join("\n\n", errorsList);
+                    }
+                }
+
+                if(processingDocuments.Exists(p => p.DocStatus != (int)DocEdoStatus.Sent))
+                    _dataBaseAdapter.Commit();
+            }
+            catch (Exception ex)
+            {
+                _dataBaseAdapter.Rollback();
+                string errorMessage = _log.GetRecursiveInnerException(ex);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+
             UpdateProperties();
         }
 
@@ -150,14 +196,28 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if(SelectedItem.IsSigned == 1)
+            if(SelectedItem.DocStatus == (int)DocEdoStatus.Sent)
             {
                 System.Windows.MessageBox.Show(
                     "Данный документ ранее уже был подписан и отправлен.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
-            if(SelectedItem.IdDocPurchasing == null)
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.Processed)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ уже был подписан, отправлен и успешно обработан.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.NoSignatureRequired)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ не предназначен для подписания.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.IdDocPurchasing == null)
             {
                 System.Windows.MessageBox.Show(
                     "Данный документ не сопоставлен с документом закупок.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
@@ -185,7 +245,7 @@ namespace HonestMarkSystem.Models
                     loadWindow.Owner = this.Owner;
 
                 var reportForSend = signWindow.Report;
-                var docSellerContent = signWindow.DocSellerContent;
+                var docSellerContent = _edoSystem.GetDocumentContent(SelectedItem.IdDocEdo, DocumentInOutType.Inbox);//signWindow.DocSellerContent;
                 var loadContext = loadWindow.GetLoadContext();
 
                 string errorMessage = null;
@@ -227,6 +287,13 @@ namespace HonestMarkSystem.Models
                             _edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, content);
 
                             SelectedItem.SignatureFileName = reportForSend.FileName;
+
+                            if(reportForSend.FileName.StartsWith("ON_NSCHFDOPPOKMARK"))
+                                SelectedItem.DocStatus = (int)DocEdoStatus.Sent;
+                            else
+                                SelectedItem.DocStatus = (int)DocEdoStatus.Processed;
+
+                            UpdateProperties();
                         }
 
                         _dataBaseAdapter.Commit();

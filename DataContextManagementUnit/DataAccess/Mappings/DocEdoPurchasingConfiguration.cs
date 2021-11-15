@@ -107,13 +107,14 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMaxLength(500);
 
             this
-                .Property(p => p.IsSigned)
-                .HasColumnName("IS_SIGNED");
-
-            this
                 .Property(p => p.SignatureFileName)
                 .HasColumnName("SIGNATURE_FILE_NAME")
                 .HasMaxLength(500);
+
+            this
+                .Property(p => p.ErrorMessage)
+                .HasColumnName("ERROR_MESSAGE")
+                .HasMaxLength(1000);
 
             OnCreated();
         }

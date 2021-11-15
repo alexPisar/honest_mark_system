@@ -158,5 +158,15 @@ namespace WebSystems.WebClients
 
             return docInfo;
         }
+
+        public Models.DocumentEdoProcessResultInfo GetEdoDocumentProcessInfo(string docId)
+        {
+            var authData = new Dictionary<string, string>();
+            authData.Add("Authorization", $"Bearer {_token}");
+
+            var docInfo = _webService.GetRequest<Models.DocumentEdoProcessResultInfo>($"{Properties.Settings.Default.UrlAddressHonestMark}/documents/edo/tpr/ud?fileId={docId}", authData);
+
+            return docInfo;
+        }
     }
 }

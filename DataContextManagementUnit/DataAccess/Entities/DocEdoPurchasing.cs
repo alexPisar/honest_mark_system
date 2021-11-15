@@ -54,9 +54,9 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 
         public virtual string FileName { get; set; }
 
-        public virtual short? IsSigned { get; set; }
-
         public virtual string SignatureFileName { get; set; }
+
+        public virtual string ErrorMessage { get; set; }
         #endregion
 
         #region Extensibility Method Definitions

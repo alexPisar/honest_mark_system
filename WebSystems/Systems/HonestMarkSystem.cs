@@ -62,5 +62,10 @@ namespace WebSystems.Systems
 
             resultCodes.AddRange(codes);
         }
+
+        public Models.DocumentEdoProcessResultInfo GetEdoDocumentProcessInfo(string documentId)
+        {
+            return HonestMarkClient.GetInstance().GetEdoDocumentProcessInfo(documentId);
+        }
     }
 }
