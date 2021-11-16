@@ -38,7 +38,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Edi
 		private static DbConnection GetDefaultConnection()
 		{
 			DbConnection connection = Oracle.ManagedDataAccess.Client.OracleClientFactory.Instance.CreateConnection();
-            var connStr = new DataBaseConnection(Config.GetInstance().EdiDataBaseIpAddress, Config.GetInstance().EdiDataBaseSid, Config.GetInstance().GetDataBaseUser(), Config.GetInstance().GetDataBasePassword()).GetConnectionString();
+            var connStr = new DataBaseConnection(Config.GetInstance().EdiDataBaseIpAddress, Config.GetInstance().EdiDataBaseSid, Config.GetInstance().DataBaseUser, Config.GetInstance().GetDataBasePassword()).GetConnectionString();
             connection.ConnectionString = connStr;
 			return connection;
 		}
@@ -76,7 +76,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 		private static DbConnection GetDefaultConnection()
 		{
 			DbConnection connection = Oracle.ManagedDataAccess.Client.OracleClientFactory.Instance.CreateConnection();
-            var connStr = new DataBaseConnection(Config.GetInstance().AbtDataBaseIpAddress, Config.GetInstance().AbtDataBaseSid, Config.GetInstance().GetDataBaseUser(), Config.GetInstance().GetDataBasePassword()).GetConnectionString();
+            var connStr = new DataBaseConnection(Config.GetInstance().AbtDataBaseIpAddress, Config.GetInstance().AbtDataBaseSid, Config.GetInstance().DataBaseUser, Config.GetInstance().GetDataBasePassword()).GetConnectionString();
 			connection.ConnectionString = connStr;
 			return connection;
 		}

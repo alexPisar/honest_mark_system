@@ -23,7 +23,7 @@ namespace HonestMarkSystem.Implementations
         {
             _abt = new AbtDbContext();
             _documents = _abt.DocEdoPurchasings
-                .Where(d => d.EdoProviderName == providerName)
+                .Where(d => d.EdoProviderName == providerName && d.ReceiverInn == _orgInn)
                 .ToList();
         }
 

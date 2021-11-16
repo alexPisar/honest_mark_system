@@ -22,29 +22,5 @@ namespace ConfigSet.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("edi")]
-        public string DataBaseUser {
-            get {
-                return ((string)(this["DataBaseUser"]));
-            }
-            set {
-                this["DataBaseUser"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("uex`QiqiKZ#oirqq*^krGYpan]k&rr?vwgig+tlb")]
-        public string CipherDataBasePassword {
-            get {
-                return ((string)(this["CipherDataBasePassword"]));
-            }
-            set {
-                this["CipherDataBasePassword"] = value;
-            }
-        }
     }
 }

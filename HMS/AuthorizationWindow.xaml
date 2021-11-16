@@ -1,0 +1,45 @@
+﻿<dxr:DXRibbonWindow x:Class="HonestMarkSystem.AuthorizationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+        xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
+        xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HonestMarkSystem"
+        mc:Ignorable="d"
+        Title="Авторизация" ResizeMode="NoResize" Height="250" Width="700">
+    <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:EventToCommand EventName="Loaded" Command="{Binding CertsChangeViewLoaded}">
+        </dxmvvm:EventToCommand>
+    </dxmvvm:Interaction.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Label Content="Вход по паролю" Width="150" Margin="0 5" FontSize="18" Grid.Row="0"/>
+        <StackPanel Orientation="Vertical" Grid.Row="1">
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Логин" Width="150" Margin="5 0" FontSize="16"/>
+                <TextBox Width="500" Margin="5 5" Text="{Binding Path=DataBaseUser,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Инн организации" Width="150" Margin="5 0" FontSize="16"/>
+                <TextBox Width="500" Margin="5 5" Text="{Binding Path=ConsignorInn,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Пароль" Width="150" Margin="5 0" FontSize="16"/>
+                <dxe:PasswordBoxEdit x:Name="accountPassword" Width="500" Margin="5 5"></dxe:PasswordBoxEdit>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
+            <Button Content="Войти" Margin="5 10" Width="80" Click="ChangeButton_Click"></Button>
+            <Button Content="Отмена" Margin="5 10" Width="80" Click="CancelButton_Click" ></Button>
+        </StackPanel>
+    </Grid>
+</dxr:DXRibbonWindow>

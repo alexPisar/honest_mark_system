@@ -183,7 +183,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="CertsChangeWindow.xaml">
+    <Page Include="AuthorizationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -203,8 +203,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CertsChangeWindow.xaml.cs">
-      <DependentUpon>CertsChangeWindow.xaml</DependentUpon>
+    <Compile Include="AuthorizationWindow.xaml.cs">
+      <DependentUpon>AuthorizationWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ErrorsWindow.xaml.cs">
       <DependentUpon>ErrorsWindow.xaml</DependentUpon>
@@ -226,7 +226,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\CertsChangeViewModel.cs" />
     <Compile Include="Models\MainViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

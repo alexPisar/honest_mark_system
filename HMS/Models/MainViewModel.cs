@@ -36,7 +36,6 @@ namespace HonestMarkSystem.Models
             _honestMarkSystem = honestMarkSystem;
             _cryptoUtil = cryptoUtil;
             _dataBaseAdapter = dataBaseAdapter;
-            _dataBaseAdapter.InitializeContext();
 
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>();
         }
