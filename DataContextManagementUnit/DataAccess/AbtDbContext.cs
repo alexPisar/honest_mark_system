@@ -122,6 +122,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
             modelBuilder.Configurations.Add(new Mapping.DocGoodsDetailsLabelsConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocGoodsMarkShipmentConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocPurchasingConfiguration());
+            modelBuilder.Configurations.Add(new Mapping.RefEdoStatusConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocEdoPurchasingConfiguration());
 
             CustomizeMapping(modelBuilder);

@@ -120,6 +120,7 @@
     <Compile Include="DataAccess\Entities\RefCountry.cs" />
     <Compile Include="DataAccess\Entities\RefCustomer.cs" />
     <Compile Include="DataAccess\Entities\RefDistrict.cs" />
+    <Compile Include="DataAccess\Entities\RefEdoStatus.cs" />
     <Compile Include="DataAccess\Entities\RefFilial.cs" />
     <Compile Include="DataAccess\Entities\RefGood.cs" />
     <Compile Include="DataAccess\Entities\RefItem.cs" />
@@ -158,6 +159,7 @@
     <Compile Include="DataAccess\Mappings\RefContractorConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefCustomerConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefDistrictConfiguration.cs" />
+    <Compile Include="DataAccess\Mappings\RefEdoStatusConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefGoodConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefItemConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefOrderStatusConfiguration.cs" />

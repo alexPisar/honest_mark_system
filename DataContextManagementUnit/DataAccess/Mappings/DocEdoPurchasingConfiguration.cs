@@ -116,6 +116,12 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasColumnName("ERROR_MESSAGE")
                 .HasMaxLength(1000);
 
+            this
+                .HasOptional(p => p.Status)
+                .WithMany()
+                .HasForeignKey(p => p.DocStatus)
+                .WillCascadeOnDelete(false);
+
             OnCreated();
         }
 

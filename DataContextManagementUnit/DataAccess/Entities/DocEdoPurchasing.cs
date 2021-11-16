@@ -59,6 +59,10 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual string ErrorMessage { get; set; }
         #endregion
 
+        #region Navigation Properties
+        public virtual RefEdoStatus Status { get; set; }
+        #endregion
+
         #region Extensibility Method Definitions
 
         partial void OnCreated();

@@ -64,7 +64,8 @@
             <dxg:GridColumn FieldName="SenderInn" Header="ИНН отправителя" Width="150"/>
             <dxg:GridColumn FieldName="ReceiverName" Header="Получатель" Width="150"/>
             <dxg:GridColumn FieldName="ReceiverInn" Header="ИНН получателя" Width="150"/>
-            <dxg:GridColumn FieldName="DocStatus" Header="Статус документа" Width="120"/>
+            <dxg:GridColumn FieldName="Status.Name" Header="Статус документа" Width="150"/>
+            <dxg:GridColumn FieldName="ErrorMessage" Header="Сообщение об ошибке" Width="180"/>
             <dxg:GridColumn FieldName="Name" Header="Наименование" Width="150"/>
             <dxg:GridColumn FieldName="IdDocType" Header="Тип документа" Width="100"/>
             <dxg:GridColumn FieldName="CreateDate" Header="Дата создания" Width="100"/>
@@ -72,6 +73,9 @@
             <dxg:GridColumn FieldName="TotalVatAmount" Header="Сумма налога" Width="100"/>
             <dxg:GridColumn FieldName="TotalPrice" Header="Общая стоимость" Width="120"/>
             <dxg:GridColumn FieldName="IdDocPurchasing" Header="ID приходного документа" Width="150"/>
+            <dxg:GridControl.View>
+                <dxg:TableView  FixedLineHeight="50"/>
+            </dxg:GridControl.View>
         </dxg:GridControl>
     </Grid>
 </dxr:DXRibbonWindow>
