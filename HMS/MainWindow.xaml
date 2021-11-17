@@ -64,6 +64,7 @@
             <dxg:GridColumn FieldName="SenderInn" Header="ИНН отправителя" Width="150"/>
             <dxg:GridColumn FieldName="ReceiverName" Header="Получатель" Width="150"/>
             <dxg:GridColumn FieldName="ReceiverInn" Header="ИНН получателя" Width="150"/>
+            <dxg:GridColumn FieldName="UserName" Header="Имя пользователя" Width="120"/>
             <dxg:GridColumn FieldName="Status.Name" Header="Статус документа" Width="150"/>
             <dxg:GridColumn FieldName="ErrorMessage" Header="Сообщение об ошибке" Width="180"/>
             <dxg:GridColumn FieldName="Name" Header="Наименование" Width="150"/>

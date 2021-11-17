@@ -49,7 +49,8 @@ namespace HonestMarkSystem.Implementations
                 SenderEdoOrgName = report.EdoProviderOrgName,
                 SenderEdoOrgInn = report.ProviderInn,
                 SenderEdoOrgId = report.EdoId,
-                FileName = report.FileName
+                FileName = report.FileName,
+                UserName = ConfigSet.Configs.Config.GetInstance().DataBaseUser
             };
 
             if (doc.Status == (int)WebSystems.EdoLiteDocumentStatus.SignedAndSend)

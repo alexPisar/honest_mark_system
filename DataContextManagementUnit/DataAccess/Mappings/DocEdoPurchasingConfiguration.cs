@@ -117,6 +117,11 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMaxLength(1000);
 
             this
+                .Property(p => p.UserName)
+                .HasColumnName("USER_NAME")
+                .HasMaxLength(100);
+
+            this
                 .HasOptional(p => p.Status)
                 .WithMany()
                 .HasForeignKey(p => p.DocStatus)
