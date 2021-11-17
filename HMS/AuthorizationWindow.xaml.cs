@@ -47,7 +47,6 @@ namespace HonestMarkSystem
                 if (selectedCert == null)
                     throw new Exception("Не найден сертификат по ИНН организации.");
 
-                ((Config)DataContext).SetDataBasePassword(accountPassword.Text);
                 var dataBaseAdapter = new Implementations.EdoLiteToDataBase();
 
                 WebSystems.Systems.HonestMarkSystem markSystem;
@@ -63,6 +62,10 @@ namespace HonestMarkSystem
                     var orgName = cryptoUtil.ParseCertAttribute(selectedCert.Subject, "CN");
                     var orgInn = ((Config)DataContext).ConsignorInn;
                     mainModel.SaveOrgData(orgInn, orgName);
+
+                    ((Config)DataContext).GenerateParametersForPassword();
+                    ((Config)DataContext).SetDataBasePassword(accountPassword.Text);
+
                     dataBaseAdapter.InitializeContext();
                     ((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
 

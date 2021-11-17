@@ -40,6 +40,9 @@ namespace ConfigSet.Configs
         public string MailUserEmailAddress { get; set; }
         public string MailErrorSubject { get; set; }
 
+        public int? PositionIndex { get; set; }
+        public int? ShiftIndex { get; set; }
+
         [NonSerialized]
         private string _password = null;
 
@@ -83,7 +86,8 @@ namespace ConfigSet.Configs
                     var skitalaBytes = System.Text.Encoding.ASCII.GetBytes(CipherDataBasePassword);
                     var saltData = System.Text.Encoding.ASCII.GetBytes(_salt);
 
-                    int position = 6, shift = 7;
+                    int position, shift;
+                    GetParametersForPassword(out position, out shift);
                     var bytes = new byte[40];
 
                     for (int j = 0; j < 8; j++)
@@ -118,8 +122,8 @@ namespace ConfigSet.Configs
 
         public void SetDataBasePassword(string password)
         {
-            var position = 6;
-            var shift = 7;
+            int position, shift;
+            GetParametersForPassword(out position, out shift);
 
             var passwordData = Encoding.ASCII.GetBytes(password);
             var saltData = Encoding.ASCII.GetBytes(_salt);
@@ -144,6 +148,29 @@ namespace ConfigSet.Configs
 
             CipherDataBasePassword = Encoding.ASCII.GetString(skitalaBytes);
             _password = password;
+        }
+
+        public void GenerateParametersForPassword()
+        {
+            var rand = new Random();
+            PositionIndex = rand.Next() % 40;
+            ShiftIndex = rand.Next() % 5;
+        }
+
+        public void GetParametersForPassword(out int position, out int shift)
+        {
+            if (PositionIndex == null || ShiftIndex == null)
+                GenerateParametersForPassword();
+
+            int[] arrPosition = new int[40] 
+            {
+               36, 39, 38, 2, 15, 16, 8, 26, 31, 21, 28, 5, 25, 9, 27, 18, 4, 29, 33, 34, 14, 35, 24, 0, 6, 10, 7, 23, 11, 13, 22, 1, 19, 17, 32, 3, 20, 12, 30, 37
+            };
+
+            int[] arrShift = new int[] { 13, 7, 19, 17, 23 };
+
+            position = arrPosition[PositionIndex.Value];
+            shift = arrShift[ShiftIndex.Value];
         }
     }
 }
