@@ -16,6 +16,8 @@ namespace HonestMarkSystem.Interfaces
 
         bool ExistsDocumentInDataBase(IEdoSystemDocument<string> document);
 
+        bool DocumentCanBeAddedByUser(IEdoSystemDocument<string> document);
+
         object GetDocumentFromDb(IEdoSystemDocument<string> document);
 
         object[] GetAllDocuments();

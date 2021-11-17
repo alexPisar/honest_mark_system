@@ -16,15 +16,32 @@ namespace HonestMarkSystem.Implementations
 
         private string _orgName;
         private string _orgInn;
+        private string _dataBaseUser;
         private AbtDbContext _abt;
         private List<DocEdoPurchasing> _documents;
+        private List<string> _permittedSenderInnsForUser;
 
         public void InitializeContext()
         {
             _abt = new AbtDbContext();
+
+            _dataBaseUser = ConfigSet.Configs.Config.GetInstance().DataBaseUser;
+            _permittedSenderInnsForUser = (from refUser in _abt.RefUsersByEdoShippers
+                            join cus in _abt.RefCustomers
+                            on refUser.IdCustomer equals cus.Id
+                            where refUser.UserName == _dataBaseUser
+                            select cus.Inn).ToList() ?? new List<string>();
+
             _documents = _abt.DocEdoPurchasings
                 .Where(d => d.EdoProviderName == providerName && d.ReceiverInn == _orgInn)
                 .ToList();
+        }
+
+        public bool DocumentCanBeAddedByUser(IEdoSystemDocument<string> document)
+        {
+            var doc = (EdoLiteDocuments)document;
+
+            return _permittedSenderInnsForUser.Exists(p => p == (doc?.Sender?.Inn.ToString() ?? ""));
         }
 
         public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
@@ -50,7 +67,7 @@ namespace HonestMarkSystem.Implementations
                 SenderEdoOrgInn = report.ProviderInn,
                 SenderEdoOrgId = report.EdoId,
                 FileName = report.FileName,
-                UserName = ConfigSet.Configs.Config.GetInstance().DataBaseUser
+                UserName = _dataBaseUser
             };
 
             if (doc.Status == (int)WebSystems.EdoLiteDocumentStatus.SignedAndSend)
@@ -109,7 +126,8 @@ namespace HonestMarkSystem.Implementations
 
         public object[] GetAllDocuments()
         {
-            return _documents.ToArray();
+            return _documents.Where(d => _permittedSenderInnsForUser.FirstOrDefault(c => c == d.SenderInn) != null)
+                .ToArray();
         }
 
         public object[] GetPurchasingDocuments()

@@ -124,6 +124,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
             modelBuilder.Configurations.Add(new Mapping.DocPurchasingConfiguration());
             modelBuilder.Configurations.Add(new Mapping.RefEdoStatusConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocEdoPurchasingConfiguration());
+            modelBuilder.Configurations.Add(new Mapping.RefUserByEdoShipperConfiguration());
 
             CustomizeMapping(modelBuilder);
         }
@@ -150,5 +151,6 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual DbSet<DocGoodsMarkShipment> DocGoodsMarkShipments { get; set; }
         public virtual DbSet<DocPurchasing> DocPurchasings { get; set; }
         public virtual DbSet<DocEdoPurchasing> DocEdoPurchasings { get; set; }
+        public virtual DbSet<RefUserByEdoShipper> RefUsersByEdoShippers { get; set; }
     }
 }

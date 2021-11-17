@@ -74,6 +74,9 @@ namespace HonestMarkSystem.Models
                 {
                     foreach (var doc in documents)
                     {
+                        if (!_dataBaseAdapter.DocumentCanBeAddedByUser(doc))
+                            continue;
+
                         byte[] docContentBytes;
                         SaveNewDocument(doc, out docContentBytes);
 
