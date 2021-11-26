@@ -148,6 +148,28 @@ namespace WebSystems.WebClients
             return fileBytes;
         }
 
+        public byte[] GetIncomingZipDocument(string documentId)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("Authorization", $"Bearer {_token}");
+
+            var docContentStr = _webService.GetRequest($"{Properties.Settings.Default.UrlAddressEdoLite}/api/v1/incoming-documents/{documentId}", headerData, Encoding.GetEncoding(1251), "application/zip");
+
+            var fileBytes = Encoding.GetEncoding(1251).GetBytes(docContentStr);
+            return fileBytes;
+        }
+
+        public byte[] GetOutgoingZipDocument(string documentId)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("Authorization", $"Bearer {_token}");
+
+            var docContentStr = _webService.GetRequest($"{Properties.Settings.Default.UrlAddressEdoLite}/api/v1/outgoing-documents/{documentId}", headerData, Encoding.GetEncoding(1251), "application/zip");
+
+            var fileBytes = Encoding.GetEncoding(1251).GetBytes(docContentStr);
+            return fileBytes;
+        }
+
         public string LoadTitleDocument(string content, string idDocument, string signature)
         {
             var authData = new Dictionary<string, string>();

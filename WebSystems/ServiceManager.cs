@@ -167,11 +167,14 @@ namespace WebSystems
             return result;
         }
 
-        public string GetRequest(string url, Dictionary<string, string> headers = null, Encoding encoding = null)
+        public string GetRequest(string url, Dictionary<string, string> headers = null, Encoding encoding = null, string accept = null)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 
             request.Method = "GET";
+
+            if(accept != null)
+                request.Accept = accept;
 
             if (headers != null)
             {

@@ -69,14 +69,14 @@ namespace HmsTests
             #region ИнЛицо
             #region ПредОргПрин
 
-            document.OrganizationEmployeeOrAnotherPerson = new Reporter.Entities.AnotherPerson();
+            document.OrganizationEmployeeOrAnotherPerson = new List<object>(new object[] { new Reporter.Entities.AnotherPerson() });
             var organizationRepresentative = new Reporter.Entities.OrganizationRepresentative();
             organizationRepresentative.Position = "Директор";
             organizationRepresentative.OrgName = "ООО \"ВЛАМУР\"";
             organizationRepresentative.Surname = "Мигеркин";
             organizationRepresentative.Name = "Николай";
             organizationRepresentative.Patronymic = "Игоревич";
-            ((Reporter.Entities.AnotherPerson)document.OrganizationEmployeeOrAnotherPerson).Item = organizationRepresentative;
+            ((Reporter.Entities.AnotherPerson)document.OrganizationEmployeeOrAnotherPerson.First()).Item = organizationRepresentative;
 
             #endregion
             #endregion
@@ -103,7 +103,7 @@ namespace HmsTests
             var xmlContent = document.GetXmlContent();
 
             var xmlDocument = new XmlDocument();
-            xmlDocument.LoadXml($"<?xml version=\"1.0\" encoding=\"windows-1251\"?>{xmlContent}");
+            xmlDocument.LoadXml(xmlContent);
             xmlDocument.Save($"C:\\Users\\systech\\Desktop\\{document.FileName}.xml");
         }
     }

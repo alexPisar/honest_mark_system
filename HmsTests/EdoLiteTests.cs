@@ -50,5 +50,19 @@ namespace HmsTests
 
             var docName = xmlDocument.LastChild.Attributes["ИдФайл"].Value;
         }
+
+        [TestMethod]
+        public void GetZipDocumentTest()
+        {
+            var crypto = new WinApiCryptWrapper();
+            var cert = crypto.GetCertificateWithPrivateKey("F88D4A47F8C9E5783535D50D4E20F1B0FB421892", false);
+            var edo = EdoLiteClient.GetInstance();
+            edo.Authorization(cert);
+
+            var documentId = "1dff6c28-67cc-4681-abca-1bec18538a3e";
+            var zipContent = edo.GetIncomingZipDocument(documentId);
+
+            System.IO.File.WriteAllBytes("C:\\Users\\systech\\Desktop\\ON_NSCHFDOPPRMARK_2LT-11000533130_2BM-5032262632-503201001-201601270943558790381_20210921_1dff6c28-67cc-4681-abca-1bec18538a3e.zip", zipContent);
+        }
     }
 }
