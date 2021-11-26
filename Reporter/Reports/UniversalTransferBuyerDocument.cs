@@ -178,7 +178,7 @@ namespace Reporter.Reports
         /// <summary>
         /// Работник организации покупателя или иное лицо
         /// </summary>
-        public object OrganizationEmployeeOrAnotherPerson { get; set; }
+        public List<object> OrganizationEmployeeOrAnotherPerson { get; set; }
         #endregion
         #endregion
 
@@ -364,18 +364,18 @@ namespace Reporter.Reports
                 if(personInfo.Item.GetType() == typeof(ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок))
                 {
                     var orgPersonInfo = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок)personInfo.Item;
-                    OrganizationEmployeeOrAnotherPerson = new OrganizationEmployee();
-                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).BasisOfAuthority = orgPersonInfo.ОснПолн;
-                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).Position = orgPersonInfo.Должность;
-                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).OtherInfo = orgPersonInfo.ИныеСвед;
-                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).Surname = orgPersonInfo.ФИО?.Фамилия;
-                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).Name = orgPersonInfo.ФИО?.Имя;
-                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson).Patronymic = orgPersonInfo.ФИО?.Отчество;
+                    OrganizationEmployeeOrAnotherPerson = new List<object>(new object[] { new OrganizationEmployee() });
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson.First()).BasisOfAuthority = orgPersonInfo.ОснПолн;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson.First()).Position = orgPersonInfo.Должность;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson.First()).OtherInfo = orgPersonInfo.ИныеСвед;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson.First()).Surname = orgPersonInfo.ФИО?.Фамилия;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson.First()).Name = orgPersonInfo.ФИО?.Имя;
+                    ((OrganizationEmployee)OrganizationEmployeeOrAnotherPerson.First()).Patronymic = orgPersonInfo.ФИО?.Отчество;
                 }
                 else if (personInfo.Item.GetType() == typeof(ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо))
                 {
                     var otherPerson = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо)personInfo.Item;
-                    OrganizationEmployeeOrAnotherPerson = new AnotherPerson();
+                    OrganizationEmployeeOrAnotherPerson = new List<object>(new object[] { new AnotherPerson() });
 
                     if (otherPerson.Item?.GetType() == typeof(ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоФЛПрин))
                     {
@@ -386,7 +386,7 @@ namespace Reporter.Reports
                         trustedIndividual.Surname = otherIndividualPerson?.ФИО?.Фамилия;
                         trustedIndividual.Name = otherIndividualPerson?.ФИО?.Имя;
                         trustedIndividual.Patronymic = otherIndividualPerson?.ФИО?.Отчество;
-                        ((AnotherPerson)OrganizationEmployeeOrAnotherPerson).Item = trustedIndividual;
+                        ((AnotherPerson)OrganizationEmployeeOrAnotherPerson.First()).Item = trustedIndividual;
                     }
                     else if (otherPerson.Item?.GetType() == typeof(ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицоПредОргПрин))
                     {
@@ -400,7 +400,7 @@ namespace Reporter.Reports
                         organizationRepresentative.Surname = otherOrgPerson.ФИО?.Фамилия;
                         organizationRepresentative.Name = otherOrgPerson.ФИО?.Имя;
                         organizationRepresentative.Patronymic = otherOrgPerson.ФИО?.Отчество;
-                        ((AnotherPerson)OrganizationEmployeeOrAnotherPerson).Item = organizationRepresentative;
+                        ((AnotherPerson)OrganizationEmployeeOrAnotherPerson.First()).Item = organizationRepresentative;
                     }
                 }
             }
@@ -525,10 +525,11 @@ namespace Reporter.Reports
             xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.НомДокРасх = DocumentDiscrepancyNumber;
             xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.ДатаДокРасх = DocumentDiscrepancyDate?.ToString("dd.MM.yyyy");
             xsdDocument.ИнфПок.СодФХЖ4.СвПрин.КодСодОпер.ИдФайлДокРасх = IdDocumentDiscrepancy;
-            
-            if(OrganizationEmployeeOrAnotherPerson?.GetType() == typeof(AnotherPerson))
+
+            var orgEmployeeOrAnotherPerson = OrganizationEmployeeOrAnotherPerson?.FirstOrDefault();
+            if (orgEmployeeOrAnotherPerson?.GetType() == typeof(AnotherPerson))
             {
-                var anotherPerson = OrganizationEmployeeOrAnotherPerson as AnotherPerson;
+                var anotherPerson = orgEmployeeOrAnotherPerson as AnotherPerson;
                 xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин = new ФайлИнфПокСодФХЖ4СвПринСвЛицПрин();
                 xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо();
                 var anotherPersonItem = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринИнЛицо)xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item;
@@ -562,9 +563,9 @@ namespace Reporter.Reports
                     };
                 }
             }
-            else if (OrganizationEmployeeOrAnotherPerson?.GetType() == typeof(OrganizationEmployee))
+            else if (orgEmployeeOrAnotherPerson?.GetType() == typeof(OrganizationEmployee))
             {
-                var organizationEmployee = OrganizationEmployeeOrAnotherPerson as OrganizationEmployee;
+                var organizationEmployee = orgEmployeeOrAnotherPerson as OrganizationEmployee;
                 xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин = new ФайлИнфПокСодФХЖ4СвПринСвЛицПрин();
                 xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item = new ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок();
                 var orgEmployeeItem = (ФайлИнфПокСодФХЖ4СвПринСвЛицПринРабОргПок)xsdDocument.ИнфПок.СодФХЖ4.СвПрин.СвЛицПрин.Item;

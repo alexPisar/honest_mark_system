@@ -61,17 +61,11 @@ namespace Reporter.Controls
         public override void SetDefaults()
         {
             signerOrgTabItem.IsSelected = true;
-            anotherPersonTabItem.IsSelected = true;
-            orgRepresentativeTabItem.IsSelected = true;
-            ((AnotherPerson)anotherPersonTabItem.DataContext).Item = orgRepresentativeTabItem.DataContext;
-            ((UniversalTransferBuyerDocument)DataContext).OrganizationEmployeeOrAnotherPerson = anotherPersonTabItem.DataContext;
+        }
 
-            receiverTabControl.Loaded += (object sender, RoutedEventArgs e) => {
-                anotherPersonTabItem.IsSelected = true;
-                orgRepresentativeTabItem.IsSelected = true;
-            };
-            ((UniversalTransferBuyerDocument)DataContext).OnPropertyChanged("OrganizationEmployeeOrAnotherPerson");
-            ((UniversalTransferBuyerDocument)DataContext).OnPropertyChanged("OrganizationEmployeeOrAnotherPerson.Item");
+        private void ReceiverTabControlLoaded(object sender, RoutedEventArgs e)
+        {
+            
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)

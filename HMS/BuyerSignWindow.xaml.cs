@@ -156,12 +156,6 @@ namespace HonestMarkSystem
             Report.JuridicalInn = _cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0');
             Report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
 
-            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).OrgName = Report.SignerOrgName;
-            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Position = Report.SignerPosition;
-            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Surname = Report.SignerSurname;
-            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Name = Report.SignerName;
-            ((Reporter.Entities.OrganizationRepresentative)((Reporter.Entities.AnotherPerson)Report.OrganizationEmployeeOrAnotherPerson).Item).Patronymic = Report.SignerPatronymic;
-
             Report.BasisOfAuthority = "Должностные обязанности";
             Report.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoResponsibleForRegistrationExecution;
             Report.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;

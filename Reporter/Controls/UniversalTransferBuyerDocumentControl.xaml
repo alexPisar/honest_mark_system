@@ -9,7 +9,7 @@
              xmlns:ent="clr-namespace:Reporter.Entities"
              xmlns:local="clr-namespace:Reporter.Controls"
              mc:Ignorable="d"
-             d:DesignHeight="900" d:DesignWidth="800">
+             d:DesignHeight="920" d:DesignWidth="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -54,9 +54,11 @@
                 </StackPanel>
             </StackPanel>
         </GroupBox>
-        <GroupBox Header="Сведения о лице, принявшем товары (груз)" Grid.Row="2" Height="300">
-            <base:ReportSwitchTabControl x:Name="receiverTabControl" SelectedValue="{Binding OrganizationEmployeeOrAnotherPerson, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                <base:ReportSwitchTabItem Header="Работник организации покупателя" x:Name="orgEmployeeTabItem" DataEntityObject="{ent:OrganizationEmployee}">
+        <GroupBox Header="Сведения о лице, принявшем товары (груз)" Grid.Row="2" Height="340">
+            <base:ReportAddedControl MinOccurs="0" MaxOccurs="1" DataContext="{Binding OrganizationEmployeeOrAnotherPerson, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TabText="СвЛицПрин">
+                <base:ReportAddedControl.ContentPage>
+                    <base:ReportSwitchTabControl Loaded="ReceiverTabControlLoaded">
+                <base:ReportSwitchTabItem Header="Работник организации покупателя" DataEntityObject="{ent:OrganizationEmployee}">
                     <StackPanel Orientation="Vertical">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Width="135" Margin="10 5">Должность</TextBlock>
@@ -80,10 +82,10 @@
                         </StackPanel>
                     </StackPanel>
                 </base:ReportSwitchTabItem>
-                <base:ReportSwitchTabItem Header="Иное лицо, которому доверено принятие груза" x:Name="anotherPersonTabItem" DataEntityObject="{ent:AnotherPerson}">
+                <base:ReportSwitchTabItem Header="Иное лицо, которому доверено принятие груза" DataEntityObject="{ent:AnotherPerson}">
                     <StackPanel Orientation="Vertical">
                         <base:ReportSwitchTabControl SelectedValue="{Binding Item, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                            <base:ReportSwitchTabItem Header="Представитель организации" x:Name="orgRepresentativeTabItem" DataEntityObject="{ent:OrganizationRepresentative}">
+                            <base:ReportSwitchTabItem Header="Представитель организации" DataEntityObject="{ent:OrganizationRepresentative}">
                                 <StackPanel Orientation="Vertical">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Width="160" Margin="10 5">Наименование организации</TextBlock>
@@ -113,7 +115,7 @@
                                     </StackPanel>
                                 </StackPanel>
                             </base:ReportSwitchTabItem>
-                            <base:ReportSwitchTabItem Header="Физическое лицо" x:Name="trustedIndividualTabItem" DataEntityObject="{ent:TrustedIndividual}">
+                            <base:ReportSwitchTabItem Header="Физическое лицо" DataEntityObject="{ent:TrustedIndividual}">
                                 <StackPanel Orientation="Vertical">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Width="360" Margin="10 5">Основание, по которому физ. лицу доверено принятие товаров</TextBlock>
@@ -137,6 +139,8 @@
                     </StackPanel>
                 </base:ReportSwitchTabItem>
             </base:ReportSwitchTabControl>
+                </base:ReportAddedControl.ContentPage>
+            </base:ReportAddedControl>
         </GroupBox>
         <GroupBox Header="Подписант" Grid.Row="3"  Margin="10,0">
             <StackPanel Orientation="Vertical">

@@ -29,6 +29,18 @@ namespace Reporter.Controls.Base
 
         private bool ValidationControl(object control, ScriptOptions options)
         {
+            if(control.GetType() == typeof(ReportAddedControl))
+            {
+                bool result = true;
+
+                var reportAddedControl = control as ReportAddedControl;
+
+                foreach(var c in reportAddedControl.Controls)
+                    result = ValidationControl(c, options) && result;
+
+                return result;
+            }
+
             var panelControl = control as Panel;
             if(panelControl != null)
             {
