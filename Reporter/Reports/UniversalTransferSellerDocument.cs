@@ -80,6 +80,11 @@ namespace Reporter.Reports
         /// Порядковый номер счета-фактуры (строка 1 счета-фактуры), документа об отгрузке товаров (выполнении работ), передаче имущественных прав (документа об оказании услуг)
         /// </summary>
         public string DocNumber { get; set; }
+
+        /// <summary>
+        /// Дата составления (выписки) счета-фактуры (строка 1 счета-фактуры), документа об отгрузке товаров (выполнении работ), передаче имущественных прав (документа об оказании услуг)
+        /// </summary>
+        public DateTime DocDate { get; set; }
         #endregion
 
         #region Сведения таблицы счета-фактуры (содержание факта хозяйственной жизни 2 - наименование и другая информация об отгруженных товарах (выполненных работах, оказанных услугах), о переданных имущественных правах
@@ -137,6 +142,9 @@ namespace Reporter.Reports
 
                 DocName = document.НаимДокОпр;
                 DocNumber = document.СвСчФакт?.НомерСчФ;
+
+                if (!string.IsNullOrEmpty(document.СвСчФакт?.ДатаСчФ))
+                    DocDate = DateTime.ParseExact(document.СвСчФакт.ДатаСчФ, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
                 var goods = document.ТаблСчФакт?.СведТов ?? new ФайлДокументТаблСчФактСведТов[] { };
                 Products = new List<Product>();

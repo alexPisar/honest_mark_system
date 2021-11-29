@@ -184,7 +184,7 @@ namespace HonestMarkSystem
             Report.DocName = sellerReport.DocName;
             Report.Function = sellerReport.Function;
             Report.SellerInvoiceNumber = sellerReport.DocNumber;
-            Report.SellerInvoiceDate = sellerReport.CreateDate;
+            Report.SellerInvoiceDate = sellerReport.DocDate;
 
             Report.OnAllPropertyChanged();
         }
