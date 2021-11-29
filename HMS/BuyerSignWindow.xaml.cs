@@ -60,6 +60,8 @@ namespace HonestMarkSystem
             }
         }
 
+        public byte[] SellerSignature { get; set; }
+
         private void CancelButtonClick(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
@@ -72,7 +74,7 @@ namespace HonestMarkSystem
 
             if (validationResult)
             {
-                Report.Signature = GetSignatureStringForReport(DocSellerContent);
+                Report.Signature = GetSignatureStringForReport();
                 Report.DateReceive = DateTime.Now;
 
                 if (reportControl.ValidateXml())
@@ -101,7 +103,7 @@ namespace HonestMarkSystem
 
             try
             {
-                Report.Signature = GetSignatureStringForReport(DocSellerContent);
+                Report.Signature = GetSignatureStringForReport();
                 Report.DateReceive = DateTime.Now;
                 changePathDialog.FileName = Report.FileName;
 
@@ -135,10 +137,9 @@ namespace HonestMarkSystem
             }
         }
 
-        private string GetSignatureStringForReport(byte[] fileBytes)
+        private string GetSignatureStringForReport()
         {
-            var signature = _cryptoUtil.Sign(fileBytes, true);
-            var signatureAsBase64 = Convert.ToBase64String(signature);
+            var signatureAsBase64 = Convert.ToBase64String(SellerSignature);
             return signatureAsBase64;
         }
 

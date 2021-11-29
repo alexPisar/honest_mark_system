@@ -10,6 +10,7 @@ using WebSystems.Models;
 using DataContextManagementUnit.DataAccess.Contexts.Abt;
 using System.Xml;
 using System.IO;
+using System.IO.Compression;
 using HonestMarkSystem.Implementations;
 
 namespace HonestMarkSystem.Models
@@ -226,16 +227,66 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
+            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip"))
             {
                 System.Windows.MessageBox.Show(
-                    "Не найден файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    "Не найден zip файл документооборота.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
+            }
+
+            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
+            {
+                try
+                {
+                    using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                    {
+                        var entry = zipArchive.Entries.FirstOrDefault(x => x.Name == $"{SelectedItem.FileName}.xml");
+                        entry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                    }
+                }
+                catch(Exception ex)
+                {
+                    string errorMessage = _log.GetRecursiveInnerException(ex);
+                    _log.Log(errorMessage);
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла xml из архива.", new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
+                    return;
+                }
             }
 
             var signWindow = new BuyerSignWindow(_cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
             signWindow.SetDefaultParameters(_edoSystem.GetCertSubject(), SelectedItem);
             signWindow.Report.EdoProgramVersion = _edoSystem.ProgramVersion;
+
+            string signedFilePath;
+
+            try
+            {
+                using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                {
+                    var signedEntry = zipArchive.Entries.FirstOrDefault(x => x.Name.StartsWith(SelectedItem.FileName) && x.Name != $"{SelectedItem.FileName}.xml");
+
+                    if (signedEntry == null)
+                        throw new Exception("Не найден файл подписи продавца.");
+
+                    if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}"))
+                        signedEntry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}");
+
+                    signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}";
+                }
+            }
+            catch (Exception ex)
+            {
+                string errMessage = _log.GetRecursiveInnerException(ex);
+                _log.Log(errMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла подписи продавца из архива.", new List<string>(new string[] { errMessage }));
+                errorsWindow.ShowDialog();
+                return;
+            }
+
+            signWindow.SellerSignature = File.ReadAllBytes(signedFilePath);
 
             if (signWindow.ShowDialog() == true)
             {
@@ -247,7 +298,7 @@ namespace HonestMarkSystem.Models
                     loadWindow.Owner = this.Owner;
 
                 var reportForSend = signWindow.Report;
-                var docSellerContent = _edoSystem.GetDocumentContent(SelectedItem.IdDocEdo, DocumentInOutType.Inbox);//signWindow.DocSellerContent;
+                var docSellerContent = _edoSystem.GetDocumentContent(SelectedItem.IdDocEdo, DocumentInOutType.Inbox);
                 var loadContext = loadWindow.GetLoadContext();
 
                 string errorMessage = null;
@@ -398,6 +449,16 @@ namespace HonestMarkSystem.Models
 
             fileBytes = _edoSystem.GetDocumentContent(document, DocumentInOutType.Inbox);
 
+            byte[] zipBytes;
+            try
+            {
+                zipBytes = _edoSystem.GetZipContent(document.EdoId, DocumentInOutType.Inbox);
+            }
+            catch
+            {
+                zipBytes = null;
+            }
+
             if (_edoSystem.GetType() == typeof(EdoLiteSystem))
                 if (document.DocType == (int)EdoLiteDocumentType.DpUkdDis || document.DocType == (int)EdoLiteDocumentType.DpUkdDisInfoBuyer
                     || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoice || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoiceDis
@@ -413,6 +474,9 @@ namespace HonestMarkSystem.Models
                     string docName = xmlDocument.LastChild.Attributes["ИдФайл"].Value;
                     string filePath = $"{dirPath}//{docName}.xml";
                     xmlDocument.Save(filePath);
+
+                    if(zipBytes != null)
+                        File.WriteAllBytes($"{dirPath}//{docName}.zip", zipBytes);
                 }
         }
 

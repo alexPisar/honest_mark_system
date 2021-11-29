@@ -65,6 +65,23 @@ namespace WebSystems.EdoSystems
             return fileBytes;
         }
 
+        public override byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None)
+        {
+            var webClient = (WebClients.EdoLiteClient)_webClient;
+            byte[] zipBytes = null;
+
+            if(inOutType == DocumentInOutType.Inbox)
+            {
+                zipBytes = webClient.GetIncomingZipDocument(documentId);
+            }
+            else if (inOutType == DocumentInOutType.Outbox)
+            {
+                zipBytes = webClient.GetOutgoingZipDocument(documentId);
+            }
+
+            return zipBytes;
+        }
+
         public override bool Authorization()
         {
             if (_certificate == null)
