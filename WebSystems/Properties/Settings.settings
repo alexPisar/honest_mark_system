@@ -8,5 +8,8 @@
     <Setting Name="UrlAddressEdoLite" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://elk.edo.crpt.tech</Value>
     </Setting>
+    <Setting Name="DiadocApiUrl" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://diadoc-api.kontur.ru</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -79,12 +79,17 @@ namespace HonestMarkSystem.Models
                             continue;
 
                         byte[] docContentBytes;
-                        SaveNewDocument(doc, out docContentBytes);
+
+                        if(!SaveNewDocument(doc, out docContentBytes))
+                            continue;
 
                         var docFromDb = (DocEdoPurchasing)_dataBaseAdapter.GetDocumentFromDb(doc);
 
                         if (docFromDb == null)
+                        {
+                            _edoSystem.SendReceivingConfirmationEventHandler?.Invoke(this, new WebSystems.EventArgs.SendReceivingConfirmationEventArgs { Document = doc});
                             _dataBaseAdapter.AddDocumentToDataBase(doc, docContentBytes, DocumentInOutType.Inbox);
+                        }
                     }
                     _dataBaseAdapter.Commit();
                     SaveParameters(parameters);
@@ -298,7 +303,11 @@ namespace HonestMarkSystem.Models
                     loadWindow.Owner = this.Owner;
 
                 var reportForSend = signWindow.Report;
-                var docSellerContent = _edoSystem.GetDocumentContent(SelectedItem.IdDocEdo, DocumentInOutType.Inbox);
+
+                var sellerXmlDocument = new XmlDocument();
+                sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+
                 var loadContext = loadWindow.GetLoadContext();
 
                 string errorMessage = null;
@@ -412,6 +421,11 @@ namespace HonestMarkSystem.Models
 
                 ConfigSet.Configs.Config.GetInstance().Save(ConfigSet.Configs.Config.GetInstance(), ConfigSet.Configs.Config.ConfFileName);
             }
+            else if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+            {
+                ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime = (DateTime)parameters[0];
+                ConfigSet.Configs.Config.GetInstance().Save(ConfigSet.Configs.Config.GetInstance(), ConfigSet.Configs.Config.ConfFileName);
+            }
         }
 
         public List<IEdoSystemDocument<string>> GetNewDocuments(out object[] parameters)
@@ -432,6 +446,13 @@ namespace HonestMarkSystem.Models
                 else
                     return new List<IEdoSystemDocument<string>>();
             }
+            else if(_edoSystem.GetType() == typeof(DiadocEdoSystem))
+            {
+                parameters = new object[1] { DateTime.Now };
+
+                var newDocuments = _edoSystem.GetDocuments(DocumentInOutType.Inbox, 0, ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime);
+                return newDocuments;
+            }
             else
             {
                 parameters = null;
@@ -439,7 +460,7 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        public void SaveNewDocument(IEdoSystemDocument<string> document, out byte[] fileBytes)
+        public bool SaveNewDocument(IEdoSystemDocument<string> document, out byte[] fileBytes)
         {
             if(!Directory.Exists(edoFilesPath))
                 Directory.CreateDirectory(edoFilesPath);
@@ -460,6 +481,7 @@ namespace HonestMarkSystem.Models
             }
 
             if (_edoSystem.GetType() == typeof(EdoLiteSystem))
+            {
                 if (document.DocType == (int)EdoLiteDocumentType.DpUkdDis || document.DocType == (int)EdoLiteDocumentType.DpUkdDisInfoBuyer
                     || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoice || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoiceDis
                     || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoiceDisInfoBuyer || document.DocType == (int)EdoLiteDocumentType.DpUpdDop
@@ -475,15 +497,51 @@ namespace HonestMarkSystem.Models
                     string filePath = $"{dirPath}//{docName}.xml";
                     xmlDocument.Save(filePath);
 
-                    if(zipBytes != null)
+                    if (zipBytes != null)
                         File.WriteAllBytes($"{dirPath}//{docName}.zip", zipBytes);
+
+                    return true;
                 }
+                else
+                    return false;
+            }
+            else if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+            {
+                var doc = document as DiadocEdoDocument;
+
+                if (string.IsNullOrEmpty(doc?.FileName))
+                    return false;
+
+                if (!doc.FileName.ToLower().EndsWith(".xml"))
+                    return false;
+
+                var xml = Encoding.GetEncoding(1251).GetString(fileBytes);
+                var xmlDocument = new XmlDocument();
+                xmlDocument.LoadXml(xml);
+
+                string filePath = $"{dirPath}//{doc.FileName}";
+                xmlDocument.Save(filePath);
+                return true;
+            }
+            else
+                return false;
         }
 
         public void SaveOrgData(string orgInn, string orgName)
         {
             if(_dataBaseAdapter.GetType() == typeof(EdoLiteToDataBase))
                 ((EdoLiteToDataBase)_dataBaseAdapter).SaveOrgData(orgInn, orgName);
+            else if(_dataBaseAdapter.GetType() == typeof(DiadocEdoToDataBase))
+            {
+                var edoSystem = _edoSystem as DiadocEdoSystem;
+
+                if (edoSystem == null)
+                    return;
+
+                var counteragentsBoxIdsForOrganization = edoSystem.GetCounteragentsBoxesForOrganization(orgInn);
+                ((DiadocEdoToDataBase)_dataBaseAdapter).SetPermittedBoxIds(counteragentsBoxIdsForOrganization);
+                ((DiadocEdoToDataBase)_dataBaseAdapter).SetOrgData(orgName, orgInn);
+            }
         }
     }
 }

@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DiadocApi, Version=2.9.0.0, Culture=neutral, PublicKeyToken=d18fd4c7ad3c243e, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiadocSDK.2.9.22\lib\net461\DiadocApi.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -45,12 +48,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EdoSystems\DiadocEdoSystem.cs" />
     <Compile Include="EdoSystems\EdoLiteSystem.cs" />
     <Compile Include="Enums.cs" />
+    <Compile Include="EventArgs\SendReceivingConfirmationEventArgs.cs" />
     <Compile Include="IEdoSystem.cs" />
     <Compile Include="IWebClient.cs" />
     <Compile Include="Models\AuthRequest.cs" />
     <Compile Include="Models\AuthResult.cs" />
+    <Compile Include="Models\DiadocEdoDocument.cs" />
     <Compile Include="Models\DocumentCreateRequest.cs" />
     <Compile Include="Models\DocumentCreateResponse.cs" />
     <Compile Include="Models\DocumentEdoProcessResultInfo.cs" />
@@ -82,6 +88,7 @@
     <Compile Include="ServiceManager.cs" />
     <Compile Include="Systems\HonestMarkSystem.cs" />
     <Compile Include="WebClientSingleInstance.cs" />
+    <Compile Include="WebClients\DiadocEdoClient.cs" />
     <Compile Include="WebClients\EdoLiteClient.cs" />
     <Compile Include="WebClients\HonestMarkClient.cs" />
   </ItemGroup>
@@ -100,8 +107,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

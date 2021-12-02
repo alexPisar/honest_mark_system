@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using ConfigSet.Configs;
 using UtilitesLibrary.Service;
 using System.Security.Cryptography.X509Certificates;
+using DataContextManagementUnit.DataAccess.Contexts.Abt;
 using WebSystems;
 using WebSystems.EdoSystems;
 
@@ -47,7 +48,7 @@ namespace HonestMarkSystem
                 if (selectedCert == null)
                     throw new Exception("Не найден сертификат по ИНН организации.");
 
-                var dataBaseAdapter = new Implementations.EdoLiteToDataBase();
+                Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter = new Implementations.EdoLiteToDataBase();
 
                 WebSystems.Systems.HonestMarkSystem markSystem;
                 IEdoSystem edoSystem;

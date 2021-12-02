@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WebSystems.EventArgs;
 using System.Security.Cryptography.X509Certificates;
 
 namespace WebSystems
@@ -11,14 +12,14 @@ namespace WebSystems
     {
         protected IWebClient _webClient;
         protected X509Certificate2 _certificate;
+
+        public virtual EventHandler<SendReceivingConfirmationEventArgs> SendReceivingConfirmationEventHandler { get; }
         public abstract List<Models.IEdoSystemDocument<string>> GetDocuments(DocumentInOutType inOutType = DocumentInOutType.None, int docCount = 0, DateTime? fromDate = null, DateTime? toDate = null);
         public abstract byte[] GetDocumentContent(Models.IEdoSystemDocument<string> document, DocumentInOutType inOutType = DocumentInOutType.None);
 
-        public abstract byte[] GetDocumentContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None);
-
         public abstract string ProgramVersion { get; }
 
-        public virtual byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None) { return null; }
+        public abstract byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None);
 
         public IEdoSystem(X509Certificate2 certificate)
         {

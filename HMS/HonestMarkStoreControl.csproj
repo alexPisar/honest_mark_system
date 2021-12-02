@@ -37,6 +37,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>08C2A2C9A221C5B686059B78B25533CACDAAC115</ManifestCertificateThumbprint>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="DevExpress.Images.v20.1, Version=20.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -135,6 +141,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\DevExpress 20.1\Components\Bin\Framework\DevExpress.Xpf.Themes.VS2019Light.v20.1.dll</HintPath>
     </Reference>
+    <Reference Include="DiadocApi, Version=2.9.0.0, Culture=neutral, PublicKeyToken=d18fd4c7ad3c243e, processorArchitecture=MSIL">
+      <HintPath>..\packages\DiadocSDK.2.9.22\lib\net461\DiadocApi.dll</HintPath>
+    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
@@ -177,6 +186,7 @@
     <Compile Include="BuyerSignWindow.xaml.cs">
       <DependentUpon>BuyerSignWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Implementations\DiadocEdoToDataBase.cs" />
     <Compile Include="Models\PurchasingDocumentsModel.cs" />
     <Compile Include="PurchasingDocumentsWindow.xaml.cs">
       <DependentUpon>PurchasingDocumentsWindow.xaml</DependentUpon>

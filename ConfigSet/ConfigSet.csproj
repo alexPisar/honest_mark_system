@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configs\Config.cs" />
+    <Compile Include="Configs\DiadocEdoTokenCache.cs" />
     <Compile Include="Configs\EdoLiteTokenCache.cs" />
     <Compile Include="Configs\HonestMarkTokenCache.cs" />
     <Compile Include="Configuration.cs" />

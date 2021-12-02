@@ -59,6 +59,8 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual string ErrorMessage { get; set; }
 
         public virtual string UserName { get; set; }
+
+        public virtual string CounteragentEdoBoxId { get; set; }
         #endregion
 
         #region Navigation Properties

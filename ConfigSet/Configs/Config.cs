@@ -24,6 +24,7 @@ namespace ConfigSet.Configs
         public string DataBaseUser { get; set; }
         public string CipherDataBasePassword { get; set; }
 
+        public string DiadocApiId { get; set; }
         public DateTime? EdoLastDocDateTime { get; set; }
         public int EdoDocCount { get; set; }
 

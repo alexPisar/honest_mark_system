@@ -13,6 +13,6 @@ namespace HonestMarkSystem.Interfaces
 
         void SaveParameters(params object[] parameters);
 
-        void SaveNewDocument(IEdoSystemDocument<string> document, out byte[] fileBytes);
+        bool SaveNewDocument(IEdoSystemDocument<string> document, out byte[] fileBytes);
     }
 }

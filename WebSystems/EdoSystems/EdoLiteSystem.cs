@@ -52,19 +52,6 @@ namespace WebSystems.EdoSystems
             return fileBytes;
         }
 
-        public override byte[] GetDocumentContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None)
-        {
-            var webClient = (WebClients.EdoLiteClient)_webClient;
-            byte[] fileBytes = null;
-
-            if (inOutType == DocumentInOutType.Inbox)
-                fileBytes = webClient.GetIncomingDocumentContent(documentId);
-            else if (inOutType == DocumentInOutType.Outbox)
-                fileBytes = webClient.GetOutgoingDocumentContent(documentId);
-
-            return fileBytes;
-        }
-
         public override byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None)
         {
             var webClient = (WebClients.EdoLiteClient)_webClient;

@@ -122,6 +122,11 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMaxLength(100);
 
             this
+                .Property(p => p.CounteragentEdoBoxId)
+                .HasColumnName("COUNTERAGENT_EDO_BOX_ID")
+                .HasMaxLength(128);
+
+            this
                 .HasOptional(p => p.Status)
                 .WithMany()
                 .HasForeignKey(p => p.DocStatus)
