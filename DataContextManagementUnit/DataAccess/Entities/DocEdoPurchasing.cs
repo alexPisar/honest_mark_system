@@ -61,6 +61,8 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual string UserName { get; set; }
 
         public virtual string CounteragentEdoBoxId { get; set; }
+
+        public virtual string ParentEntityId { get; set; }
         #endregion
 
         #region Navigation Properties

@@ -127,6 +127,11 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMaxLength(128);
 
             this
+                .Property(p => p.ParentEntityId)
+                .HasColumnName("PARENT_ENTITY_ID")
+                .HasMaxLength(128);
+
+            this
                 .HasOptional(p => p.Status)
                 .WithMany()
                 .HasForeignKey(p => p.DocStatus)

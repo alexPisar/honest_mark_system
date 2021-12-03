@@ -170,6 +170,7 @@ namespace HonestMarkSystem.Implementations
                 Name = doc.Title,
                 IdDocType = (int)doc.DocumentType,
                 CounteragentEdoBoxId = doc.CounteragentBoxId,
+                ParentEntityId = doc.EntityId,
                 ReceiveDate = doc.DeliveryDate,
                 CreateDate = doc.CreatedDate,
                 TotalPrice = total,

@@ -105,17 +105,22 @@ namespace WebSystems.WebClients
             return CallApiSafe(new Func<Message>(() => { return _api.PostMessage(_authToken, messageToPost); }));
         }
 
-        public Message SendXmlDocument(string counteragentBoxId,
-            bool isOurRecipient, DocumentAttachment documentAttachment = null)
+        public MessagePatch SendPatchRecipientXmlDocument(string messageId, int docType, RecipientTitleAttachment recipientAttachment)
         {
-            var messageToPost = new MessageToPost
+            var messageToPost = new MessagePatchToPost
             {
-                FromBoxId = _actualBoxId,
-                ToBoxId = counteragentBoxId
+                BoxId = _actualBoxId,
+                MessageId = messageId
             };
 
-            messageToPost.DocumentAttachments.Add(documentAttachment);
-            return CallApiSafe(new Func<Message>(() => { return _api.PostMessage(_authToken, messageToPost); }));
+            if(docType == (int)DocumentType.UniversalTransferDocument)
+                messageToPost.AddUniversalTransferDocumentBuyerTitle(recipientAttachment);
+            else if(docType == (int)DocumentType.XmlTorg12)
+                messageToPost.AddXmlTorg12BuyerTitle(recipientAttachment);
+            else if (docType == (int)DocumentType.XmlAcceptanceCertificate)
+                messageToPost.AddXmlAcceptanceCertificateBuyerTitle(recipientAttachment);
+
+            return CallApiSafe(new Func<MessagePatch>(() => { return _api.PostMessagePatch(_authToken, messageToPost); }));
         }
 
         public List<Counteragent> GetKontragents(string orgId = null)

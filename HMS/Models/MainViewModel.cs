@@ -394,8 +394,7 @@ namespace HonestMarkSystem.Models
                                 return;
                             }
 
-                            _edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedItem.CounteragentEdoBoxId,
-                                typeNameId, function, "utd820_05_01_01_hyphen");
+                            _edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedItem.ParentEntityId, SelectedItem.IdDocType);
                         }
 
                         SelectedItem.SignatureFileName = reportForSend.FileName;
