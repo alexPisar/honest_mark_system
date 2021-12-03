@@ -19,11 +19,19 @@ namespace WebSystems
 
         public abstract string ProgramVersion { get; }
 
+        public abstract bool HasZipContent { get; }
+
         public abstract byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None);
 
         public IEdoSystem(X509Certificate2 certificate)
         {
             _certificate = certificate;
+        }
+
+        public virtual byte[] GetDocumentContent(Models.IEdoSystemDocument<string> document, out byte[] signature, DocumentInOutType inOutType = DocumentInOutType.None)
+        {
+            signature = null;
+            return GetDocumentContent(document, inOutType);
         }
 
         public virtual int GetDocumentsCount()

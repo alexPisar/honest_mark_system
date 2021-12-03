@@ -17,6 +17,8 @@ namespace WebSystems.EdoSystems
 
         public override string ProgramVersion => "Diadoc 1.0";
 
+        public override bool HasZipContent => false;
+
         public override EventHandler<SendReceivingConfirmationEventArgs> SendReceivingConfirmationEventHandler => (object sender, SendReceivingConfirmationEventArgs e) => 
         {
             var doc = (Models.DiadocEdoDocument)e.Document;
@@ -109,6 +111,19 @@ namespace WebSystems.EdoSystems
             var doc = document as Models.DiadocEdoDocument;
             var selectedDoc = ((WebClients.DiadocEdoClient)_webClient).GetDocument(doc.EdoId, doc.EntityId);
             return selectedDoc.Content?.Data;
+        }
+
+        public override byte[] GetDocumentContent(Models.IEdoSystemDocument<string> document, out byte[] signature, DocumentInOutType inOutType = DocumentInOutType.None)
+        {
+            var webClient = _webClient as WebClients.DiadocEdoClient;
+            var doc = document as Models.DiadocEdoDocument;
+
+            var events = webClient.GetEvents(doc.EdoId, doc.EntityId, true);
+            var mainEvent = events.FirstOrDefault(e => e.DocumentInfo.DocumentType == doc.DocumentType && e.Docflow?.DocumentAttachment != null);
+
+            var documentAttachment = mainEvent.Docflow.DocumentAttachment;
+            signature = documentAttachment.Signature?.Entity?.Content?.Data;
+            return documentAttachment.Attachment?.Entity?.Content?.Data;
         }
 
         public override byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None)

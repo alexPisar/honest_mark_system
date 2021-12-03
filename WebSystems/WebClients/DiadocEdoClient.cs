@@ -157,6 +157,26 @@ namespace WebSystems.WebClients
             return events;
         }
 
+        public List<DocumentWithDocflow> GetEvents(string messageId, string entityId, bool includedContent = false)
+        {
+            var requests = new GetDocflowBatchRequest
+            {
+                Requests =
+                {
+                    new GetDocflowRequest
+                    {
+                        DocumentId = new DocumentId(messageId, entityId),
+                        InjectEntityContent = includedContent
+                    }
+                }
+            };
+
+            var eventsResponse = CallApiSafe(new Func<GetDocflowBatchResponse>(() => _api.GetDocflows(_authToken, _actualBoxId, requests)));
+            var events = eventsResponse.Documents;
+
+            return events;
+        }
+
         public Document GetDocument(string messageId, string entityId)
         {
             var document = CallApiSafe(new Func<Document>(() => _api.GetDocument(_authToken, _actualBoxId, messageId, entityId)));

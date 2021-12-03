@@ -41,12 +41,22 @@ namespace HmsTests
             var edo = DiadocEdoClient.GetInstance();
             edo.Authenticate(cert);
 
-            var docs = edo.GetDocuments("Any.OutboundNotFinished", ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime.Value);
+            var docs = edo.GetDocuments("Any.OutboundFinished", ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime.Value);
             var doc = docs.Last();
 
             var selectedDoc = edo.GetDocument(doc.MessageId, doc.EntityId);
             //var documents = edo.GetDocumentsByMessageId(doc.MessageId);
             var currentMessage = edo.GetMessage(doc.MessageId, doc.EntityId);
+
+            var signatureDoc = currentMessage.Entities.FirstOrDefault(e => e.ParentEntityId == doc.EntityId && e.EntityType == Diadoc.Api.Proto.Events.EntityType.Signature);
+
+            foreach (var d in docs)
+            {
+                var events = edo.GetEvents(d.MessageId, d.EntityId, true);
+                var ev = events.FirstOrDefault(e => e.DocumentInfo.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocument && e.Docflow.OutboundUniversalTransferDocumentDocflow != null);
+                var sign = ev.Docflow.DocumentAttachment;
+            }
+            //var signContent = edo.GetDocument(doc.MessageId, signatureDoc.EntityId);
         }
     }
 }
