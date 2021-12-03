@@ -236,6 +236,13 @@ namespace HonestMarkSystem.Implementations
             return _documents.FirstOrDefault(d => d.IdDocEdo == document.EdoId);
         }
 
+        public void LoadStatus(DocEdoPurchasing doc)
+        {
+            doc.Status = null;
+            _abt.Entry(doc).Reference("Status").IsLoaded = false;
+            _abt.Entry(doc).Reference("Status").Load();
+        }
+
         public void Commit()
         {
             _abt.SaveChanges();

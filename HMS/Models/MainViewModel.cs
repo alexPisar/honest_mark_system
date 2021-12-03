@@ -118,7 +118,10 @@ namespace HonestMarkSystem.Models
                     var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
 
                     if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
+                    {
                         processingDocument.DocStatus = (int)DocEdoStatus.Processed;
+                        LoadStatus(processingDocument);
+                    }
                     else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
                     {
                         processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
@@ -138,6 +141,7 @@ namespace HonestMarkSystem.Models
                                 errorsList.Add($"Произошла ошибка с кодом:{error.Code}\n");
                         }
                         processingDocument.ErrorMessage = string.Join("\n\n", errorsList);
+                        LoadStatus(processingDocument);
                     }
                 }
 
@@ -192,6 +196,14 @@ namespace HonestMarkSystem.Models
                     var errorsWindow = new ErrorsWindow("Произошла ошибка сопоставления.", new List<string>(new string[] { errorMessage }));
                     errorsWindow.ShowDialog();
                 }
+            }
+        }
+
+        private void LoadStatus(DocEdoPurchasing doc)
+        {
+            if(_dataBaseAdapter?.GetType() == typeof(DiadocEdoToDataBase))
+            {
+                ((DiadocEdoToDataBase)_dataBaseAdapter).LoadStatus(doc);
             }
         }
 
@@ -404,6 +416,7 @@ namespace HonestMarkSystem.Models
                         else
                             SelectedItem.DocStatus = (int)DocEdoStatus.Processed;
 
+                        LoadStatus(SelectedItem);
                         UpdateProperties();
 
                         _dataBaseAdapter.Commit();
