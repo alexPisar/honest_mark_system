@@ -368,16 +368,44 @@ namespace HonestMarkSystem.Models
 
                             string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{reportForSend.FileName}.xml";
                             _edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, content);
-
-                            SelectedItem.SignatureFileName = reportForSend.FileName;
-
-                            if(reportForSend.FileName.StartsWith("ON_NSCHFDOPPOKMARK"))
-                                SelectedItem.DocStatus = (int)DocEdoStatus.Sent;
-                            else
-                                SelectedItem.DocStatus = (int)DocEdoStatus.Processed;
-
-                            UpdateProperties();
                         }
+                        else if(_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                        {
+                            string typeNameId = string.Empty, function = string.Empty;
+
+                            if (SelectedItem.IdDocType == (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocument)
+                            {
+                                typeNameId = "UniversalTransferDocumentBuyerTitle";
+                                function = "СЧФДОП";
+                            }
+                            else if (SelectedItem.IdDocType == (int)Diadoc.Api.Proto.DocumentType.XmlTorg12)
+                            {
+                                typeNameId = "XmlTorg12BuyerTitle";
+                                function = "ДОП";
+                            }
+                            else if (SelectedItem.IdDocType == (int)Diadoc.Api.Proto.DocumentType.XmlAcceptanceCertificate)
+                            {
+                                typeNameId = "XmlAcceptanceCertificateBuyerTitle";
+                                function = "ДОП";
+                            }
+                            else
+                            {
+                                System.Windows.MessageBox.Show("Исходный документ продавца не предусматривает подписи и отправки титула покупателя.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                                return;
+                            }
+
+                            _edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedItem.CounteragentEdoBoxId,
+                                typeNameId, function, "utd820_05_01_01_hyphen");
+                        }
+
+                        SelectedItem.SignatureFileName = reportForSend.FileName;
+
+                        if (reportForSend.FileName.StartsWith("ON_NSCHFDOPPOKMARK"))
+                            SelectedItem.DocStatus = (int)DocEdoStatus.Sent;
+                        else
+                            SelectedItem.DocStatus = (int)DocEdoStatus.Processed;
+
+                        UpdateProperties();
 
                         _dataBaseAdapter.Commit();
                         loadContext.SetSuccessFullLoad("Данные были успешно загружены.");

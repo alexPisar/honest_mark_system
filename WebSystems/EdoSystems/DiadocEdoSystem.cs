@@ -48,26 +48,23 @@ namespace WebSystems.EdoSystems
 
         public override object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters)
         {
-            string senderOrgId = (string)parameters[0];
-            string receiverOrgId = (string)parameters[1];
+            string counteragentBoxId = (string)parameters[0];
 
             var documentAttachment = new Diadoc.Api.Proto.Events.DocumentAttachment
             {
-                TypeNamedId = (string)parameters[2],
-                Function = (string)parameters[3],
-                Version = (string)parameters[4],
+                TypeNamedId = (string)parameters[1],
+                Function = (string)parameters[2],
+                Version = (string)parameters[3],
                 SignedContent = new Diadoc.Api.Proto.Events.SignedContent
                 {
                     Content = content
                 }
             };
 
-            documentAttachment.CustomDocumentId = (string)parameters[5];
-
             if (signature != null)
                 documentAttachment.SignedContent.Signature = signature;
 
-            return ((WebClients.DiadocEdoClient)_webClient).SendXmlDocument(senderOrgId, receiverOrgId, false, documentAttachment);
+            return ((WebClients.DiadocEdoClient)_webClient).SendXmlDocument(counteragentBoxId, false, documentAttachment);
         }
 
         public string GetMyOrgId(string inn, string kpp = null)

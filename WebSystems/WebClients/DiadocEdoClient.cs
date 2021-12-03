@@ -105,6 +105,19 @@ namespace WebSystems.WebClients
             return CallApiSafe(new Func<Message>(() => { return _api.PostMessage(_authToken, messageToPost); }));
         }
 
+        public Message SendXmlDocument(string counteragentBoxId,
+            bool isOurRecipient, DocumentAttachment documentAttachment = null)
+        {
+            var messageToPost = new MessageToPost
+            {
+                FromBoxId = _actualBoxId,
+                ToBoxId = counteragentBoxId
+            };
+
+            messageToPost.DocumentAttachments.Add(documentAttachment);
+            return CallApiSafe(new Func<Message>(() => { return _api.PostMessage(_authToken, messageToPost); }));
+        }
+
         public List<Counteragent> GetKontragents(string orgId = null)
         {
             CounteragentList list;
