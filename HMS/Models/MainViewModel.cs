@@ -486,9 +486,10 @@ namespace HonestMarkSystem.Models
 
             foreach(var productGroup in productGroups)
             {
-                errorMessage = errorMessage == null ? $"Количество товара с наименованием: \n{productGroup.Description}\nНе равно количеству кодов маркировки."
+                errorMessage = errorMessage == null ? $"Количество товара с наименованием: \n{productGroup.Description}\nНе равно количеству кодов маркировки.\n" +
+                    $"Количество кодов маркировки-{productGroup.Count}, товара-{productGroup.Quantity}."
                     : $"{errorMessage}\n\nКоличество товара с наименованием: \n{productGroup.Description}\nНе равно количеству кодов маркировки.\n" +
-                    $"Количество кодов маркировки-{productGroup.Count}, товара-{productGroup.Quantity}";
+                    $"Количество кодов маркировки-{productGroup.Count}, товара-{productGroup.Quantity}.";
             }
 
             if (!string.IsNullOrEmpty(errorMessage))
