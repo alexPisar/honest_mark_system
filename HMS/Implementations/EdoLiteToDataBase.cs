@@ -108,6 +108,23 @@ namespace HonestMarkSystem.Implementations
                 newDocInDb.ReceiverName = doc?.Recipient?.Name;
             }
 
+            foreach(var product in report.Products)
+            {
+                var newDetail = new DocEdoPurchasingDetail
+                {
+                    BarCode = product.BarCode,
+                    Quantity = product.Quantity,
+                    Description = product.Description,
+                    Price = product.Price,
+                    Subtotal = product.Subtotal,
+                    TaxAmount = product.TaxAmount,
+                    IdDocEdoPurchasing = newDocInDb.IdDocEdo,
+                    EdoDocument = newDocInDb
+                };
+
+                newDocInDb.Details.Add(newDetail);
+            }
+
             _abt.DocEdoPurchasings.Add(newDocInDb);
             _documents.Add(newDocInDb);
 

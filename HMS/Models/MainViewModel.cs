@@ -24,6 +24,8 @@ namespace HonestMarkSystem.Models
         private UtilitesLibrary.Service.CryptoUtil _cryptoUtil;
         private WebSystems.Systems.HonestMarkSystem _honestMarkSystem;
 
+        public List<DocEdoPurchasingDetail> Details => SelectedItem?.Details;
+
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });

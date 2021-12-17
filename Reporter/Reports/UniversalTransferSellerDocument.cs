@@ -155,8 +155,18 @@ namespace Reporter.Reports
                     {
                         Description = good.НаимТов,
                         Quantity = good.КолТов,
-                        BarCode = good?.ДопСведТов?.КодТов?.TrimStart('0')
+                        Price = good.ЦенаТов,
+                        TaxAmount = good.СумНал?.Item as decimal?,
+                        Subtotal = good.СтТовУчНал
                     };
+
+                    if (!string.IsNullOrEmpty(good?.ДопСведТов?.КодТов))
+                    {
+                        if (good.ДопСведТов.КодТов.StartsWith("0") && good.ДопСведТов.КодТов.Length == 14)
+                            product.BarCode = good.ДопСведТов.КодТов.TrimStart('0');
+                        else
+                            product.BarCode = good.ДопСведТов.КодТов;
+                    }
 
                     product.MarkedCodes = new List<string>();
                     product.TransportPackingIdentificationCode = new List<string>();

@@ -124,6 +124,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
             modelBuilder.Configurations.Add(new Mapping.DocPurchasingConfiguration());
             modelBuilder.Configurations.Add(new Mapping.RefEdoStatusConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocEdoPurchasingConfiguration());
+            modelBuilder.Configurations.Add(new Mapping.DocEdoPurchasingDetailConfiguration());
             modelBuilder.Configurations.Add(new Mapping.RefUserByEdoShipperConfiguration());
 
             CustomizeMapping(modelBuilder);

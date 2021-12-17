@@ -10,6 +10,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
     {
         public DocEdoPurchasing()
         {
+            this.Details = new List<DocEdoPurchasingDetail>();
             OnCreated();
         }
 
@@ -67,6 +68,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 
         #region Navigation Properties
         public virtual RefEdoStatus Status { get; set; }
+        public virtual List<DocEdoPurchasingDetail> Details { get; set; }
         #endregion
 
         #region Extensibility Method Definitions

@@ -25,5 +25,10 @@ namespace HonestMarkSystem
         {
             InitializeComponent();
         }
+
+        private void SelectedItemChanged(object sender, DevExpress.Xpf.Grid.SelectedItemChangedEventArgs e)
+        {
+            ((UtilitesLibrary.ModelBase.ListViewModel<DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing>)DataContext).OnPropertyChanged("Details");
+        }
     }
 }

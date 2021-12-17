@@ -15,7 +15,11 @@ namespace Reporter.Entities
 
         public string BarCode { get; set; }
 
+        public decimal? Price { get; set; }
+
         public decimal? TaxAmount { get; set; }
+
+        public decimal? Subtotal { get; set; }
 
         public List<string> MarkedCodes { get; set; }
 

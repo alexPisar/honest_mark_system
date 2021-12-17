@@ -211,6 +211,23 @@ namespace HonestMarkSystem.Implementations
             else
                 newDoc.DocStatus = (int)WebSystems.DocEdoStatus.New;
 
+            foreach(var product in report.Products)
+            {
+                var newDetail = new DocEdoPurchasingDetail
+                {
+                    BarCode = product.BarCode,
+                    Quantity = product.Quantity,
+                    Description = product.Description,
+                    Price = product.Price,
+                    Subtotal = product.Subtotal,
+                    TaxAmount = product.TaxAmount,
+                    IdDocEdoPurchasing = newDoc.IdDocEdo,
+                    EdoDocument = newDoc
+                };
+
+                newDoc.Details.Add(newDetail);
+            }
+
             _abt.DocEdoPurchasings.Add(newDoc);
             _documents.Add(newDoc);
 

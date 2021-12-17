@@ -19,7 +19,9 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
         <dxb:StatusBarControl Grid.Row="0" Caption="Главное меню" Height="70">
             <dxb:BarButtonItem ToolTip="Обновить список" Command="{Binding RefreshCommand}">
@@ -68,7 +70,8 @@
             </dxb:BarButtonItem>
         </dxb:StatusBarControl>
         <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList}" 
-                         SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}">
+                         SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                         SelectedItemChanged="SelectedItemChanged">
             <dxg:GridColumn FieldName="IdDocEdo" Header="ID" Width="250"/>
             <dxg:GridColumn FieldName="EdoProviderName" Header="Имя провайдера" Width="120"/>
             <dxg:GridColumn FieldName="SenderName" Header="Отправитель" Width="150"/>
@@ -88,6 +91,19 @@
             <dxg:GridControl.View>
                 <dxg:TableView  FixedLineHeight="50"/>
             </dxg:GridControl.View>
+        </dxg:GridControl>
+        <GridSplitter Grid.Row="2" 
+                      Height="5" 
+                      ShowsPreview="False"
+                      VerticalAlignment="Stretch"
+                      HorizontalAlignment="Center"/>
+        <dxg:GridControl Grid.Row="3" ItemsSource="{Binding Path=Details, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+            <dxg:GridColumn FieldName="BarCode" Header="Код товара" Width="100"/>
+            <dxg:GridColumn FieldName="Description" Header="Наименование" Width="450"/>
+            <dxg:GridColumn FieldName="Quantity" Header="Количество" Width="75"/>
+            <dxg:GridColumn FieldName="Price" Header="Цена за единицу" Width="110"/>
+            <dxg:GridColumn FieldName="TaxAmount" Header="Сумма налога" Width="100"/>
+            <dxg:GridColumn FieldName="Subtotal" Header="Сумма всего" Width="110"/>
         </dxg:GridControl>
     </Grid>
 </dxr:DXRibbonWindow>

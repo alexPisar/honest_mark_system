@@ -137,6 +137,12 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasForeignKey(p => p.DocStatus)
                 .WillCascadeOnDelete(false);
 
+            this
+                .HasMany(p => p.Details)
+                .WithRequired(d => d.EdoDocument)
+                .HasForeignKey(d => d.IdDocEdoPurchasing)
+                .WillCascadeOnDelete(false);
+
             OnCreated();
         }
 
