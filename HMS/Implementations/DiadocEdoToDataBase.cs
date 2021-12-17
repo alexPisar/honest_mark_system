@@ -83,45 +83,39 @@ namespace HonestMarkSystem.Implementations
                 .ToArray();
         }
 
-        public void SaveMarkedCodes(decimal idDocPurchasing, KeyValuePair<string, string>[] markedCodesByBar)
+        public object GetPurchasingDocumentById(decimal idDocPurchasing)
         {
-            var docPurchasing = _abt.DocPurchasings.FirstOrDefault(d => d.Id == idDocPurchasing);
+            return _abt.DocPurchasings.FirstOrDefault(d => d.Id == idDocPurchasing);
+        }
 
-            if (docPurchasing == null)
-                throw new Exception("Не найден документ закупок в базе.");
-
-            if (docPurchasing.IdDocLink == null)
+        public void AddMarkedCode(object docPurchasing, KeyValuePair<string, string> code)
+        {
+            if (((DocPurchasing)docPurchasing)?.IdDocLink == null)
                 throw new Exception("Для документа закупок не найден трейдер документ.");
 
-            var idDoc = docPurchasing.IdDocLink.Value;
+            var idDoc = ((DocPurchasing)docPurchasing).IdDocLink.Value;
+            var markedCode = code.Key;
 
-            var docGoodsDetailsLabels = _abt.DocGoodsDetailsLabels.Where(l => l.IdDoc == idDoc);
+            var barCode = code.Value;
+            var idGood = _abt.RefBarCodes?
+                .FirstOrDefault(b => b.BarCode == barCode && b.IsPrimary == false)?
+                .IdGood;
 
-            foreach (var code in markedCodesByBar)
+            if (idGood == null)
+                throw new Exception($"Товара со штрихкодом {barCode} нет в базе данных.");
+
+            if (_abt.DocGoodsDetailsLabels.FirstOrDefault(l => l.IdDoc == idDoc && l.IdGood == idGood && l.DmLabel == markedCode) != null)
+                return;
+
+            var label = new DocGoodsDetailsLabels
             {
-                var markedCode = code.Key;
+                IdDoc = idDoc,
+                DmLabel = markedCode,
+                IdGood = idGood.Value,
+                InsertDateTime = DateTime.Now
+            };
 
-                if (docGoodsDetailsLabels?.FirstOrDefault(l => l.DmLabel == markedCode) != null)
-                    continue;
-
-                var barCode = code.Value;
-                var idGood = _abt.RefBarCodes?
-                    .FirstOrDefault(b => b.BarCode == barCode && b.IsPrimary == false)?
-                    .IdGood;
-
-                if (idGood == null)
-                    throw new Exception($"Товара со штрихкодом {barCode} нет в базе данных.");
-
-                var label = new DocGoodsDetailsLabels
-                {
-                    IdDoc = idDoc,
-                    DmLabel = markedCode,
-                    IdGood = idGood.Value,
-                    InsertDateTime = DateTime.Now
-                };
-
-                _abt.DocGoodsDetailsLabels.Add(label);
-            }
+            _abt.DocGoodsDetailsLabels.Add(label);
         }
 
         public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)

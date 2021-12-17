@@ -25,8 +25,8 @@ namespace WebSystems.Systems
         public void GetCodesByThePiece(IEnumerable<string> sourceCodes,
             List<KeyValuePair<string, string>> resultCodes)
         {
-            var markedCodesInfo = HonestMarkClient.GetInstance()
-                .GetMarkCodesInfo(ProductGroupsEnum.Perfumery, sourceCodes.ToArray());
+            var markedCodes = HonestMarkClient.GetInstance()
+                .GetAggregatedCodes(ProductGroupsEnum.Perfumery, sourceCodes.ToArray());
 
             Func<string, KeyValuePair<string, string>> predicate = s =>
             {
@@ -39,26 +39,7 @@ namespace WebSystems.Systems
                     return new KeyValuePair<string, string>(s, string.Empty);
             };
 
-            IEnumerable<KeyValuePair<string, string>> codes = sourceCodes.Select(s => predicate(s));
-
-
-            while (markedCodesInfo.Any(m => 
-            {
-                if (m?.CisInfo == null)
-                    return false;
-
-                if (m.CisInfo.Children == null)
-                    return false;
-
-                return m.CisInfo.Children.Count() > 0;
-            }))
-            {
-                codes = markedCodesInfo.SelectMany(m => m?.CisInfo?.Children?.ToList())?
-                    .Select(c => predicate(c));
-
-                markedCodesInfo = HonestMarkClient.GetInstance()
-                    .GetMarkCodesInfo(ProductGroupsEnum.Perfumery, codes?.Select(c => c.Key)?.ToArray() ?? new string[] { });
-            }
+            IEnumerable<KeyValuePair<string, string>> codes = markedCodes.Select(s => predicate(s));
 
             resultCodes.AddRange(codes);
         }

@@ -27,6 +27,7 @@ namespace HonestMarkSystem.Models
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
+        public RelayCommand ExportToTraderCommand => new RelayCommand((o) => { ExportToTrader(); });
 
         public MainViewModel(IEdoSystem edoSystem,
             WebSystems.Systems.HonestMarkSystem honestMarkSystem, 
@@ -446,25 +447,64 @@ namespace HonestMarkSystem.Models
             }
         }
 
+        private void ExportToTrader()
+        {
+
+        }
+
         private void SaveMarkedCodesToDataBase(byte[] sellerFileContent)
         {
             var reporterDll = new Reporter.ReporterDll();
             var report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
+            string errorMessage = null;
 
             if (report.Products == null || report.Products.Count == 0)
                 return;
 
             var markedCodes = new List<KeyValuePair<string, string>>();
+
+            var productsWithTransportCodes = report?.Products?.Where(p => p.TransportPackingIdentificationCode != null && p.TransportPackingIdentificationCode.Count > 0);
+
+            var transportCodes = productsWithTransportCodes?.SelectMany(p => p.TransportPackingIdentificationCode) ?? new List<string>();
+
+            if (transportCodes.Count() > 0)
+                _honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
+
             foreach (var product in report.Products)
             {
-                if(product.MarkedCodes != null && product.MarkedCodes.Count > 0)
-                    _honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
+                var count = markedCodes.Count;
 
-                if (product.TransportPackingIdentificationCode != null && product.TransportPackingIdentificationCode.Count > 0)
-                    _honestMarkSystem.GetCodesByThePiece(product.TransportPackingIdentificationCode, markedCodes);
+                if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
+                    _honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
             }
 
-            _dataBaseAdapter.SaveMarkedCodes(SelectedItem.IdDocPurchasing.Value, markedCodes.ToArray());
+            var productGroups = (from markedCode in markedCodes
+                                group markedCode by markedCode.Value into g
+                                join product in report.Products on g.Key equals product.BarCode
+                                select new { product.Quantity, product.BarCode, product.Description, Count = g.Count() })
+                                .Where(g => g.Count != g.Quantity).ToList();
+
+            foreach(var productGroup in productGroups)
+            {
+                errorMessage = errorMessage == null ? $"Количество товара с наименованием: \n{productGroup.Description}\nНе равно количеству кодов маркировки."
+                    : $"{errorMessage}\n\nКоличество товара с наименованием: \n{productGroup.Description}\nНе равно количеству кодов маркировки.\n" +
+                    $"Количество кодов маркировки-{productGroup.Count}, товара-{productGroup.Quantity}";
+            }
+
+            if (!string.IsNullOrEmpty(errorMessage))
+                if (System.Windows.MessageBox.Show(errorMessage +
+                        $"\nВсё равно хотите отправить документ?", "Внимание",
+                        System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Question) != System.Windows.MessageBoxResult.Yes)
+                    throw new Exception("Попытка отправки прервана пользователем." + errorMessage);
+
+            var docPurchasing = _dataBaseAdapter.GetPurchasingDocumentById(SelectedItem.IdDocPurchasing.Value);
+
+            if (docPurchasing == null)
+                throw new Exception("Не найден документ закупок в базе.");
+            
+            foreach(var code in markedCodes)
+                _dataBaseAdapter.AddMarkedCode(docPurchasing, code);
         }
 
         private void UpdateProperties()

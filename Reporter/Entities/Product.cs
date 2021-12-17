@@ -13,6 +13,8 @@ namespace Reporter.Entities
 
         public decimal? Quantity { get; set; }
 
+        public string BarCode { get; set; }
+
         public decimal? TaxAmount { get; set; }
 
         public List<string> MarkedCodes { get; set; }

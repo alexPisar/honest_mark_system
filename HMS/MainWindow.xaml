@@ -44,6 +44,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Экспорт в трейдер" Command="{Binding ExportToTraderCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/PDF Viewer/SinglePageView.svg}" />
+                            <TextBlock Text="Экспорт" HorizontalAlignment="Center" />
+                            <TextBlock Text="в трейдер" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
             <dxb:BarButtonItem ToolTip="Подписать и отправить документ" Command="{Binding SignAndSendCommand}">
                 <dxb:BarButtonItem.ContentTemplate>
                     <DataTemplate>

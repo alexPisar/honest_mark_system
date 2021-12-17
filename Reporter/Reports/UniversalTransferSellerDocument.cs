@@ -154,7 +154,8 @@ namespace Reporter.Reports
                     var product = new Product()
                     {
                         Description = good.НаимТов,
-                        Quantity = good.КолТов
+                        Quantity = good.КолТов,
+                        BarCode = good?.ДопСведТов?.КодТов?.TrimStart('0')
                     };
 
                     product.MarkedCodes = new List<string>();
