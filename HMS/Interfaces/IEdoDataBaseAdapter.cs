@@ -20,7 +20,7 @@ namespace HonestMarkSystem.Interfaces
 
         object GetDocumentFromDb(IEdoSystemDocument<string> document);
 
-        object[] GetAllDocuments();
+        object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo);
 
         object[] GetPurchasingDocuments();
 

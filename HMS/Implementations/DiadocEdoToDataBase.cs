@@ -70,9 +70,9 @@ namespace HonestMarkSystem.Implementations
             _orgInn = inn;
         }
 
-        public object[] GetAllDocuments()
+        public object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo)
         {
-            return _documents.Where(d => _permittedBoxes.FirstOrDefault(c => c.BoxId == d.CounteragentEdoBoxId) != null)
+            return _documents.Where(d => _permittedBoxes.FirstOrDefault(c => c.BoxId == d.CounteragentEdoBoxId) != null && d.CreateDate > dateFrom && d.CreateDate <= dateTo)
                 .ToArray();
         }
 

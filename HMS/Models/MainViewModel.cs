@@ -26,6 +26,9 @@ namespace HonestMarkSystem.Models
 
         public List<DocEdoPurchasingDetail> Details => SelectedItem?.Details;
 
+        public DateTime DateTo { get; set; } = DateTime.Now.AddDays(1);
+        public DateTime DateFrom { get; set; } = DateTime.Now.AddMonths(-6);
+
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
@@ -108,7 +111,7 @@ namespace HonestMarkSystem.Models
                 }
             }
 
-            var docs = _dataBaseAdapter.GetAllDocuments().Cast<DocEdoPurchasing>();
+            var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>();
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>(docs);
             SelectedItem = null;
 

@@ -34,6 +34,18 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarSubItem Content="Фильтрация">
+                <dxb:BarEditItem Content="Дата с" EditValue="{Binding Path=DateFrom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" EditWidth="150">
+                    <dxb:BarEditItem.EditSettings>
+                        <dxe:DateEditSettings Name="DateFromPicker" Mask="d MMM y" MaskUseAsDisplayFormat="True"/>
+                    </dxb:BarEditItem.EditSettings>
+                </dxb:BarEditItem>
+                <dxb:BarEditItem Content="Дата по" EditValue="{Binding Path=DateTo, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" EditWidth="150">
+                    <dxb:BarEditItem.EditSettings>
+                        <dxe:DateEditSettings Name="DateToPicker" Mask="d MMM y" MaskUseAsDisplayFormat="True"/>
+                    </dxb:BarEditItem.EditSettings>
+                </dxb:BarEditItem>
+            </dxb:BarSubItem>
             <dxb:BarButtonItem ToolTip="Привязать документ закупок к данному документу"
                                Command="{Binding ChangePurchasingDocumentCommand}">
                 <dxb:BarButtonItem.ContentTemplate>

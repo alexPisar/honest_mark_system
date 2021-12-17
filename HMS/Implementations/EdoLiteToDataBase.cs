@@ -141,9 +141,9 @@ namespace HonestMarkSystem.Implementations
             return _documents.FirstOrDefault(d => d.IdDocEdo == document.EdoId);
         }
 
-        public object[] GetAllDocuments()
+        public object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo)
         {
-            return _documents.Where(d => _permittedSenderInnsForUser.FirstOrDefault(c => c == d.SenderInn) != null)
+            return _documents.Where(d => _permittedSenderInnsForUser.FirstOrDefault(c => c == d.SenderInn) != null && d.CreateDate > dateFrom && d.CreateDate <= dateTo)
                 .ToArray();
         }
 
