@@ -718,6 +718,7 @@ namespace HonestMarkSystem.Models
                 if (refGoodsWindow.ShowDialog() == true)
                 {
                     SelectedDetail.IdGood = refGoodsModel.SelectedItem.Id;
+                    OnPropertyChanged("SelectedDetail");
                     _dataBaseAdapter.Commit();
                 }
             }
