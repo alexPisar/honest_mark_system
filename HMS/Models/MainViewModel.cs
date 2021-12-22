@@ -258,6 +258,13 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if (Details.Exists(d => d?.IdGood == null))
+            {
+                System.Windows.MessageBox.Show(
+                    "В списке товаров есть несопоставленные с ID товары.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
             {
                 if (_edoSystem.HasZipContent)
