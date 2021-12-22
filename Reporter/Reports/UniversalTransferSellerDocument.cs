@@ -157,7 +157,8 @@ namespace Reporter.Reports
                         Quantity = good.КолТов,
                         Price = good.ЦенаТов,
                         TaxAmount = good.СумНал?.Item as decimal?,
-                        Subtotal = good.СтТовУчНал
+                        Subtotal = good.СтТовУчНал,
+                        Number = Convert.ToInt32(good.НомСтр)
                     };
 
                     if (!string.IsNullOrEmpty(good?.ДопСведТов?.КодТов))

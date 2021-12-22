@@ -119,7 +119,8 @@ namespace HonestMarkSystem.Implementations
                     Subtotal = product.Subtotal,
                     TaxAmount = product.TaxAmount,
                     IdDocEdoPurchasing = newDocInDb.IdDocEdo,
-                    EdoDocument = newDocInDb
+                    EdoDocument = newDocInDb,
+                    DetailNumber = product.Number
                 };
 
                 var refGoods = _abt.RefBarCodes?

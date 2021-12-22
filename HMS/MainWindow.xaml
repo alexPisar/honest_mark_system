@@ -112,6 +112,7 @@
         <dxg:GridControl Grid.Row="3" ItemsSource="{Binding Path=Details, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                          SelectedItem="{Binding Path=SelectedDetail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
             <dxg:GridControl.Columns>
+                <dxg:GridColumn FieldName="DetailNumber" Header="Номер" Width="80" DefaultSortOrder="Ascending" SortIndex="0" />
                 <dxg:GridColumn FieldName="BarCode" Header="Код товара" Width="100"/>
                 <dxg:GridColumn FieldName="IdGood" Header="Id товара" Width="85">
                     <dxg:GridColumn.EditSettings>

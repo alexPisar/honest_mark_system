@@ -8,6 +8,7 @@ namespace Reporter.Entities
 {
     public class Product : Base.IReportEntity<Product>
     {
+        public int Number { get; set; }
 
         public string Description { get; set; }
 
