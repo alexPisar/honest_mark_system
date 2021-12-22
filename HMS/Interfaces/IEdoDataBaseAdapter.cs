@@ -26,7 +26,7 @@ namespace HonestMarkSystem.Interfaces
 
         object GetPurchasingDocumentById(decimal idDocPurchasing);
 
-        void AddMarkedCode(object docPurchasing, KeyValuePair<string, string> code);
+        void AddMarkedCode(decimal idDocJournal, decimal idGood, string markedCode);
 
         List<object> GetRefGoodsByBarCode(string barCode);
 

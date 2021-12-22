@@ -88,30 +88,16 @@ namespace HonestMarkSystem.Implementations
             return _abt.DocPurchasings.FirstOrDefault(d => d.Id == idDocPurchasing);
         }
 
-        public void AddMarkedCode(object docPurchasing, KeyValuePair<string, string> code)
+        public void AddMarkedCode(decimal idDocJournal, decimal idGood, string markedCode)
         {
-            if (((DocPurchasing)docPurchasing)?.IdDocLink == null)
-                throw new Exception("Для документа закупок не найден трейдер документ.");
-
-            var idDoc = ((DocPurchasing)docPurchasing).IdDocLink.Value;
-            var markedCode = code.Key;
-
-            var barCode = code.Value;
-            var idGood = _abt.RefBarCodes?
-                .FirstOrDefault(b => b.BarCode == barCode && b.IsPrimary == false)?
-                .IdGood;
-
-            if (idGood == null)
-                throw new Exception($"Товара со штрихкодом {barCode} нет в базе данных.");
-
-            if (_abt.DocGoodsDetailsLabels.FirstOrDefault(l => l.IdDoc == idDoc && l.IdGood == idGood && l.DmLabel == markedCode) != null)
+            if (_abt.DocGoodsDetailsLabels.FirstOrDefault(l => l.IdDoc == idDocJournal && l.IdGood == idGood && l.DmLabel == markedCode) != null)
                 return;
 
             var label = new DocGoodsDetailsLabels
             {
-                IdDoc = idDoc,
+                IdDoc = idDocJournal,
                 DmLabel = markedCode,
-                IdGood = idGood.Value,
+                IdGood = idGood,
                 InsertDateTime = DateTime.Now
             };
 

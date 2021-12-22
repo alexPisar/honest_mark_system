@@ -491,13 +491,15 @@ namespace HonestMarkSystem.Models
                     _honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
             }
 
-            var productGroups = (from markedCode in markedCodes
-                                group markedCode by markedCode.Value into g
-                                join product in report.Products on g.Key equals product.BarCode
-                                select new { product.Quantity, product.BarCode, product.Description, Count = g.Count() })
-                                .Where(g => g.Count != g.Quantity).ToList();
+            var productGroupsRequest = from markedCode in markedCodes
+                                group markedCode by markedCode.Value into gr
+                                join product in report.Products on gr.Key equals product.BarCode
+                                select new { product.Quantity, product.BarCode, product.Description, product.Number,
+                                    Count = gr.Count(), Items=gr.Select(g => g.Key).ToList() };
 
-            foreach(var productGroup in productGroups)
+            var productGroupsNotEquals = productGroupsRequest.Where(g => g.Count != g.Quantity).ToList();
+
+            foreach (var productGroup in productGroupsNotEquals)
             {
                 errorMessage = errorMessage == null ? $"Количество товара с наименованием: \n{productGroup.Description}\nНе равно количеству кодов маркировки.\n" +
                     $"Количество кодов маркировки-{productGroup.Count}, товара-{productGroup.Quantity}."
@@ -516,9 +518,20 @@ namespace HonestMarkSystem.Models
 
             if (docPurchasing == null)
                 throw new Exception("Не найден документ закупок в базе.");
-            
-            foreach(var code in markedCodes)
-                _dataBaseAdapter.AddMarkedCode(docPurchasing, code);
+
+            if (((DocPurchasing)docPurchasing)?.IdDocLink == null)
+                throw new Exception("Для документа закупок не найден трейдер документ.");
+
+            foreach (var productGroup in productGroupsRequest)
+            {
+                var detail = Details?.FirstOrDefault(d => d.DetailNumber == productGroup.Number);
+
+                if (detail == null)
+                    throw new Exception($"Не найден товар с названием {productGroup.Description}.");
+
+                foreach (var code in productGroup.Items)
+                    _dataBaseAdapter.AddMarkedCode(((DocPurchasing)docPurchasing).IdDocLink.Value, detail.IdGood.Value, code);
+            }
         }
 
         private void UpdateProperties()
