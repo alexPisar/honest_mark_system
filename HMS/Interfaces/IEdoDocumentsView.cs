@@ -14,5 +14,7 @@ namespace HonestMarkSystem.Interfaces
         void SaveParameters(params object[] parameters);
 
         bool SaveNewDocument(IEdoSystemDocument<string> document, out byte[] fileBytes);
+
+        void UpdateIdGood();
     }
 }

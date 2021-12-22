@@ -41,6 +41,10 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .Property(d => d.TaxAmount)
                 .HasColumnName("TAX_AMOUNT");
 
+            this
+                .Property(d => d.IdGood)
+                .HasColumnName("ID_GOOD");
+
             OnCreated();
         }
 

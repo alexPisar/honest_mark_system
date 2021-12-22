@@ -25,6 +25,7 @@ namespace HonestMarkSystem.Models
         private WebSystems.Systems.HonestMarkSystem _honestMarkSystem;
 
         public List<DocEdoPurchasingDetail> Details => SelectedItem?.Details;
+        public DocEdoPurchasingDetail SelectedDetail { get; set; }
 
         public DateTime DateTo { get; set; } = DateTime.Now.AddDays(1);
         public DateTime DateFrom { get; set; } = DateTime.Now.AddMonths(-6);
@@ -664,6 +665,41 @@ namespace HonestMarkSystem.Models
                 var counteragentsBoxIdsForOrganization = edoSystem.GetCounteragentsBoxesForOrganization(orgInn);
                 ((DiadocEdoToDataBase)_dataBaseAdapter).SetPermittedBoxIds(counteragentsBoxIdsForOrganization);
                 ((DiadocEdoToDataBase)_dataBaseAdapter).SetOrgData(orgName, orgInn);
+            }
+        }
+
+        public void UpdateIdGood()
+        {
+            if(SelectedDetail == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран товар для сопоставления.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                var refGoods = _dataBaseAdapter.GetRefGoodsByBarCode(SelectedDetail.BarCode);
+
+                if (refGoods.Count == 0)
+                    refGoods = _dataBaseAdapter.GetAllRefGoods();
+
+                var refGoodsModel = new RefGoodsModel(refGoods.Cast<RefGood>());
+                var refGoodsWindow = new RefGoodsWindow();
+                refGoodsWindow.DataContext = refGoodsModel;
+
+                if (refGoodsWindow.ShowDialog() == true)
+                {
+                    SelectedDetail.IdGood = refGoodsModel.SelectedItem.Id;
+                    _dataBaseAdapter.Commit();
+                }
+            }
+            catch(Exception ex)
+            {
+                var errorMessage = $"Exception: {_log.GetRecursiveInnerException(ex)}";
+                var errorsWindow = new ErrorsWindow("Произошла ошибка привязки Id для товара.", new List<string>(new string[] { errorMessage }));
+                _log.Log(errorMessage);
+                errorsWindow.ShowDialog();
             }
         }
     }

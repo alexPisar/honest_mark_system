@@ -188,8 +188,12 @@
     </Compile>
     <Compile Include="Implementations\DiadocEdoToDataBase.cs" />
     <Compile Include="Models\PurchasingDocumentsModel.cs" />
+    <Compile Include="Models\RefGoodsModel.cs" />
     <Compile Include="PurchasingDocumentsWindow.xaml.cs">
       <DependentUpon>PurchasingDocumentsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RefGoodsWindow.xaml.cs">
+      <DependentUpon>RefGoodsWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="BuyerSignWindow.xaml">
       <SubType>Designer</SubType>
@@ -233,6 +237,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="PurchasingDocumentsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RefGoodsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -30,5 +30,10 @@ namespace HonestMarkSystem
         {
             ((UtilitesLibrary.ModelBase.ListViewModel<DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing>)DataContext).OnPropertyChanged("Details");
         }
+
+        private void ButtonEditSettings_DefaultButtonClick(object sender, RoutedEventArgs e)
+        {
+            ((Interfaces.IEdoDocumentsView)DataContext).UpdateIdGood();
+        }
     }
 }

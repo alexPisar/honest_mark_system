@@ -122,6 +122,13 @@ namespace HonestMarkSystem.Implementations
                     EdoDocument = newDocInDb
                 };
 
+                var refGoods = _abt.RefBarCodes?
+                            .Where(b => b.BarCode == newDetail.BarCode && b.IsPrimary == false)?
+                            .Select(b => b.IdGood)?.Distinct()?.ToList() ?? new List<decimal?>();
+
+                if (refGoods.Count == 1)
+                    newDetail.IdGood = refGoods.First();
+
                 newDocInDb.Details.Add(newDetail);
             }
 
@@ -193,6 +200,22 @@ namespace HonestMarkSystem.Implementations
             };
 
             _abt.DocGoodsDetailsLabels.Add(label);
+        }
+
+        public List<object> GetRefGoodsByBarCode(string barCode)
+        {
+            var refGoods = (from refBarCode in _abt.RefBarCodes
+                           where refBarCode.BarCode == barCode
+                           join refGood in _abt.RefGoods
+                           on refBarCode.IdGood equals refGood.Id
+                           select refGood)?.ToList<object>() ?? new List<object>();
+
+            return refGoods;
+        }
+
+        public List<object> GetAllRefGoods()
+        {
+            return _abt.RefGoods.ToList<object>();
         }
 
         public void Commit()

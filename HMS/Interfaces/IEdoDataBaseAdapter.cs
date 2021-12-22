@@ -28,6 +28,10 @@ namespace HonestMarkSystem.Interfaces
 
         void AddMarkedCode(object docPurchasing, KeyValuePair<string, string> code);
 
+        List<object> GetRefGoodsByBarCode(string barCode);
+
+        List<object> GetAllRefGoods();
+
         void Rollback();
 
         void Commit();
