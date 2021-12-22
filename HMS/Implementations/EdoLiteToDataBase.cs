@@ -189,6 +189,24 @@ namespace HonestMarkSystem.Implementations
             _abt.DocGoodsDetailsLabels.Add(label);
         }
 
+        public void AddMarkedCodes(decimal idDocJournal, decimal idGood, IEnumerable<string> markedCodes)
+        {
+            markedCodes = markedCodes.Where(m => !_abt.DocGoodsDetailsLabels.Any(l => l.IdDoc == idDocJournal && l.IdGood == idGood && l.DmLabel == m));
+
+            if (markedCodes.Count() == 0)
+                return;
+
+            var labels = markedCodes.Select(m => new DocGoodsDetailsLabels
+            {
+                IdDoc = idDocJournal,
+                DmLabel = m,
+                IdGood = idGood,
+                InsertDateTime = DateTime.Now
+            });
+
+            _abt.DocGoodsDetailsLabels.AddRange(labels);
+        }
+
         public List<object> GetRefGoodsByBarCode(string barCode)
         {
             var refGoods = (from refBarCode in _abt.RefBarCodes

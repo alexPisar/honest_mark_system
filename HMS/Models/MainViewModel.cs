@@ -536,8 +536,7 @@ namespace HonestMarkSystem.Models
                 if (detail == null)
                     throw new Exception($"Не найден товар с названием {productGroup.Description}.");
 
-                foreach (var code in productGroup.Items)
-                    _dataBaseAdapter.AddMarkedCode(((DocPurchasing)docPurchasing).IdDocLink.Value, detail.IdGood.Value, code);
+                _dataBaseAdapter.AddMarkedCodes(((DocPurchasing)docPurchasing).IdDocLink.Value, detail.IdGood.Value, productGroup.Items);
             }
         }
 
