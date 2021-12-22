@@ -265,6 +265,13 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if (Details.GroupBy(d => d.IdGood).Any(g => g.Count() > 1))
+            {
+                System.Windows.MessageBox.Show(
+                    "В списке товаров есть одинаковые ID товаров.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
             {
                 if (_edoSystem.HasZipContent)
