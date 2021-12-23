@@ -491,20 +491,19 @@ namespace HonestMarkSystem.Models
                 _honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
 
             foreach (var product in report.Products)
-            {
-                var count = markedCodes.Count;
-
                 if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
                     _honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
-            }
 
-            var productGroupsRequest = from markedCode in markedCodes
+            if (markedCodes.Count == 0)
+                return;
+
+            var productGroups = from markedCode in markedCodes
                                 group markedCode by markedCode.Value into gr
                                 join product in report.Products on gr.Key equals product.BarCode
                                 select new { product.Quantity, product.BarCode, product.Description, product.Number,
                                     Count = gr.Count(), Items=gr.Select(g => g.Key).ToList() };
 
-            var productGroupsNotEquals = productGroupsRequest.Where(g => g.Count != g.Quantity).ToList();
+            var productGroupsNotEquals = productGroups.Where(g => g.Count != g.Quantity).ToList();
 
             foreach (var productGroup in productGroupsNotEquals)
             {
@@ -529,7 +528,8 @@ namespace HonestMarkSystem.Models
             if (((DocPurchasing)docPurchasing)?.IdDocLink == null)
                 throw new Exception("Для документа закупок не найден трейдер документ.");
 
-            foreach (var productGroup in productGroupsRequest)
+            productGroups = productGroups.ToList();
+            foreach (var productGroup in productGroups)
             {
                 var detail = Details?.FirstOrDefault(d => d.DetailNumber == productGroup.Number);
 
