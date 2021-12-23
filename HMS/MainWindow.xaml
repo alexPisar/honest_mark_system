@@ -34,6 +34,16 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Сохранить изменения в базе" Command="{Binding EditCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical" Margin="10 0">
+                            <Image Source="{dx:DXImage SvgImages/Save/Save.svg}"/>
+                            <TextBlock Text="Сохранить" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
             <dxb:BarSubItem Content="Фильтрация">
                 <dxb:BarEditItem Content="Дата с" EditValue="{Binding Path=DateFrom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" EditWidth="150">
                     <dxb:BarEditItem.EditSettings>

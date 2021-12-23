@@ -31,6 +31,7 @@ namespace HonestMarkSystem.Models
         public DateTime DateFrom { get; set; } = DateTime.Now.AddMonths(-6);
 
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
+        public override RelayCommand EditCommand => new RelayCommand((o) => { Save(); });
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
         public RelayCommand ExportToTraderCommand => new RelayCommand((o) => { ExportToTrader(); });
@@ -166,6 +167,22 @@ namespace HonestMarkSystem.Models
             }
 
             UpdateProperties();
+        }
+
+        private void Save()
+        {
+            try
+            {
+                _dataBaseAdapter.Commit();
+            }
+            catch(Exception ex)
+            {
+                _dataBaseAdapter.Rollback();
+                var errorMessage = $"Exception: {_log.GetRecursiveInnerException(ex)}";
+                var errorsWindow = new ErrorsWindow("Произошла ошибка сохранения базы данных.", new List<string>(new string[] { errorMessage }));
+                _log.Log(errorMessage);
+                errorsWindow.ShowDialog();
+            }
         }
 
         private void ChangePurchasingDocument()
@@ -718,7 +735,6 @@ namespace HonestMarkSystem.Models
                 {
                     SelectedDetail.IdGood = refGoodsModel.SelectedItem.Id;
                     OnPropertyChanged("SelectedDetail");
-                    _dataBaseAdapter.Commit();
                 }
             }
             catch(Exception ex)
