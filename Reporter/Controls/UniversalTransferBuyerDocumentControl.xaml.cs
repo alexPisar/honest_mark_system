@@ -60,7 +60,9 @@ namespace Reporter.Controls
 
         public override void SetDefaults()
         {
-            signerOrgTabItem.IsSelected = true;
+            signerIndividualTabItem.IsSelected = true;
+            signerIndividualTabItem.DataEntityObject = ((UniversalTransferBuyerDocument)Report).SignerEntity;
+            signerIndividualTabItem.DataContext = signerIndividualTabItem.DataEntityObject;
         }
 
         private void ReceiverTabControlLoaded(object sender, RoutedEventArgs e)

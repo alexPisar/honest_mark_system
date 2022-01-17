@@ -145,23 +145,25 @@ namespace HonestMarkSystem
 
         public void SetDefaultParameters(string subject, DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing dataBaseObject)
         {
-            reportControl.SetDefaults();
-
             Report.CreateBuyerFileDate = DateTime.Now;
 
             var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
-            Report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-            Report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
-            Report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
-            Report.SignerOrgName = _cryptoUtil.ParseCertAttribute(subject, "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
-            Report.JuridicalInn = _cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0');
-            Report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
+            Report.SignerEntity = new Reporter.Entities.IndividualEntity()
+            {
+                Inn = _cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0'),
+                Surname = _cryptoUtil.ParseCertAttribute(subject, "SN"),
+                Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty,
+                Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty
+            };
 
-            Report.BasisOfAuthority = "Должностные обязанности";
-            Report.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoResponsibleForRegistrationExecution;
+            var orgInn = _cryptoUtil.GetCertificateAttributeValueByOid("1.2.643.100.4");
+            var orgName = _cryptoUtil.ParseCertAttribute(subject, "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
+
+            Report.BasisOfAuthority = _cryptoUtil.ParseCertAttribute(subject, "T");
+            Report.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoMadeOperation;
             Report.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;
             Report.AcceptResult = Reporter.Enums.AcceptResultEnum.GoodsAcceptedWithoutDiscrepancy;
-            Report.FinSubjectCreator = $"{Report.SignerOrgName}, ИНН: {Report.JuridicalInn}";
+            Report.FinSubjectCreator = $"{orgName}, ИНН: {orgInn}";
 
             Report.SellerFileId = dataBaseObject.FileName;
             Report.EdoProviderOrgName = dataBaseObject.SenderEdoOrgName;
@@ -185,6 +187,8 @@ namespace HonestMarkSystem
             Report.Function = sellerReport.Function;
             Report.SellerInvoiceNumber = sellerReport.DocNumber;
             Report.SellerInvoiceDate = sellerReport.DocDate;
+
+            reportControl.SetDefaults();
 
             Report.OnAllPropertyChanged();
         }

@@ -44,7 +44,7 @@ namespace HonestMarkSystem.Implementations
                                               join cus in _abt.RefCustomers on refUser.IdCustomer equals cus.Id
                                               where refUser.UserName == _dataBaseUser
                                               select cus.Inn)?.ToList() ?? new List<string>();
-            permittedSenderInnsForUser.Add("9652306541");
+            //permittedSenderInnsForUser.Add("9652306541");
 
             _permittedBoxes = (from box in boxesByInn
                               where permittedSenderInnsForUser.Exists(p => p == box.Value.Inn)

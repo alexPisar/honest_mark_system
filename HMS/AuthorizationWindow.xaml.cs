@@ -39,16 +39,30 @@ namespace HonestMarkSystem
         {
             try
             {
-                var certs = new CryptoUtil().GetPersonalCertificates();
+                var client = new System.Net.WebClient();
+
+                if (Config.GetInstance().ProxyEnabled)
+                {
+                    var webProxy = new System.Net.WebProxy();
+
+                    webProxy.Address = new Uri("http://" + Config.GetInstance().ProxyAddress);
+                    webProxy.Credentials = new System.Net.NetworkCredential(Config.GetInstance().ProxyUserName,
+                        Config.GetInstance().ProxyUserPassword);
+
+                    client.Proxy = webProxy;
+                }
+
+                var certs = new CryptoUtil().GetPersonalCertificates().OrderByDescending(c => c.NotBefore);
+                var cryptoUtil = new CryptoUtil(client);
 
                 var selectedCert = certs?.FirstOrDefault(c =>
-                new CryptoUtil().ParseCertAttribute(c.Subject, "ИНН").TrimStart('0') == ((Config)DataContext).ConsignorInn
-                && c.NotAfter > DateTime.Now);
+                cryptoUtil.GetOrgInnFromCertificate(c) == ((Config)DataContext).ConsignorInn
+                && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
 
                 if (selectedCert == null)
                     throw new Exception("Не найден сертификат по ИНН организации.");
 
-                Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter = new Implementations.EdoLiteToDataBase();
+                Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter = new Implementations.DiadocEdoToDataBase();
 
                 WebSystems.Systems.HonestMarkSystem markSystem;
                 IEdoSystem edoSystem;
@@ -59,7 +73,6 @@ namespace HonestMarkSystem
                     var mainModel = new Models.MainViewModel(edoSystem, markSystem, dataBaseAdapter, new CryptoUtil(selectedCert));
                     mainModel.Owner = mainWindow;
 
-                    var cryptoUtil = new CryptoUtil();
                     var orgName = cryptoUtil.ParseCertAttribute(selectedCert.Subject, "CN");
                     var orgInn = ((Config)DataContext).ConsignorInn;
                     mainModel.SaveOrgData(orgInn, orgName);
@@ -101,7 +114,7 @@ namespace HonestMarkSystem
                     return false;
                 }
 
-                edoSystem = new EdoLiteSystem(certificate);
+                edoSystem = new DiadocEdoSystem(certificate);
                 bool result = edoSystem.Authorization();
 
                 markSystem = new WebSystems.Systems.HonestMarkSystem(certificate);

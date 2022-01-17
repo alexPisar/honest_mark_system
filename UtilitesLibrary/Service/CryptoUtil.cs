@@ -11,6 +11,9 @@ namespace UtilitesLibrary.Service
 {
     public class CryptoUtil
     {
+        private UtilityLog _log = UtilityLog.GetInstance();
+        private List<KeyValuePair<string, Org.BouncyCastle.X509.X509Crl>> _listOfRevoke = new List<KeyValuePair<string, Org.BouncyCastle.X509.X509Crl>>();
+        private System.Net.WebClient _client = null;
         private WinApiCryptWrapper _crypto;
 
         public CryptoUtil()
@@ -21,6 +24,11 @@ namespace UtilitesLibrary.Service
         public CryptoUtil(X509Certificate2 certificate)
         {
             _crypto = new WinApiCryptWrapper(certificate);
+        }
+
+        public CryptoUtil(System.Net.WebClient client)
+        {
+            _client = client;
         }
 
         public List<X509Certificate2> GetPersonalCertificates()
@@ -75,6 +83,82 @@ namespace UtilitesLibrary.Service
             {
                 return result;
             }
+        }
+
+        public string GetCertificateAttributeValueByOid(string oid)
+        {
+            return _crypto.GetValueBySubjectOid(oid);
+        }
+
+        public string GetOrgInnFromCertificate(X509Certificate2 certificate)
+        {
+            var inn = ParseCertAttribute(certificate.Subject, "ИНН").TrimStart('0');
+
+            if (string.IsNullOrEmpty(inn) || inn.Length == 12)
+            {
+                var crypt = new WinApiCryptWrapper(certificate);
+                inn = crypt.GetValueBySubjectOid("1.2.643.100.4");
+            }
+
+            return inn;
+        }
+
+        /// <summary>
+        /// Проверка сертификата на валидность, и что он не содержится в списках отзыва
+        /// </summary>
+        /// <param name="certificate"></param>
+        /// <returns></returns>
+        public bool IsCertificateValid(X509Certificate2 certificate)
+        {
+            _log.Log($"IsCertificateValid : проверка на валидность сертификата с серийным номером {certificate.SerialNumber}");
+            var cert = Org.BouncyCastle.Security.DotNetUtilities.FromX509Certificate(certificate);
+
+            if (!cert.IsValidNow)
+                return false;
+
+            if (_client == null)
+                return true;
+
+            _log.Log($"Проверка наличия сертификата в списках отзыва");
+            var crypto = new WinApiCryptWrapper(certificate);
+
+            var references = crypto.GetCrlReferences();
+            bool isCertRevoked = false;
+
+            foreach (var reference in references)
+            {
+                if (string.IsNullOrEmpty(reference))
+                    continue;
+
+                if (isCertRevoked)
+                    continue;
+
+                Org.BouncyCastle.X509.X509Crl crl = null;
+
+                try
+                {
+                    if (_listOfRevoke.Exists(l => l.Key == reference))
+                    {
+                        crl = _listOfRevoke.First(l => l.Key == reference).Value;
+                        isCertRevoked = isCertRevoked || crl.IsRevoked(cert);
+                    }
+                    else
+                    {
+                        var bytes = _client.DownloadData(reference);
+                        isCertRevoked = isCertRevoked || crypto.IsCertRevoked(bytes, out crl);
+
+                        if (crl != null)
+                            _listOfRevoke.Add(new KeyValuePair<string, Org.BouncyCastle.X509.X509Crl>(reference, crl));
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            _log.Log($"Результат проверки на наличие в списках отзыва - {isCertRevoked.ToString()}");
+            return !isCertRevoked;
         }
 
         public byte[] Sign(byte[] fileContent, bool isDetached)

@@ -64,6 +64,92 @@ namespace Cryptography.WinApi
         }
 
         /// <summary>
+        /// Получение значения параметра oid из строки субьекта сертификата
+        /// </summary>
+        /// <param name="oid"></param>
+        /// <returns></returns>
+        public string GetValueBySubjectOid(string oid)
+        {
+            if (_certificate == null)
+                throw new Exception("Не определён сертификат пользователя.");
+
+            var cert = Org.BouncyCastle.Security.DotNetUtilities.FromX509Certificate(_certificate);
+            var oids = cert.SubjectDN.GetOidList();
+
+            var selectedOid = oids?.OfType<object>()?.FirstOrDefault(s => s.ToString() == oid);
+
+            if (selectedOid == null)
+                return null;
+
+            var oidIndex = oids.IndexOf(selectedOid);
+
+            if (oidIndex < 0)
+                return null;
+
+            var val = cert.SubjectDN.GetValueList()[oidIndex]?.ToString();
+            string inn = val.TrimStart('0');
+            return inn;
+        }
+
+        public bool IsCertRevoked(byte[] crlBytes, out Org.BouncyCastle.X509.X509Crl crl)
+        {
+            if (_certificate == null)
+                throw new Exception("Не определён сертификат пользователя.");
+
+            var cert = Org.BouncyCastle.Security.DotNetUtilities.FromX509Certificate(_certificate);
+
+            crl = new Org.BouncyCastle.X509.X509CrlParser().ReadCrl(crlBytes);
+
+            if (crl == null)
+                return false;
+
+            return crl.IsRevoked(cert);
+        }
+
+        public List<string> GetCrlReferences()
+        {
+            if (_certificate == null)
+                throw new Exception("Не определён сертификат пользователя.");
+
+            List<string> references = new List<string>();
+
+            var cert = Org.BouncyCastle.Security.DotNetUtilities.FromX509Certificate(_certificate);
+
+            var objectIdentifier = new Org.BouncyCastle.Asn1.DerObjectIdentifier("2.5.29.31");
+            Org.BouncyCastle.Asn1.Asn1OctetString octetString = cert.GetExtensionValue(objectIdentifier);
+            var revokedObjects = Org.BouncyCastle.X509.Extension.X509ExtensionUtilities.FromExtensionValue(octetString);
+
+            if (revokedObjects as Org.BouncyCastle.Asn1.Asn1Sequence == null)
+                return references;
+
+            foreach (var revokedObject in (Org.BouncyCastle.Asn1.Asn1Sequence)revokedObjects)
+            {
+                object obj = ((Org.BouncyCastle.Asn1.Asn1Sequence)revokedObject)[0];
+
+                while (obj.GetType() == typeof(Org.BouncyCastle.Asn1.DerTaggedObject))
+                    obj = ((Org.BouncyCastle.Asn1.DerTaggedObject)obj).GetObject();
+
+                if (obj as Org.BouncyCastle.Asn1.Asn1OctetString != null)
+                {
+                    var bytes = ((Org.BouncyCastle.Asn1.Asn1OctetString)obj).GetEncoded();
+                    var str = Encoding.ASCII.GetString(bytes);
+
+                    var indx = str.IndexOf("http");
+
+                    if (indx < 0)
+                        continue;
+
+                    str = str.Substring(indx);
+
+                    if (!string.IsNullOrEmpty(str))
+                        references.Add(str);
+                }
+            }
+
+            return references;
+        }
+
+        /// <summary>
 		/// Сравнение двух массивов байт
 		/// </summary>
 		/// <param name="d1"></param>

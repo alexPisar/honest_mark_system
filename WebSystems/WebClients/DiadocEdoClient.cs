@@ -296,7 +296,7 @@ namespace WebSystems.WebClients
                 if (string.IsNullOrEmpty(authToken))
                     return false;
 
-                var certInn = new UtilitesLibrary.Service.CryptoUtil().ParseCertAttribute(_certificate.Subject, "ИНН").TrimStart('0');
+                var certInn = new UtilitesLibrary.Service.CryptoUtil().GetOrgInnFromCertificate(_certificate);
 
                 _cache = new DiadocEdoTokenCache(authToken, $"Certificate, Serial Number {_certificate.SerialNumber}", _cache?.PartyId ?? "");
 
