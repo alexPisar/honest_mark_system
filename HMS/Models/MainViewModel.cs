@@ -35,6 +35,7 @@ namespace HonestMarkSystem.Models
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
         public RelayCommand ExportToTraderCommand => new RelayCommand((o) => { ExportToTrader(); });
+        public RelayCommand WithdrawalCodesCommand => new RelayCommand((o) => { WithdrawalCodes(); });
 
         public MainViewModel(IEdoSystem edoSystem,
             WebSystems.Systems.HonestMarkSystem honestMarkSystem, 
@@ -65,7 +66,7 @@ namespace HonestMarkSystem.Models
                 string errorMessage = _log.GetRecursiveInnerException(webEx);
                 _log.Log(errorMessage);
 
-                var errorsWindow = new ErrorsWindow("Произошола ошибка получения документов на удалённом сервере.", new List<string>(new string[] { errorMessage }));
+                var errorsWindow = new ErrorsWindow("Произошла ошибка получения документов на удалённом сервере.", new List<string>(new string[] { errorMessage }));
                 errorsWindow.ShowDialog();
             }
             catch (Exception ex)
@@ -73,7 +74,7 @@ namespace HonestMarkSystem.Models
                 string errorMessage = _log.GetRecursiveInnerException(ex);
                 _log.Log(errorMessage);
 
-                var errorsWindow = new ErrorsWindow("Произошола ошибка получения документов.", new List<string>(new string[] { errorMessage }));
+                var errorsWindow = new ErrorsWindow("Произошла ошибка получения документов.", new List<string>(new string[] { errorMessage }));
                 errorsWindow.ShowDialog();
             }
 
@@ -487,6 +488,15 @@ namespace HonestMarkSystem.Models
         private void ExportToTrader()
         {
 
+        }
+
+        private void WithdrawalCodes()
+        {
+            var markedCodes = _dataBaseAdapter.GetAllMarkedCodes().Cast<DocGoodsDetailsLabels>().ToList();
+
+            var withdrawalWindow = new ChangeMarkedCodesWindow();
+            withdrawalWindow.DataContext = new ChangeMarkedCodesModel(markedCodes, _honestMarkSystem);
+            withdrawalWindow.ShowDialog();
         }
 
         private void SaveMarkedCodesToDataBase(byte[] sellerFileContent)

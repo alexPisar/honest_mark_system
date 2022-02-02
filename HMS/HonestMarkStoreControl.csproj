@@ -186,7 +186,15 @@
     <Compile Include="BuyerSignWindow.xaml.cs">
       <DependentUpon>BuyerSignWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ChangeMarkedCodesWindow.xaml.cs">
+      <DependentUpon>ChangeMarkedCodesWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Implementations\DiadocEdoToDataBase.cs" />
+    <Compile Include="MarkedCodesWindow.xaml.cs">
+      <DependentUpon>MarkedCodesWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ChangeMarkedCodesModel.cs" />
+    <Compile Include="Models\MarkedCodesModel.cs" />
     <Compile Include="Models\PurchasingDocumentsModel.cs" />
     <Compile Include="Models\RefGoodsModel.cs" />
     <Compile Include="PurchasingDocumentsWindow.xaml.cs">
@@ -200,6 +208,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="AuthorizationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChangeMarkedCodesWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -236,6 +248,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="MarkedCodesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PurchasingDocumentsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

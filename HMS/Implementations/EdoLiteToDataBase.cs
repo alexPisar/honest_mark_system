@@ -224,6 +224,11 @@ namespace HonestMarkSystem.Implementations
             return _abt.RefGoods.ToList<object>();
         }
 
+        public List<object> GetAllMarkedCodes()
+        {
+            return _abt.DocGoodsDetailsLabels.Where(l => l.DmLabel.Length == 31 && l.SaleDmLabel == null).ToList<object>();
+        }
+
         public void Commit()
         {
             _abt.SaveChanges();

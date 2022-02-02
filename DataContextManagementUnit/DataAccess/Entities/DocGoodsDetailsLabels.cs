@@ -11,11 +11,17 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         #region Properties
         public virtual decimal IdDoc { get; set; }
 
-        public virtual decimal IdGood { get; set; }
+        public virtual decimal? IdGood { get; set; }
 
         public virtual string DmLabel { get; set; }
 
+        public virtual decimal? IdDocSale { get; set; }
+
+        public virtual string SaleDmLabel { get; set; }
+
         public virtual DateTime InsertDateTime { get; set; }
+
+        public virtual DateTime? SaleDateTime { get; set; }
         #endregion
     }
 }

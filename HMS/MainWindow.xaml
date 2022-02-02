@@ -79,6 +79,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Вывод кодов маркировки из оборота" Command="{Binding WithdrawalCodesCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/XAF/State_Validation_Invalid.svg}" />
+                            <TextBlock Text="Вывод" HorizontalAlignment="Center" />
+                            <TextBlock Text="из оборота" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
             <dxb:BarButtonItem ToolTip="Подписать и отправить документ" Command="{Binding SignAndSendCommand}">
                 <dxb:BarButtonItem.ContentTemplate>
                     <DataTemplate>

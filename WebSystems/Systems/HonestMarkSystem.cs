@@ -48,5 +48,15 @@ namespace WebSystems.Systems
         {
             return HonestMarkClient.GetInstance().GetEdoDocumentProcessInfo(documentId);
         }
+
+        public string SendDocument(ProductGroupsEnum productGroup, DocumentFormatsEnum documentFormat, string codeDocType, Models.IDocument documentData)
+        {
+            return HonestMarkClient.GetInstance().CreateDocument(productGroup, documentFormat, codeDocType, documentData);
+        }
+
+        public Models.DocumentInfo GetDocumentInfo(ProductGroupsEnum productGroup, string docId)
+        {
+            return HonestMarkClient.GetInstance().GetDocumentInfo(productGroup, docId);
+        }
     }
 }

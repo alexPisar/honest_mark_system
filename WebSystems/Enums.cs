@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace WebSystems
 {
@@ -423,5 +424,92 @@ namespace WebSystems
         /// Документ в процессе обработки
         /// </summary>
         IN_PROGRESS
+    }
+
+    public enum ReasonOfWithdrawalFromTurnover
+    {
+        /// <summary>
+        /// Розничная реализация
+        /// </summary>
+        [EnumMember(Value = "RETAIL")]
+        [Description("Розничная реализация")]
+        Retail = 1,
+
+        /// <summary>
+        /// Экспорт в страны ЕАЭС
+        /// </summary>
+        [EnumMember(Value = "EEC_EXPORT")]
+        [Description("Экспорт в страны ЕАЭС")]
+        EecExport,
+
+        /// <summary>
+        /// Экспорт за пределы стран ЕАЭС
+        /// </summary>
+        [EnumMember(Value = "BEYOND_EEC_EXPORT")]
+        [Description("Экспорт за пределы стран ЕАЭС")]
+        BeyondEecExport,
+
+        /// <summary>
+        /// Возврат физическому лицу
+        /// </summary>
+        [EnumMember(Value = "RETURN")]
+        [Description("Возврат физическому лицу")]
+        Return,
+
+        /// <summary>
+        /// Продажа по образцам, дистанционный способ продажи
+        /// </summary>
+        [EnumMember(Value = "REMOTE_SALE")]
+        [Description("Продажа по образцам, дистанционный способ продажи")]
+        RemoteSale,
+
+        /// <summary>
+        /// Утрата или повреждение
+        /// </summary>
+        [EnumMember(Value = "DAMAGE_LOSS")]
+        [Description("Утрата или повреждение")]
+        DamageLoss,
+
+        /// <summary>
+        /// Утилизация или уничтожение
+        /// </summary>
+        [EnumMember(Value = "DESTRUCTION")]
+        [Description("Утилизация или уничтожение")]
+        Destruction,
+
+        /// <summary>
+        /// Конфискация
+        /// </summary>
+        [EnumMember(Value = "CONFISCATION")]
+        [Description("Конфискация")]
+        Confiscation,
+
+        /// <summary>
+        /// Ликвидация предприятия
+        /// </summary>
+        [EnumMember(Value = "LIQUIDATION")]
+        [Description("Ликвидация предприятия")]
+        Liquidation,
+
+        /// <summary>
+        /// Использование для собственных нужд предприятия
+        /// </summary>
+        [EnumMember(Value = "ENTERPRISE_USE")]
+        [Description("Использование для собственных нужд предприятия")]
+        EnterpriseUse,
+
+        /// <summary>
+        /// Продажа по сделке, составляющей гос. тайну
+        /// </summary>
+        [EnumMember(Value = "STATE_SECRET")]
+        [Description("Продажа по сделке, составляющей гос. тайну")]
+        StateSecret,
+
+        /// <summary>
+        /// Другое
+        /// </summary>
+        [EnumMember(Value = "OTHER")]
+        [Description("Другое")]
+        Other
     }
 }

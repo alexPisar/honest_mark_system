@@ -34,6 +34,8 @@ namespace HonestMarkSystem.Interfaces
 
         List<object> GetAllRefGoods();
 
+        List<object> GetAllMarkedCodes();
+
         void Rollback();
 
         void Commit();

@@ -12,7 +12,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
         public DocGoodsDetailsLabelsConfiguration()
         {
             this
-                .HasKey(l => new { l.IdDoc, l.IdGood, l.DmLabel})
+                .HasKey(l => new { l.IdDoc, l.DmLabel})
                 .ToTable("DOC_GOODS_DETAILS_LABELS", "ABT");
 
             this
@@ -23,7 +23,6 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
             this
                 .Property(l => l.IdGood)
                 .HasColumnName(@"ID_GOOD")
-                .IsRequired()
                 .HasDatabaseGeneratedOption(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.None);
 
             this
@@ -34,6 +33,20 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
             this
                 .Property(l => l.InsertDateTime)
                 .HasColumnName(@"INSERT_DATETIME");
+
+            this
+                .Property(l => l.IdDocSale)
+                .HasColumnName(@"ID_DOC_SALE")
+                .HasDatabaseGeneratedOption(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.None);
+
+            this
+                .Property(l => l.SaleDmLabel)
+                .HasColumnName(@"SALE_DM_LABEL")
+                .HasMaxLength(100);
+
+            this
+                .Property(l => l.SaleDateTime)
+                .HasColumnName(@"SALE_DATETIME");
 
             OnCreated();
         }
