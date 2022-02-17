@@ -54,6 +54,7 @@ namespace HonestMarkSystem.Models
 
         private void Refresh()
         {
+            _dataBaseAdapter.InitializeContext();
             object[] parameters = null;
 
             List<IEdoSystemDocument<string>> documents = new List<IEdoSystemDocument<string>>();
