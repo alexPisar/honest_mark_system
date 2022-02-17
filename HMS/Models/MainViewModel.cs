@@ -163,8 +163,8 @@ namespace HonestMarkSystem.Models
                 string errorMessage = _log.GetRecursiveInnerException(ex);
                 _log.Log(errorMessage);
 
-                var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
-                errorsWindow.ShowDialog();
+                //var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
+                //errorsWindow.ShowDialog();
             }
 
             UpdateProperties();

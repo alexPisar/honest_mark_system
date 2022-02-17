@@ -119,8 +119,7 @@ namespace HonestMarkSystem.Implementations
                 InsertDateTime = DateTime.Now
             }).ToList();
 
-            foreach(var label in labels)
-                _abt.DocGoodsDetailsLabels.Add(label);
+            _abt.DocGoodsDetailsLabels.AddRange(labels);
         }
 
         public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
