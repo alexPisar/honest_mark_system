@@ -106,5 +106,51 @@ namespace HmsTests
             xmlDocument.LoadXml(xmlContent);
             xmlDocument.Save($"C:\\Users\\systech\\Desktop\\{document.FileName}.xml");
         }
+
+        [TestMethod]
+        public void GetXmlCorrectionRequestTest()
+        {
+            var document = new ClarificationCorrectionRequestDocument();
+
+            #region Файл
+            document.FileName = "DP_UVUTOCH_2BM-5032262632-503201001-201601270943558790381_2BM-2539108495-253901001-201407110842566644066_20220218_da9428c5-3dab-4e58-83a0-416bcba4fe9f";
+            document.EdoProgramVersion = "Diadoc 1.0";
+
+            #region УчастЭДО
+            document.CreatorEdoId = "2BM-2539108495-253901001-201407110842566644066";
+            document.JuridicalInn = "2539108495";
+            document.JuridicalKpp = "253901001";
+            document.OrgCreatorName = "ООО \"ВЛАМУР\"";
+            #endregion
+
+            #region СвУведУточ
+            document.ReceiveDate = DateTime.Now;
+            document.Text = "Штрихкода испорчены";
+            document.ReceivedFileName = "ON_NSCHFDOPPRMARK_2BM-2539108495-253901001-201407110842566644066_2BM-5032262632-503201001-201601270943558790381_20211228_4fbcec52-b5bd-468a-839b-df954b122342";
+            document.ReceivedFileSignature = "MIAGCSqGSIb3DQEHAqCAMIACAQExDjAMBggqhQMHAQECAgUAMIAGCSqGSIb3DQEHAQAAoIIKajCCCmYwggoToAMCAQICEQInzXoA3qzPpUe1utOX57PeMAoGCCqFAwcBAQMCMIIB6DEbMBkGCSqGSIb3DQEJARYMY...";
+            #endregion
+
+            #region ОтпрДок
+            document.SenderEdoId = "2BM-5032262632-503201001-201601270943558790381";
+            document.SenderJuridicalInn = "5032262632";
+            document.SenderJuridicalKpp = "503201001";
+            document.OrgSenderName = "Общество с ограниченной  ответственностью \"Понти Парфюм\"";
+            #endregion
+
+            #region Подписант
+            document.SignerPosition = "Директор";
+            document.SignerSurname = "Мигеркин";
+            document.SignerName = "Николай";
+            document.SignerPatronymic = "Игоревич";
+            #endregion
+
+            #endregion
+
+            var xmlContent = document.GetXmlContent();
+
+            var xmlDocument = new XmlDocument();
+            xmlDocument.LoadXml(xmlContent);
+            xmlDocument.Save($"C:\\Users\\systech\\Desktop\\{document.FileName}.xml");
+        }
     }
 }
