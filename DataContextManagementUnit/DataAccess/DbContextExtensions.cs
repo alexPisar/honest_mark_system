@@ -73,6 +73,21 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 			return retVal;
 		}
 
+        public void ExecuteProcedure(string procedureName, params object[] parameters)
+        {
+            using (OracleCommand command = new OracleCommand() { Parameters = { parameters } })
+            {
+                command.Connection = (OracleConnection)this?.Database?.Connection ?? (OracleConnection)GetDefaultConnection();
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandText = procedureName;
+
+                if (command.Connection.State != ConnectionState.Open)
+                    command.Connection.Open();
+
+                command.ExecuteNonQuery();
+            }
+        }
+
 		private static DbConnection GetDefaultConnection()
 		{
 			DbConnection connection = Oracle.ManagedDataAccess.Client.OracleClientFactory.Instance.CreateConnection();

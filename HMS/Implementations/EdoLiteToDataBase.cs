@@ -229,6 +229,11 @@ namespace HonestMarkSystem.Implementations
             return _abt.DocGoodsDetailsLabels.Where(l => l.DmLabel.Length == 31 && l.SaleDmLabel == null).ToList<object>();
         }
 
+        public void ExportDocument(object documentObject)
+        {
+
+        }
+
         public void Commit()
         {
             _abt.SaveChanges();

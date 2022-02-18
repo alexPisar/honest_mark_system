@@ -287,6 +287,60 @@ namespace HonestMarkSystem.Implementations
             return _abt.DocGoodsDetailsLabels.Where(l => l.DmLabel.Length == 31 && l.SaleDmLabel == null).ToList<object>();
         }
 
+        public void ExportDocument(object documentObject)
+        {
+            var document = (DocEdoPurchasing)documentObject;
+
+            var sender = (from senderCustomer in _abt.RefCustomers
+                          where senderCustomer.Inn == document.SenderInn && senderCustomer.IdContractor != null
+                          join refUser in _abt.RefUsersByEdoShippers
+                          on senderCustomer.Id equals (refUser.IdCustomer)
+                          where refUser.UserName == _dataBaseUser
+                          select senderCustomer).FirstOrDefault();
+
+            if (sender.IdContractor == null)
+                throw new Exception("Данный отправитель не задан в базе");
+
+            var receiver = (from receiverCustomer in _abt.RefCustomers
+                            where receiverCustomer.Inn == document.ReceiverInn && receiverCustomer.IdContractor != null
+                            select receiverCustomer).FirstOrDefault();
+
+            if (receiver.IdContractor == null)
+                throw new Exception("Данный получатель не задан в базе");
+
+            var parameters = new object[]{ new Oracle.ManagedDataAccess.Client.OracleParameter("p_comments", ""),
+                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_seller", sender.IdContractor),
+                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_customer", receiver.IdContractor),
+                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id", Oracle.ManagedDataAccess.Client.OracleDbType.Decimal, System.Data.ParameterDirection.Output),
+                new Oracle.ManagedDataAccess.Client.OracleParameter("p_code", Oracle.ManagedDataAccess.Client.OracleDbType.Varchar2, System.Data.ParameterDirection.Output)};
+
+            _abt.ExecuteProcedure("ABT.Add_document", parameters);
+
+            var idDoc = (decimal)((Oracle.ManagedDataAccess.Client.OracleParameter)parameters[3]).Value;
+
+            foreach(var detail in document.Details)
+            {
+                parameters = new object[]
+                {
+                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc", idDoc),
+                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_good", detail.IdGood),
+                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_quantity", detail.Quantity)
+                };
+
+                _abt.ExecuteProcedure("ABT.Add_document_row", parameters);
+            }
+
+            parameters = new object[]
+            {
+                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc", idDoc),
+                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc_edo", document.IdDocEdo),
+                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id", Oracle.ManagedDataAccess.Client.OracleDbType.Decimal, System.Data.ParameterDirection.Output)
+            };
+
+            _abt.ExecuteProcedure("ABT.Add_document_purchasing", parameters);
+            document.IdDocPurchasing = (decimal?)((Oracle.ManagedDataAccess.Client.OracleParameter)parameters[2]).Value;
+        }
+
         public void Commit()
         {
             _abt.SaveChanges();

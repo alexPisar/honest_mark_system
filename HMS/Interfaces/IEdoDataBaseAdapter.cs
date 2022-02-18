@@ -36,6 +36,8 @@ namespace HonestMarkSystem.Interfaces
 
         List<object> GetAllMarkedCodes();
 
+        void ExportDocument(object documentObject);
+
         void Rollback();
 
         void Commit();

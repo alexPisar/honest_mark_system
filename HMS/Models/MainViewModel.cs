@@ -488,7 +488,34 @@ namespace HonestMarkSystem.Models
 
         private void ExportToTrader()
         {
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ для экспорта.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
 
+            if (Details.Exists(d => d?.IdGood == null))
+            {
+                System.Windows.MessageBox.Show(
+                    "В списке товаров есть несопоставленные с ID товары.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                _dataBaseAdapter.ExportDocument(SelectedItem);
+                _dataBaseAdapter.Commit();
+            }
+            catch (Exception ex)
+            {
+                _dataBaseAdapter.Rollback();
+                string errorMessage = _log.GetRecursiveInnerException(ex);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка экспорта.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
         }
 
         private void WithdrawalCodes()
