@@ -627,7 +627,7 @@ namespace HonestMarkSystem.Models
                 var sellerSignature = File.ReadAllBytes(signedFilePath);
                 report.ReceivedFileSignature = Convert.ToBase64String(sellerSignature);
 
-                //var xmlContent = report.GetXmlContent();
+                var xmlContent = report.GetXmlContent();
 
                 //var xmlDocument = new XmlDocument();
                 //xmlDocument.LoadXml(xmlContent);

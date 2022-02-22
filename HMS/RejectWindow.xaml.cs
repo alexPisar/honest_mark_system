@@ -27,5 +27,23 @@ namespace HonestMarkSystem
         }
 
         public ClarificationCorrectionRequestDocument Report => (ClarificationCorrectionRequestDocument)DataContext;
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
+
+        private void OkButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(string.IsNullOrEmpty(((ClarificationCorrectionRequestDocument)DataContext).Text))
+            {
+                MessageBox.Show("Не указана причина отклонения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            DialogResult = true;
+            Close();
+        }
     }
 }
