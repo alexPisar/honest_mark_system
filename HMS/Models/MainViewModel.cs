@@ -36,6 +36,7 @@ namespace HonestMarkSystem.Models
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
         public RelayCommand ExportToTraderCommand => new RelayCommand((o) => { ExportToTrader(); });
         public RelayCommand WithdrawalCodesCommand => new RelayCommand((o) => { WithdrawalCodes(); });
+        public RelayCommand RejectDocumentCommand => new RelayCommand((o) => { RejectDocument(); });
 
         public MainViewModel(IEdoSystem edoSystem,
             WebSystems.Systems.HonestMarkSystem honestMarkSystem, 
@@ -525,6 +526,113 @@ namespace HonestMarkSystem.Models
             var withdrawalWindow = new ChangeMarkedCodesWindow();
             withdrawalWindow.DataContext = new ChangeMarkedCodesModel(markedCodes, _honestMarkSystem);
             withdrawalWindow.ShowDialog();
+        }
+
+        private void RejectDocument()
+        {
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ для отклонения.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.Rejected)
+            {
+                System.Windows.MessageBox.Show(
+                    "Документ уже был отклонён.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.DocStatus != (int)DocEdoStatus.New)
+            {
+                System.Windows.MessageBox.Show(
+                    "Невозможно отклонить документ в данном статусе.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var rejectWindow = new RejectWindow();
+
+            if (rejectWindow.ShowDialog() == true)
+            {
+                var report = rejectWindow.Report;
+                var sellerXmlDocument = new XmlDocument();
+                sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+
+                var reporterDll = new Reporter.ReporterDll();
+                var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+
+                report.FileName = $"DP_UVUTOCH_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                report.EdoProgramVersion = sellerReport.EdoProgramVersion;
+
+                report.CreatorEdoId = sellerReport.ReceiverEdoId;
+                report.JuridicalInn = SelectedItem.ReceiverInn;
+                report.OrgCreatorName = SelectedItem.ReceiverName;
+
+                report.ReceiveDate = DateTime.Now;
+                report.ReceivedFileName = sellerReport.FileName;
+
+                report.SenderEdoId = sellerReport.SenderEdoId;
+                report.SenderJuridicalInn = SelectedItem.SenderInn;
+                report.OrgSenderName = SelectedItem.SenderName;
+
+                var subject = _edoSystem.GetCertSubject();
+                var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
+                report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
+                report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+                report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                string signedFilePath;
+
+                if (_edoSystem.HasZipContent)
+                {
+                    try
+                    {
+                        using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                        {
+                            var signedEntry = zipArchive.Entries.FirstOrDefault(x => x.Name.StartsWith(SelectedItem.FileName) && x.Name != $"{SelectedItem.FileName}.xml");
+
+                            if (signedEntry == null)
+                                throw new Exception("Не найден файл подписи продавца.");
+
+                            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}"))
+                                signedEntry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}");
+
+                            signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        string errMessage = _log.GetRecursiveInnerException(ex);
+                        _log.Log(errMessage);
+
+                        var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла подписи продавца из архива.", new List<string>(new string[] { errMessage }));
+                        errorsWindow.ShowDialog();
+                        return;
+                    }
+                }
+                else
+                {
+                    signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml.sig";
+
+                    if (!File.Exists(signedFilePath))
+                    {
+                        System.Windows.MessageBox.Show("Не найден файл подписи продавца.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        return;
+                    }
+                }
+
+                var sellerSignature = File.ReadAllBytes(signedFilePath);
+                report.ReceivedFileSignature = Convert.ToBase64String(sellerSignature);
+
+                //var xmlContent = report.GetXmlContent();
+
+                //var xmlDocument = new XmlDocument();
+                //xmlDocument.LoadXml(xmlContent);
+                //xmlDocument.Save($"C:\\Users\\systech\\Desktop\\{report.FileName}.xml");
+            }
         }
 
         private void SaveMarkedCodesToDataBase(byte[] sellerFileContent)

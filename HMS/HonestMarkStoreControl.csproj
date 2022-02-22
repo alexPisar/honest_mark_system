@@ -203,6 +203,9 @@
     <Compile Include="RefGoodsWindow.xaml.cs">
       <DependentUpon>RefGoodsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="RejectWindow.xaml.cs">
+      <DependentUpon>RejectWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="BuyerSignWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -257,6 +260,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="RefGoodsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RejectWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

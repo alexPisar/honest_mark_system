@@ -295,6 +295,11 @@ namespace WebSystems
     public enum DocEdoStatus
     {
         /// <summary>
+        /// Отклонён
+        /// </summary>
+        Rejected = -1,
+
+        /// <summary>
         /// Новый
         /// </summary>
         New,

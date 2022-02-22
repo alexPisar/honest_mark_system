@@ -75,20 +75,18 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 
         public void ExecuteProcedure(string procedureName, params object[] parameters)
         {
-            using (OracleCommand command = new OracleCommand() { Parameters = { parameters } })
-            {
-                command.Connection = (OracleConnection)this?.Database?.Connection ?? (OracleConnection)GetDefaultConnection();
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandText = procedureName;
+            var commandText = string.Empty;
 
-                if (command.Connection.State != ConnectionState.Open)
-                    command.Connection.Open();
+            if (parameters?.Count() > 0)
+                foreach (var par in parameters)
+                    commandText += string.IsNullOrEmpty(commandText) ? $"{((OracleParameter)par).ParameterName} => :{((OracleParameter)par).ParameterName}"
+                        : $", {((OracleParameter)par).ParameterName} => :{((OracleParameter)par).ParameterName}";
 
-                command.ExecuteNonQuery();
-            }
+            commandText = $"begin {procedureName}({commandText});END;";
+            Database.ExecuteSqlCommand(commandText, parameters);
         }
 
-		private static DbConnection GetDefaultConnection()
+        private static DbConnection GetDefaultConnection()
 		{
 			DbConnection connection = Oracle.ManagedDataAccess.Client.OracleClientFactory.Instance.CreateConnection();
             var connStr = new DataBaseConnection(Config.GetInstance().AbtDataBaseIpAddress, Config.GetInstance().AbtDataBaseSid, Config.GetInstance().DataBaseUser, Config.GetInstance().GetDataBasePassword()).GetConnectionString();

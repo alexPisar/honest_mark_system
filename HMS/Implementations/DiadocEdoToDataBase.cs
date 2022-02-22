@@ -33,6 +33,11 @@ namespace HonestMarkSystem.Implementations
                 .ToList();
 
             _isContextInitialized = true;
+
+            var nlsNumericCharacters = _abt.SelectSingleValue("select value from v$nls_parameters where parameter = 'NLS_NUMERIC_CHARACTERS'");
+
+            if (nlsNumericCharacters != ".,")
+                _abt.Database.ExecuteSqlCommand("ALTER SESSION SET NLS_LANGUAGE = 'AMERICAN' NLS_NUMERIC_CHARACTERS= '.,'");
         }
 
         public void SetPermittedBoxIds(List<KeyValuePair<Diadoc.Api.Proto.Box, Diadoc.Api.Proto.Organization>> boxesByInn)
@@ -308,17 +313,23 @@ namespace HonestMarkSystem.Implementations
             if (receiver.IdContractor == null)
                 throw new Exception("Данный получатель не задан в базе");
 
-            var parameters = new object[]{ new Oracle.ManagedDataAccess.Client.OracleParameter("p_comments", ""),
-                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_seller", sender.IdContractor),
-                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_customer", receiver.IdContractor),
-                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id", Oracle.ManagedDataAccess.Client.OracleDbType.Decimal, System.Data.ParameterDirection.Output),
-                new Oracle.ManagedDataAccess.Client.OracleParameter("p_code", Oracle.ManagedDataAccess.Client.OracleDbType.Varchar2, System.Data.ParameterDirection.Output)};
+            decimal? idDoc = null;
 
-            _abt.ExecuteProcedure("ABT.Add_document", parameters);
+            var parameters =
+                new object[] {
+                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_comments", Oracle.ManagedDataAccess.Client.OracleDbType.Varchar2, string.Empty, System.Data.ParameterDirection.Input),
+                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_seller", sender.IdContractor),
+                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_customer", receiver.IdContractor),
+                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_id", Oracle.ManagedDataAccess.Client.OracleDbType.Decimal, System.Data.ParameterDirection.Output),
+                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_code", Oracle.ManagedDataAccess.Client.OracleDbType.Varchar2, System.Data.ParameterDirection.Output){ Size=20 } };
 
-            var idDoc = (decimal)((Oracle.ManagedDataAccess.Client.OracleParameter)parameters[3]).Value;
+            _abt.ExecuteProcedure("abt.Add_document", parameters);
+            idDoc = ((Oracle.ManagedDataAccess.Types.OracleDecimal)((Oracle.ManagedDataAccess.Client.OracleParameter)parameters[3]).Value).Value;
 
-            foreach(var detail in document.Details)
+            if (idDoc == null)
+                throw new Exception("Не удалось получить идентификатор созданного документа.");
+
+            foreach (var detail in document.Details)
             {
                 parameters = new object[]
                 {
@@ -333,12 +344,12 @@ namespace HonestMarkSystem.Implementations
             parameters = new object[]
             {
                 new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc", idDoc),
-                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc_edo", document.IdDocEdo),
+                new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc_edo", Oracle.ManagedDataAccess.Client.OracleDbType.Varchar2, document.IdDocEdo, System.Data.ParameterDirection.Input),
                 new Oracle.ManagedDataAccess.Client.OracleParameter("p_id", Oracle.ManagedDataAccess.Client.OracleDbType.Decimal, System.Data.ParameterDirection.Output)
             };
 
             _abt.ExecuteProcedure("ABT.Add_document_purchasing", parameters);
-            document.IdDocPurchasing = (decimal?)((Oracle.ManagedDataAccess.Client.OracleParameter)parameters[2]).Value;
+            document.IdDocPurchasing = ((Oracle.ManagedDataAccess.Types.OracleDecimal)((Oracle.ManagedDataAccess.Client.OracleParameter)parameters[2]).Value).Value;
         }
 
         public void Commit()
