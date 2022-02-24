@@ -528,7 +528,7 @@ namespace HonestMarkSystem.Models
             withdrawalWindow.ShowDialog();
         }
 
-        private void RejectDocument()
+        private async void RejectDocument()
         {
             if (SelectedItem == null)
             {
@@ -552,86 +552,118 @@ namespace HonestMarkSystem.Models
             }
 
             var rejectWindow = new RejectWindow();
-
             if (rejectWindow.ShowDialog() == true)
             {
+                string errorMessage = null;
+                string titleErrorText = null;
+
+                LoadWindow loadWindow = new LoadWindow("Подождите, идёт загрузка данных");
+
+                if (this.Owner != null)
+                    loadWindow.Owner = this.Owner;
+
+                var loadContext = loadWindow.GetLoadContext();
                 var report = rejectWindow.Report;
-                var sellerXmlDocument = new XmlDocument();
-                sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
-                var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
 
-                var reporterDll = new Reporter.ReporterDll();
-                var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
-
-                report.FileName = $"DP_UVUTOCH_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
-                report.EdoProgramVersion = sellerReport.EdoProgramVersion;
-
-                report.CreatorEdoId = sellerReport.ReceiverEdoId;
-                report.JuridicalInn = SelectedItem.ReceiverInn;
-                report.OrgCreatorName = SelectedItem.ReceiverName;
-
-                report.ReceiveDate = DateTime.Now;
-                report.ReceivedFileName = sellerReport.FileName;
-
-                report.SenderEdoId = sellerReport.SenderEdoId;
-                report.SenderJuridicalInn = SelectedItem.SenderInn;
-                report.OrgSenderName = SelectedItem.SenderName;
-
-                var subject = _edoSystem.GetCertSubject();
-                var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
-                report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
-                report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
-                report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-                report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
-
-                string signedFilePath;
-
-                if (_edoSystem.HasZipContent)
+                loadWindow.Show();
+                await Task.Run(() =>
                 {
                     try
                     {
-                        using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                        loadContext.SetLoadingText("Формирование файла отказа");
+                        var sellerXmlDocument = new XmlDocument();
+                        sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                        var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+
+                        var reporterDll = new Reporter.ReporterDll();
+                        var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+
+                        report.FileName = $"DP_UVUTOCH_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                        report.EdoProgramVersion = _edoSystem.ProgramVersion;
+
+                        report.CreatorEdoId = sellerReport.ReceiverEdoId;
+                        report.JuridicalInn = SelectedItem.ReceiverInn;
+                        report.JuridicalKpp = SelectedItem.ReceiverKpp;
+                        report.OrgCreatorName = SelectedItem.ReceiverName;
+
+                        report.ReceiveDate = DateTime.Now;
+                        report.ReceivedFileName = sellerReport.FileName;
+
+                        report.SenderEdoId = sellerReport.SenderEdoId;
+                        report.SenderJuridicalInn = SelectedItem.SenderInn;
+                        report.SenderJuridicalKpp = SelectedItem.SenderKpp;
+                        report.OrgSenderName = SelectedItem.SenderName;
+
+                        var subject = _edoSystem.GetCertSubject();
+                        var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
+                        report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
+                        report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+                        report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                        report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                        string signedFilePath;
+
+                        if (_edoSystem.HasZipContent)
                         {
-                            var signedEntry = zipArchive.Entries.FirstOrDefault(x => x.Name.StartsWith(SelectedItem.FileName) && x.Name != $"{SelectedItem.FileName}.xml");
+                            using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                            {
+                                var signedEntry = zipArchive.Entries.FirstOrDefault(x => x.Name.StartsWith(SelectedItem.FileName) && x.Name != $"{SelectedItem.FileName}.xml");
 
-                            if (signedEntry == null)
-                                throw new Exception("Не найден файл подписи продавца.");
+                                if (signedEntry == null)
+                                    throw new Exception("Не найден файл подписи продавца.");
 
-                            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}"))
-                                signedEntry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}");
+                                if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}"))
+                                    signedEntry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}");
 
-                            signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}";
+                                signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}";
+                            }
+
                         }
+                        else
+                        {
+                            signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml.sig";
+
+                            if (!File.Exists(signedFilePath))
+                            {
+                                System.Windows.MessageBox.Show("Не найден файл подписи продавца.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                                return;
+                            }
+                        }
+
+                        var sellerSignature = File.ReadAllBytes(signedFilePath);
+                        report.ReceivedFileSignature = Convert.ToBase64String(sellerSignature);
+
+                        var xmlContent = report.GetXmlContent();
+                        var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
+
+                        loadContext.SetLoadingText("Отправка");
+                        _edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                        SelectedItem.DocStatus = (int)DocEdoStatus.Rejected;
+
+                        _dataBaseAdapter.Commit();
+                        loadContext.SetSuccessFullLoad("Документ успешно отклонён.");
+                    }
+                    catch (System.Net.WebException webEx)
+                    {
+                        _dataBaseAdapter.Rollback();
+                        errorMessage = _log.GetRecursiveInnerException(webEx);
+                        titleErrorText = "Произошла ошибка отклонения документа на удалённом сервере.";
                     }
                     catch (Exception ex)
                     {
-                        string errMessage = _log.GetRecursiveInnerException(ex);
-                        _log.Log(errMessage);
-
-                        var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла подписи продавца из архива.", new List<string>(new string[] { errMessage }));
-                        errorsWindow.ShowDialog();
-                        return;
+                        _dataBaseAdapter.Rollback();
+                        errorMessage = _log.GetRecursiveInnerException(ex);
+                        titleErrorText = "Произошла ошибка отклонения документа.";
                     }
-                }
-                else
+                });
+
+                if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml.sig";
-
-                    if (!File.Exists(signedFilePath))
-                    {
-                        System.Windows.MessageBox.Show("Не найден файл подписи продавца.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                        return;
-                    }
+                    loadWindow.Close();
+                    _log.Log(errorMessage);
+                    var errorsWindow = new ErrorsWindow(titleErrorText, new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
                 }
-
-                var sellerSignature = File.ReadAllBytes(signedFilePath);
-                report.ReceivedFileSignature = Convert.ToBase64String(sellerSignature);
-
-                var xmlContent = report.GetXmlContent();
-
-                //var xmlDocument = new XmlDocument();
-                //xmlDocument.LoadXml(xmlContent);
-                //xmlDocument.Save($"C:\\Users\\systech\\Desktop\\{report.FileName}.xml");
             }
         }
 
@@ -853,7 +885,9 @@ namespace HonestMarkSystem.Models
 
                 var counteragentsBoxIdsForOrganization = edoSystem.GetCounteragentsBoxesForOrganization(orgInn);
                 ((DiadocEdoToDataBase)_dataBaseAdapter).SetPermittedBoxIds(counteragentsBoxIdsForOrganization);
-                ((DiadocEdoToDataBase)_dataBaseAdapter).SetOrgData(orgName, orgInn);
+
+                var orgKpp = edoSystem.GetKppForMyOrganization(orgInn);
+                ((DiadocEdoToDataBase)_dataBaseAdapter).SetOrgData(orgName, orgInn, orgKpp);
             }
         }
 

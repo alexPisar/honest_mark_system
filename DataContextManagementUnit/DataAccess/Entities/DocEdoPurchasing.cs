@@ -35,9 +35,13 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 
         public virtual string SenderInn { get; set; }
 
+        public virtual string SenderKpp { get; set; }
+
         public virtual string SenderName { get; set; }
 
         public virtual string ReceiverInn { get; set; }
+
+        public virtual string ReceiverKpp { get; set; }
 
         public virtual string ReceiverName { get; set; }
 

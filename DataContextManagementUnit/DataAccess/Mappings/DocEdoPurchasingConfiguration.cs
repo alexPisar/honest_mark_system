@@ -58,6 +58,11 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMaxLength(20);
 
             this
+                .Property(p => p.SenderKpp)
+                .HasColumnName("SENDER_KPP")
+                .HasMaxLength(20);
+
+            this
                 .Property(p => p.SenderName)
                 .HasColumnName("SENDER_NAME")
                 .HasMaxLength(200);
@@ -65,6 +70,11 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
             this
                 .Property(p => p.ReceiverInn)
                 .HasColumnName("RECEIVER_INN")
+                .HasMaxLength(20);
+
+            this
+                .Property(p => p.ReceiverKpp)
+                .HasColumnName("RECEIVER_KPP")
                 .HasMaxLength(20);
 
             this

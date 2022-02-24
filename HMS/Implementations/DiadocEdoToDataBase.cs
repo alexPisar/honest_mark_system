@@ -17,6 +17,7 @@ namespace HonestMarkSystem.Implementations
         private string _dataBaseUser;
         private string _orgName;
         private string _orgInn;
+        private string _orgKpp;
         private AbtDbContext _abt;
         private List<Diadoc.Api.Proto.Box> _permittedBoxes;
         private List<DocEdoPurchasing> _documents;
@@ -69,10 +70,11 @@ namespace HonestMarkSystem.Implementations
             return _permittedBoxes?.Exists(p => p.BoxId == doc.CounteragentBoxId) ?? false;
         }
 
-        public void SetOrgData(string orgName, string inn)
+        public void SetOrgData(string orgName, string inn, string kpp)
         {
             _orgName = orgName;
             _orgInn = inn;
+            _orgKpp = kpp;
         }
 
         public object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo)
@@ -194,20 +196,25 @@ namespace HonestMarkSystem.Implementations
 
             var counteragentName = box.Organization?.FullName;
             var counteragentInn = box.Organization?.Inn;
+            var counteragentKpp = box.Organization?.Kpp;
 
             if (inOutType == WebSystems.DocumentInOutType.Inbox)
             {
                 newDoc.SenderInn = counteragentInn;
                 newDoc.SenderName = counteragentName;
+                newDoc.SenderKpp = counteragentKpp;
                 newDoc.ReceiverInn = _orgInn;
+                newDoc.ReceiverKpp = _orgKpp;
                 newDoc.ReceiverName = _orgName;
             }
             else if (inOutType == WebSystems.DocumentInOutType.Outbox)
             {
                 newDoc.SenderInn = _orgInn;
+                newDoc.SenderKpp = _orgKpp;
                 newDoc.SenderName = _orgName;
                 newDoc.ReceiverInn = counteragentInn;
                 newDoc.ReceiverName = counteragentName;
+                newDoc.ReceiverKpp = counteragentKpp;
             }
 
             if (doc.DocStatus == "Success")

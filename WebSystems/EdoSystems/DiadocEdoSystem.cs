@@ -127,6 +127,17 @@ namespace WebSystems.EdoSystems
             return null;
         }
 
+        public override void SendRejectionDocument(string function, byte[] fileBytes, params object[] parameters)
+        {
+            var messageId = (string)parameters[0];
+            var entityId = (string)parameters[1];
+
+            if (function == "СЧФ")
+                ((WebClients.DiadocEdoClient)_webClient).SendInvoiceCorrectionDocument(messageId, entityId, fileBytes);
+            else
+                ((WebClients.DiadocEdoClient)_webClient).SendRejectionDocument(messageId, entityId, fileBytes);
+        }
+
         public List<KeyValuePair<Diadoc.Api.Proto.Box, Diadoc.Api.Proto.Organization>> GetCounteragentsBoxesForOrganization(string inn)
         {
             var organization = ((WebClients.DiadocEdoClient)_webClient).GetMyOrganizationByInnKpp(inn);
@@ -139,6 +150,12 @@ namespace WebSystems.EdoSystems
 
             var result = (from c in counteragents select new KeyValuePair<Diadoc.Api.Proto.Box, Diadoc.Api.Proto.Organization>(c?.Organization?.Boxes?.FirstOrDefault(), c?.Organization)).ToList();
             return result;
+        }
+
+        public string GetKppForMyOrganization(string inn)
+        {
+            var organization = ((WebClients.DiadocEdoClient)_webClient).GetMyOrganizationByInnKpp(inn);
+            return organization.Kpp;
         }
     }
 }
