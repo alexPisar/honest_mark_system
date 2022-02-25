@@ -229,6 +229,21 @@ namespace HonestMarkSystem.Implementations
             else
                 newDoc.DocStatus = (int)WebSystems.DocEdoStatus.New;
 
+            if(doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
+            {
+                newDoc.Name = $"Исправление {report.DocNumber} № {newDoc.Name}";
+
+                var parent = _documents.FirstOrDefault(d => d.Name == report.DocNumber 
+                && d.SenderEdoId == newDoc.SenderEdoId && d.ReceiverEdoId == newDoc.ReceiverEdoId);
+
+                if(parent != null)
+                {
+                    newDoc.Parent = parent;
+                    newDoc.ParentIdDocEdo = parent.IdDocEdo;
+                    parent.Children.Add(newDoc);
+                }
+            }
+
             foreach(var product in report.Products)
             {
                 var newDetail = new DocEdoPurchasingDetail
@@ -250,6 +265,13 @@ namespace HonestMarkSystem.Implementations
 
                 if (refGoods.Count == 1)
                     newDetail.IdGood = refGoods.First();
+                else if(newDoc.Parent != null)
+                {
+                    var curDetail = newDoc.Parent.Details.FirstOrDefault(d => d.BarCode == newDetail.BarCode);
+
+                    if (curDetail != null)
+                        newDetail.IdGood = curDetail.IdGood;
+                }
 
                 newDoc.Details.Add(newDetail);
             }

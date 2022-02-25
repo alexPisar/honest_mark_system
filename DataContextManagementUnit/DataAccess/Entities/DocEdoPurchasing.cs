@@ -11,6 +11,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public DocEdoPurchasing()
         {
             this.Details = new List<DocEdoPurchasingDetail>();
+            this.Children = new List<DocEdoPurchasing>();
             OnCreated();
         }
 
@@ -68,11 +69,15 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual string CounteragentEdoBoxId { get; set; }
 
         public virtual string ParentEntityId { get; set; }
+
+        public virtual string ParentIdDocEdo { get; set; }
         #endregion
 
         #region Navigation Properties
         public virtual RefEdoStatus Status { get; set; }
         public virtual List<DocEdoPurchasingDetail> Details { get; set; }
+        public virtual DocEdoPurchasing Parent { get; set; }
+        public virtual List<DocEdoPurchasing> Children { get; set; }
         #endregion
 
         #region Extensibility Method Definitions

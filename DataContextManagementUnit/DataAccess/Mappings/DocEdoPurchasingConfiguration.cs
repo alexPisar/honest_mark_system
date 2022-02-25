@@ -142,6 +142,11 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMaxLength(128);
 
             this
+                .Property(p => p.ParentIdDocEdo)
+                .HasColumnName("PARENT_ID_DOC_EDO")
+                .HasMaxLength(36);
+
+            this
                 .HasOptional(p => p.Status)
                 .WithMany()
                 .HasForeignKey(p => p.DocStatus)
@@ -151,6 +156,12 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMany(p => p.Details)
                 .WithRequired(d => d.EdoDocument)
                 .HasForeignKey(d => d.IdDocEdoPurchasing)
+                .WillCascadeOnDelete(false);
+
+            this
+                .HasMany(p => p.Children)
+                .WithOptional(p => p.Parent)
+                .HasForeignKey(p => p.ParentIdDocEdo)
                 .WillCascadeOnDelete(false);
 
             OnCreated();
