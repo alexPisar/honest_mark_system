@@ -127,15 +127,15 @@ namespace WebSystems.EdoSystems
             return null;
         }
 
-        public override void SendRejectionDocument(string function, byte[] fileBytes, params object[] parameters)
+        public override void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters)
         {
             var messageId = (string)parameters[0];
             var entityId = (string)parameters[1];
 
             if (function == "СЧФ")
-                ((WebClients.DiadocEdoClient)_webClient).SendInvoiceCorrectionDocument(messageId, entityId, fileBytes);
+                ((WebClients.DiadocEdoClient)_webClient).SendInvoiceCorrectionDocument(messageId, entityId, fileBytes, signature);
             else
-                ((WebClients.DiadocEdoClient)_webClient).SendRejectionDocument(messageId, entityId, fileBytes);
+                ((WebClients.DiadocEdoClient)_webClient).SendRejectionDocument(messageId, entityId, fileBytes, signature);
         }
 
         public List<KeyValuePair<Diadoc.Api.Proto.Box, Diadoc.Api.Proto.Organization>> GetCounteragentsBoxesForOrganization(string inn)

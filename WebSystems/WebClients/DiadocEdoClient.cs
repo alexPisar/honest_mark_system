@@ -245,22 +245,15 @@ namespace WebSystems.WebClients
             var messagePatch = CallApiSafe(new Func<MessagePatch>(() => _api.PostMessagePatch(_authToken, postMessage)));
         }
 
-        public void SendInvoiceCorrectionDocument(string messageId, string entityId, byte[] fileBytes)
+        public void SendInvoiceCorrectionDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature)
         {
-            var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(_certificate);
-
-            var firstMiddleName = cryptoUtil.ParseCertAttribute(_certificate.Subject, "G");
-            string signerFirstName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-            string signerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
-            
-
             var invoiceCorrectionAttachment = new CorrectionRequestAttachment()
             {
                 ParentEntityId = entityId,
                 SignedContent = new SignedContent
                 {
                     Content = fileBytes,
-                    Signature = cryptoUtil.Sign(fileBytes, true)
+                    Signature = signature
                 }
             };
 
@@ -275,22 +268,15 @@ namespace WebSystems.WebClients
             var messagePatch = CallApiSafe(new Func<MessagePatch>(() => _api.PostMessagePatch(_authToken, postMessage)));
         }
 
-        public void SendRejectionDocument(string messageId, string entityId, byte[] fileBytes)
+        public void SendRejectionDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature)
         {
-            var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(_certificate);
-
-            var firstMiddleName = cryptoUtil.ParseCertAttribute(_certificate.Subject, "G");
-            string signerFirstName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-            string signerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
-
-
             var signatureRejectionAttachment = new XmlSignatureRejectionAttachment()
             {
                 ParentEntityId = entityId,
                 SignedContent = new SignedContent
                 {
                     Content = fileBytes,
-                    Signature = cryptoUtil.Sign(fileBytes, true)
+                    Signature = signature
                 }
             };
 

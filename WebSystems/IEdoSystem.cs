@@ -54,7 +54,7 @@ namespace WebSystems
             return _certificate?.Subject;
         }
 
-        public virtual void SendRejectionDocument(string function, byte[] fileBytes, params object[] parameters) { }
+        public virtual void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters) { }
 
         public abstract object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters);
     }

@@ -646,11 +646,19 @@ namespace HonestMarkSystem.Models
                         var sellerSignature = File.ReadAllBytes(signedFilePath);
                         report.ReceivedFileSignature = Convert.ToBase64String(sellerSignature);
 
+                        loadContext.SetLoadingText("Сохранение документов");
                         var xmlContent = report.GetXmlContent();
                         var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
+                        var signature = _cryptoUtil.Sign(contentBytes, true);
+
+                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml", contentBytes);
+                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml.sig", signature);
 
                         loadContext.SetLoadingText("Отправка");
-                        _edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+
+                        if(_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                            _edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+
                         SelectedItem.DocStatus = (int)DocEdoStatus.Rejected;
 
                         _dataBaseAdapter.Commit();
