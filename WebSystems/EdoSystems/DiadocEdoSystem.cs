@@ -30,6 +30,11 @@ namespace WebSystems.EdoSystems
             || c.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.Invoice);
 
             if (entity == null)
+            {
+                entity = currentMessage?.Entities?.FirstOrDefault(c => c.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.UniversalTransferDocumentRevision);
+            }
+
+            if (entity == null)
                 return;
 
             if (currentMessage.Entities.Exists(c => c.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.InvoiceReceipt))
