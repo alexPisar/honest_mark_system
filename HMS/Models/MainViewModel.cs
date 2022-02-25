@@ -257,6 +257,13 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.Rejected)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ был отклонён.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (SelectedItem.DocStatus == (int)DocEdoStatus.NoSignatureRequired)
             {
                 System.Windows.MessageBox.Show(
