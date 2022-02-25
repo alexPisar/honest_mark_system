@@ -513,7 +513,13 @@ namespace HonestMarkSystem.Models
             try
             {
                 _dataBaseAdapter.ExportDocument(SelectedItem);
+
+                LoadWindow loadWindow = new LoadWindow();
+                var loadContext = loadWindow.GetLoadContext();
+                loadContext.SetSuccessFullLoad("Экспорт выполнен успешно.");
+
                 _dataBaseAdapter.Commit();
+                loadWindow.ShowDialog();
             }
             catch (Exception ex)
             {
