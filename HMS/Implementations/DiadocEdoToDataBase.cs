@@ -134,7 +134,8 @@ namespace HonestMarkSystem.Implementations
             var doc = document as DiadocEdoDocument;
 
             if (doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlAcceptanceCertificate && doc.DocumentType != Diadoc.Api.Proto.DocumentType.Invoice &&
-                doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlTorg12 && doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocument)
+                doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlTorg12 && doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocument &&
+                doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
                 return null;
 
             var reporterDll = new Reporter.ReporterDll();
@@ -157,7 +158,8 @@ namespace HonestMarkSystem.Implementations
                 total = doc.Document?.XmlTorg12Metadata?.Total;
                 vat = doc.Document?.XmlTorg12Metadata.Vat;
             }
-            else if(doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocument)
+            else if(doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocument ||
+                doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
             {
                 total = doc.Document?.UniversalTransferDocumentMetadata?.Total;
                 vat = doc.Document?.UniversalTransferDocumentMetadata?.Vat;
