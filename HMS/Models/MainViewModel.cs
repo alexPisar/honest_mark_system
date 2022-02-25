@@ -433,7 +433,8 @@ namespace HonestMarkSystem.Models
                         {
                             string typeNameId = string.Empty, function = string.Empty;
 
-                            if (SelectedItem.IdDocType == (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocument)
+                            if (SelectedItem.IdDocType == (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocument ||
+                            SelectedItem.IdDocType == (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
                             {
                                 typeNameId = "UniversalTransferDocumentBuyerTitle";
                                 function = "СЧФДОП";

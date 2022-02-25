@@ -113,7 +113,7 @@ namespace WebSystems.WebClients
                 MessageId = messageId
             };
 
-            if(docType == (int)DocumentType.UniversalTransferDocument)
+            if(docType == (int)DocumentType.UniversalTransferDocument || docType == (int)DocumentType.UniversalTransferDocumentRevision)
                 messageToPost.AddUniversalTransferDocumentBuyerTitle(recipientAttachment);
             else if(docType == (int)DocumentType.XmlTorg12)
                 messageToPost.AddXmlTorg12BuyerTitle(recipientAttachment);
