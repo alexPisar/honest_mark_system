@@ -21,7 +21,6 @@ namespace HonestMarkSystem.Implementations
         private AbtDbContext _abt;
         private List<Diadoc.Api.Proto.Box> _permittedBoxes;
         private List<DocEdoPurchasing> _documents;
-        private bool _isContextInitialized = false;
 
         public void InitializeContext()
         {
@@ -33,8 +32,6 @@ namespace HonestMarkSystem.Implementations
                 .Where(d => d.EdoProviderName == providerName && d.ReceiverInn == _orgInn)
                 .ToList();
 
-            _isContextInitialized = true;
-
             var nlsNumericCharacters = _abt.SelectSingleValue("select value from v$nls_parameters where parameter = 'NLS_NUMERIC_CHARACTERS'");
 
             if (nlsNumericCharacters != ".,")
@@ -43,9 +40,6 @@ namespace HonestMarkSystem.Implementations
 
         public void SetPermittedBoxIds(List<KeyValuePair<Diadoc.Api.Proto.Box, Diadoc.Api.Proto.Organization>> boxesByInn)
         {
-            if(!_isContextInitialized)
-                InitializeContext();
-
             var permittedSenderInnsForUser = (from refUser in _abt.RefUsersByEdoShippers
                                               join cus in _abt.RefCustomers on refUser.IdCustomer equals cus.Id
                                               where refUser.UserName == _dataBaseUser

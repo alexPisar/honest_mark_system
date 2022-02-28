@@ -75,12 +75,12 @@ namespace HonestMarkSystem
 
                     var orgName = cryptoUtil.ParseCertAttribute(selectedCert.Subject, "CN");
                     var orgInn = ((Config)DataContext).ConsignorInn;
-                    mainModel.SaveOrgData(orgInn, orgName);
 
                     ((Config)DataContext).GenerateParametersForPassword();
                     ((Config)DataContext).SetDataBasePassword(accountPassword.Text);
-
                     dataBaseAdapter.InitializeContext();
+
+                    mainModel.SaveOrgData(orgInn, orgName);
                     ((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
 
                     mainWindow.DataContext = mainModel;
