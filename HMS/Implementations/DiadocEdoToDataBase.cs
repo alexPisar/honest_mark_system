@@ -158,11 +158,15 @@ namespace HonestMarkSystem.Implementations
                 total = doc.Document?.XmlTorg12Metadata?.Total;
                 vat = doc.Document?.XmlTorg12Metadata.Vat;
             }
-            else if(doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocument ||
-                doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
+            else if(doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocument)
             {
                 total = doc.Document?.UniversalTransferDocumentMetadata?.Total;
                 vat = doc.Document?.UniversalTransferDocumentMetadata?.Vat;
+            }
+            else if (doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
+            {
+                total = doc.Document?.UniversalTransferDocumentRevisionMetadata?.Total;
+                vat = doc.Document?.UniversalTransferDocumentRevisionMetadata?.Vat;
             }
             else
             {
