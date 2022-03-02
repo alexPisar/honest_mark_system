@@ -192,6 +192,7 @@
     <Compile Include="Entities\AnotherPerson.cs" />
     <Compile Include="Entities\Base\IReportEntity.cs" />
     <Compile Include="Entities\CorrectionProduct.cs" />
+    <Compile Include="Entities\DocumentDetail.cs" />
     <Compile Include="Entities\IndividualEntity.cs" />
     <Compile Include="Entities\InvoiceCorrectionInfo.cs" />
     <Compile Include="Entities\JuridicalEntity.cs" />

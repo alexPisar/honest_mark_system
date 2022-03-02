@@ -132,6 +132,52 @@ namespace Reporter.Reports
         /// </summary>
         public List<Entities.CorrectionProduct> Products { get; set; }
         #endregion
+        #region Реквизиты строки «Всего увеличение» (сумма строк (В) по графам 5, 8 и 9 корректировочного счета-фактуры)
+
+        /// <summary>
+        /// Всего увеличение, сумма налога (строка «Всего увеличение»/ графа 8 корректировочного счета-фактуры)
+        /// </summary>
+        public decimal TaxAmountIncrease { get; set; }
+
+        /// <summary>
+        /// Всего увеличение, стоимость товаров (работ, услуг), имущественных прав с налогом - всего (строка «Всего увеличение»/графа 9 корректировочного счета-фактуры)
+        /// </summary>
+        public decimal SubtotalIncrease { get; set; }
+        #endregion
+        #region Реквизиты строки «Всего уменьшение» (сумма строк (Г) по графам 5, 8 и 9 корректировочного счета-фактуры)
+
+        /// <summary>
+        /// Всего уменьшение, сумма налога (строка «Всего уменьшение»/ графа 8 корректировочного счета-фактуры)
+        /// </summary>
+        public decimal TaxAmountDecrease { get; set; }
+
+        /// <summary>
+        /// Всего уменьшение, стоимость товаров (работ, услуг), имущественных прав, с налогом - всего (строка «Всего уменьшение»/графа 9 корректировочного счета-фактуры)
+        /// </summary>
+        public decimal SubtotalDecrease { get; set; }
+        #endregion
+        #region Содержание события (факта хозяйственной жизни) 3 – сведения о факте согласования (уведомления)
+
+        /// <summary>
+        /// Содержание операции
+        /// </summary>
+        public string EventDescription { get; set; }
+
+        /// <summary>
+        /// Дата направления на согласование (дата уведомления)
+        /// </summary>
+        public DateTime ApprovalDate { get; set; }
+
+        /// <summary>
+        /// Реквизиты передаточных (отгрузочных) документов, к которым относится корректировка
+        /// </summary>
+        public List<Entities.DocumentDetail> TransferDocuments { get; set; }
+
+        /// <summary>
+        /// Реквизиты документов, являющихся основанием корректировки
+        /// </summary>
+        public List<Entities.DocumentDetail> BasisForCorrection { get; set; }
+        #endregion
         #endregion
         #endregion
 
@@ -298,6 +344,56 @@ namespace Reporter.Reports
                         BuyerName = ((СвПродПокТипИдСвСвЮЛУч)buyerInfo.Item).НаимОрг;
                         BuyerInn = ((СвПродПокТипИдСвСвЮЛУч)buyerInfo.Item).ИННЮЛ;
                         BuyerKpp = ((СвПродПокТипИдСвСвЮЛУч)buyerInfo.Item).КПП;
+                    }
+                }
+
+                TaxAmountIncrease = ((decimal?)document?.ТаблКСчФ?.ВсегоУвел?.СумНал?.Item) ?? 0;
+                SubtotalIncrease = document?.ТаблКСчФ?.ВсегоУвел?.СтТовУчНалВсего ?? 0;
+
+                TaxAmountDecrease = ((decimal?)document?.ТаблКСчФ?.ВсегоУм?.СумНал?.Item) ?? 0;
+                SubtotalDecrease = document?.ТаблКСчФ?.ВсегоУм?.СтТовУчНалВсего ?? 0;
+
+                var eventContentFactOfEconomicLife = document?.СодФХЖ3;
+
+                if(eventContentFactOfEconomicLife != null)
+                {
+                    EventDescription = eventContentFactOfEconomicLife.СодОпер;
+
+                    if(!string.IsNullOrEmpty(eventContentFactOfEconomicLife.ДатаНапр))
+                        ApprovalDate = DateTime.ParseExact(eventContentFactOfEconomicLife.ДатаНапр, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+                    TransferDocuments = new List<Entities.DocumentDetail>();
+                    foreach (var doc in eventContentFactOfEconomicLife.ПередатДокум)
+                    {
+                        var docDetail = new Entities.DocumentDetail
+                        {
+                            DocName = doc.НаимОсн,
+                            DocNumber = doc.НомОсн,
+                            OtherInfo = doc.ДопСвОсн,
+                            FileId = doc.ИдФайлОсн
+                        };
+
+                        if (!string.IsNullOrEmpty(doc.ДатаОсн))
+                            docDetail.DocDate = DateTime.ParseExact(doc.ДатаОсн, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+                        TransferDocuments.Add(docDetail);
+                    }
+
+                    BasisForCorrection = new List<Entities.DocumentDetail>();
+                    foreach (var doc in eventContentFactOfEconomicLife.ДокумОснКор)
+                    {
+                        var docDetail = new Entities.DocumentDetail
+                        {
+                            DocName = doc.НаимОсн,
+                            DocNumber = doc.НомОсн,
+                            OtherInfo = doc.ДопСвОсн,
+                            FileId = doc.ИдФайлОсн
+                        };
+
+                        if (!string.IsNullOrEmpty(doc.ДатаОсн))
+                            docDetail.DocDate = DateTime.ParseExact(doc.ДатаОсн, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+                        BasisForCorrection.Add(docDetail);
                     }
                 }
             }
