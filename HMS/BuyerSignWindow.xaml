@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:HonestMarkSystem"
         xmlns:rep="clr-namespace:Reporter.Controls;assembly=Reporter"
         mc:Ignorable="d"
-        Title="Подписание и отправка" ResizeMode="NoResize" Height="960" Width="850">
+        Title="Подписание и отправка" Height="965" Width="850">
     <Grid>
         <rep:UniversalTransferBuyerDocumentControl x:Name="reportControl" />
     </Grid>

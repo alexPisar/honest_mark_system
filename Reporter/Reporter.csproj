@@ -191,7 +191,9 @@
     </Compile>
     <Compile Include="Entities\AnotherPerson.cs" />
     <Compile Include="Entities\Base\IReportEntity.cs" />
+    <Compile Include="Entities\CorrectionProduct.cs" />
     <Compile Include="Entities\IndividualEntity.cs" />
+    <Compile Include="Entities\InvoiceCorrectionInfo.cs" />
     <Compile Include="Entities\JuridicalEntity.cs" />
     <Compile Include="Entities\OrganizationEmployee.cs" />
     <Compile Include="Entities\OrganizationRepresentative.cs" />
@@ -205,9 +207,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReporterDll.cs" />
     <Compile Include="Reports\ClarificationCorrectionRequestDocument.cs" />
+    <Compile Include="Reports\UniversalCorrectionSellerDocument.cs" />
     <Compile Include="Reports\UniversalTransferBuyerDocument.cs" />
     <Compile Include="Reports\UniversalTransferSellerDocument.cs" />
     <Compile Include="XsdClasses\DP_UVUTOCH_1_985_00_01_01_02.cs" />
+    <Compile Include="XsdClasses\ON_NKORSCHFDOPPR_1_996_03_05_01_02.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOPPOK_1_997_02_05_01_02.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOPPR_1_997_01_05_01_03.cs" />
   </ItemGroup>
@@ -231,6 +235,10 @@
     <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="XSD\DP_UVUTOCH_1_985_00_01_01_02.xsd">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="XSD\ON_NKORSCHFDOPPR_1_996_03_05_01_02.xsd">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

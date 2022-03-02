@@ -9,7 +9,7 @@
              xmlns:ent="clr-namespace:Reporter.Entities"
              xmlns:local="clr-namespace:Reporter.Controls"
              mc:Ignorable="d"
-             d:DesignHeight="920" d:DesignWidth="800">
+             d:DesignHeight="930" d:DesignWidth="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -232,7 +232,7 @@
                 </base:ReportSwitchTabControl>
             </StackPanel>
         </GroupBox>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4" Height="45">
             <Button Content="Подписать и отправить" Margin="5 5" Click="ChangeButton_Click"></Button>
             <Button Content="Сохранить" Margin="5 5" Click="SaveButton_Click"></Button>
             <Button Content="Отмена" Margin="5 5" Click="CancelButton_Click"></Button>
