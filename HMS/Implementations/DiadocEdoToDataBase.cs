@@ -118,9 +118,10 @@ namespace HonestMarkSystem.Implementations
                 DmLabel = m,
                 IdGood = idGood,
                 InsertDateTime = DateTime.Now
-            }).ToList();
+            });
 
-            _abt.DocGoodsDetailsLabels.AddRange(labels);
+            foreach(var label in labels)
+                _abt.DocGoodsDetailsLabels.Add(label);
         }
 
         public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
