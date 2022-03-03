@@ -169,6 +169,29 @@ namespace HonestMarkSystem.Models
                 //errorsWindow.ShowDialog();
             }
 
+            try
+            {
+                var newDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.New || d.DocStatus == (int)DocEdoStatus.RevokeRequested).ToList();
+
+                foreach (var newDocument in newDocuments)
+                {
+                    if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                        newDocument.DocStatus = (int)_edoSystem.GetCurrentStatus(newDocument.DocStatus, newDocument.IdDocEdo, newDocument.ParentEntityId);
+                }
+
+                if(newDocuments.Exists(d => d.DocStatus != (int)DocEdoStatus.New && d.DocStatus != (int)DocEdoStatus.RevokeRequested))
+                    _dataBaseAdapter.Commit();
+            }
+            catch(Exception ex)
+            {
+                _dataBaseAdapter.Rollback();
+                string errorMessage = _log.GetRecursiveInnerException(ex);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+
             UpdateProperties();
         }
 

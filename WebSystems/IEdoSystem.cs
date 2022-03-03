@@ -54,6 +54,11 @@ namespace WebSystems
             return _certificate?.Subject;
         }
 
+        public virtual DocEdoStatus GetCurrentStatus(params object[] parameters)
+        {
+            return DocEdoStatus.New;
+        }
+
         public virtual void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters) { }
 
         public abstract object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters);

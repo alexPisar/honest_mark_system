@@ -132,6 +132,26 @@ namespace WebSystems.EdoSystems
             return null;
         }
 
+        public override DocEdoStatus GetCurrentStatus(params object[] parameters)
+        {
+            var status = (int)parameters[0];
+            var messageId = (string)parameters[1];
+            var entityId = (string)parameters[2];
+
+            var document = ((WebClients.DiadocEdoClient)_webClient).GetDocument(messageId, entityId);
+
+            DocEdoStatus docStatus = (DocEdoStatus)status;
+
+            if (document.RevocationStatus == Diadoc.Api.Proto.Documents.RevocationStatus.RequestsMyRevocation)
+                docStatus = DocEdoStatus.RevokeRequired;
+            else if(document.RevocationStatus == Diadoc.Api.Proto.Documents.RevocationStatus.RevocationAccepted)
+                docStatus = DocEdoStatus.Revoked;
+            else if (document.RevocationStatus == Diadoc.Api.Proto.Documents.RevocationStatus.RevocationRejected)
+                docStatus = DocEdoStatus.RejectRevoke;
+
+            return docStatus;
+        }
+
         public override void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters)
         {
             var messageId = (string)parameters[0];

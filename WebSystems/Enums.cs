@@ -315,6 +315,11 @@ namespace WebSystems
         Processed,
 
         /// <summary>
+        /// Отказано в аннулировании
+        /// </summary>
+        RejectRevoke = 4,
+
+        /// <summary>
         /// Ошибка обработки
         /// </summary>
         ProcessingError = 8,
@@ -323,6 +328,21 @@ namespace WebSystems
         /// Не требуется подпись
         /// </summary>
         NoSignatureRequired = 10,
+
+        /// <summary>
+        /// Требуется аннулирование
+        /// </summary>
+        RevokeRequired,
+
+        /// <summary>
+        /// Запрошено аннулирование
+        /// </summary>
+        RevokeRequested,
+
+        /// <summary>
+        /// Аннулирован
+        /// </summary>
+        Revoked
     }
 
     public enum EdoLiteDocumentStatus
