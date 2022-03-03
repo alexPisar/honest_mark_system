@@ -291,6 +291,28 @@ namespace WebSystems.WebClients
             var messagePatch = CallApiSafe(new Func<MessagePatch>(() => _api.PostMessagePatch(_authToken, postMessage)));
         }
 
+        public void SendRevocationDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature)
+        {
+            var signatureAttachment = new RevocationRequestAttachment()
+            {
+                ParentEntityId = entityId,
+                SignedContent = new SignedContent
+                {
+                    Content = fileBytes,
+                    Signature = signature
+                }
+            };
+
+            var postMessage = new MessagePatchToPost
+            {
+                BoxId = _actualBoxId,
+                MessageId = messageId
+            };
+
+            postMessage.AddRevocationRequestAttachment(signatureAttachment);
+            var messagePatch = CallApiSafe(new Func<MessagePatch>(() => _api.PostMessagePatch(_authToken, postMessage)));
+        }
+
         public List<Document> GetDocuments(string filterCategory, DateTime dateFrom, DateTime? dateTo = null)
         {
             var documentsFilter = new DocumentsFilter

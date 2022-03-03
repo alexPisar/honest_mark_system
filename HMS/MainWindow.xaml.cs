@@ -29,6 +29,7 @@ namespace HonestMarkSystem
         private void SelectedItemChanged(object sender, DevExpress.Xpf.Grid.SelectedItemChangedEventArgs e)
         {
             ((UtilitesLibrary.ModelBase.ListViewModel<DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing>)DataContext).OnPropertyChanged("Details");
+            ((UtilitesLibrary.ModelBase.ListViewModel<DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing>)DataContext).OnPropertyChanged("IsRevokedDocument");
         }
 
         private void ButtonEditSettings_DefaultButtonClick(object sender, RoutedEventArgs e)

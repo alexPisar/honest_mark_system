@@ -30,6 +30,8 @@ namespace HonestMarkSystem.Models
         public DateTime DateTo { get; set; } = DateTime.Now.AddDays(1);
         public DateTime DateFrom { get; set; } = DateTime.Now.AddMonths(-6);
 
+        public bool IsRevokedDocument => SelectedItem?.DocStatus == (int?)DocEdoStatus.RevokeRequired || SelectedItem?.DocStatus == (int?)DocEdoStatus.New;
+
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public override RelayCommand EditCommand => new RelayCommand((o) => { Save(); });
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
@@ -37,6 +39,7 @@ namespace HonestMarkSystem.Models
         public RelayCommand ExportToTraderCommand => new RelayCommand((o) => { ExportToTrader(); });
         public RelayCommand WithdrawalCodesCommand => new RelayCommand((o) => { WithdrawalCodes(); });
         public RelayCommand RejectDocumentCommand => new RelayCommand((o) => { RejectDocument(); });
+        public RelayCommand RevokeDocumentCommand => new RelayCommand((o) => { RevokeDocument(); });
 
         public MainViewModel(IEdoSystem edoSystem,
             WebSystems.Systems.HonestMarkSystem honestMarkSystem, 
@@ -699,6 +702,150 @@ namespace HonestMarkSystem.Models
                         _dataBaseAdapter.Rollback();
                         errorMessage = _log.GetRecursiveInnerException(ex);
                         titleErrorText = "Произошла ошибка отклонения документа.";
+                    }
+                });
+
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    loadWindow.Close();
+                    _log.Log(errorMessage);
+                    var errorsWindow = new ErrorsWindow(titleErrorText, new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
+                }
+            }
+        }
+
+        private async void RevokeDocument()
+        {
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ для аннулирования.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.Revoked)
+            {
+                System.Windows.MessageBox.Show(
+                    "Документ уже был аннулирован.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var revokeWindow = new RevokeWindow();
+            if(revokeWindow.ShowDialog() == true)
+            {
+                string errorMessage = null;
+                string titleErrorText = null;
+
+                LoadWindow loadWindow = new LoadWindow("Подождите, идёт загрузка данных");
+
+                if (this.Owner != null)
+                    loadWindow.Owner = this.Owner;
+
+                var loadContext = loadWindow.GetLoadContext();
+                var report = revokeWindow.Report;
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        loadContext.SetLoadingText("Формирование файла");
+                        var sellerXmlDocument = new XmlDocument();
+                        sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                        var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+
+                        var reporterDll = new Reporter.ReporterDll();
+                        var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+
+                        report.FileName = $"DP_PRANNUL_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                        report.EdoProgramVersion = _edoSystem.ProgramVersion;
+
+                        report.CreatorEdoId = sellerReport.ReceiverEdoId;
+                        report.JuridicalCreatorInn = SelectedItem.ReceiverInn;
+                        report.JuridicalCreatorKpp = SelectedItem.ReceiverKpp;
+                        report.OrgCreatorName = SelectedItem.ReceiverName;
+
+                        report.ReceivedFileName = SelectedItem.FileName;
+
+                        report.ReceiverEdoId = sellerReport.SenderEdoId;
+                        report.JuridicalReceiverInn = SelectedItem.SenderInn;
+                        report.JuridicalReceiverKpp = SelectedItem.SenderKpp;
+                        report.OrgReceiverName = SelectedItem.SenderName;
+
+                        var subject = _edoSystem.GetCertSubject();
+                        var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
+                        report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
+                        report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+                        report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                        report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                        string signedFilePath;
+
+                        if (_edoSystem.HasZipContent)
+                        {
+                            using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                            {
+                                var signedEntry = zipArchive.Entries.FirstOrDefault(x => x.Name.StartsWith(SelectedItem.FileName) && x.Name != $"{SelectedItem.FileName}.xml");
+
+                                if (signedEntry == null)
+                                    throw new Exception("Не найден файл подписи продавца.");
+
+                                if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}"))
+                                    signedEntry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}");
+
+                                signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}";
+                            }
+
+                        }
+                        else
+                        {
+                            signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml.sig";
+
+                            if (!File.Exists(signedFilePath))
+                            {
+                                System.Windows.MessageBox.Show("Не найден файл подписи продавца.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                                return;
+                            }
+                        }
+
+                        var sellerSignature = File.ReadAllBytes(signedFilePath);
+                        report.Signature = Convert.ToBase64String(sellerSignature);
+
+                        loadContext.SetLoadingText("Сохранение документов");
+                        var xmlContent = report.GetXmlContent();
+                        var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
+                        var signature = _cryptoUtil.Sign(contentBytes, true);
+
+                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml", contentBytes);
+                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml.sig", signature);
+
+                        loadContext.SetLoadingText("Отправка");
+
+                        if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                            _edoSystem.SendRevocationDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+
+                        if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
+                            SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;
+                        else
+                            SelectedItem.DocStatus = (int)DocEdoStatus.RevokeRequested;
+
+                        _dataBaseAdapter.Commit();
+
+                        if(SelectedItem.DocStatus == (int)DocEdoStatus.Revoked)
+                            loadContext.SetSuccessFullLoad("Документ успешно аннулирован.");
+                        else
+                            loadContext.SetSuccessFullLoad("Успешно выполнен запрос.");
+                    }
+                    catch (System.Net.WebException webEx)
+                    {
+                        _dataBaseAdapter.Rollback();
+                        errorMessage = _log.GetRecursiveInnerException(webEx);
+                        titleErrorText = "Произошла ошибка аннулирования документа на удалённом сервере.";
+                    }
+                    catch (Exception ex)
+                    {
+                        _dataBaseAdapter.Rollback();
+                        errorMessage = _log.GetRecursiveInnerException(ex);
+                        titleErrorText = "Произошла ошибка аннулирования документа.";
                     }
                 });
 

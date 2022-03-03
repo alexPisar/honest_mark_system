@@ -112,6 +112,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem IsEnabled="{Binding IsRevokedDocument, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Command="{Binding RevokeDocumentCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/Snap/SnapDeleteList.svg}" />
+                            <TextBlock Text="Аннулирование" HorizontalAlignment="Center" />
+                            <TextBlock Text="документа" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
         </dxb:StatusBarControl>
         <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList}" 
                          SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"

@@ -163,6 +163,14 @@ namespace WebSystems.EdoSystems
                 ((WebClients.DiadocEdoClient)_webClient).SendRejectionDocument(messageId, entityId, fileBytes, signature);
         }
 
+        public override void SendRevocationDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters)
+        {
+            var messageId = (string)parameters[0];
+            var entityId = (string)parameters[1];
+
+            ((WebClients.DiadocEdoClient)_webClient).SendRevocationDocument(messageId, entityId, fileBytes, signature);
+        }
+
         public List<KeyValuePair<Diadoc.Api.Proto.Box, Diadoc.Api.Proto.Organization>> GetCounteragentsBoxesForOrganization(string inn)
         {
             var organization = ((WebClients.DiadocEdoClient)_webClient).GetMyOrganizationByInnKpp(inn);
