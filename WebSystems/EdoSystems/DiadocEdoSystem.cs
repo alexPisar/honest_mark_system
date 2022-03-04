@@ -152,6 +152,30 @@ namespace WebSystems.EdoSystems
             return docStatus;
         }
 
+        public override object GetRevokeDocument(out string fileName, params object[] parameters)
+        {
+            var initiatorBoxId = (string)parameters[0];
+            var messageId = (string)parameters[1];
+            var entityId = (string)parameters[2];
+
+            var currentMessage = ((WebClients.DiadocEdoClient)_webClient).GetMessage(messageId, entityId, true);
+
+            var entity = currentMessage?.Entities?.FirstOrDefault(c => c.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.RevocationRequest &&
+            c.RevocationRequestInfo?.InitiatorBoxId == initiatorBoxId);
+
+            fileName = entity.FileName;
+
+            return entity;
+        }
+
+        public override void SendRevokeConfirmation(byte[] signature, params object[] parameters)
+        {
+            var messageId = (string)parameters[0];
+            var entityId = (string)parameters[1];
+
+            ((WebClients.DiadocEdoClient)_webClient).SendPatchSignedDocument(messageId, entityId, signature);
+        }
+
         public override void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters)
         {
             var messageId = (string)parameters[0];

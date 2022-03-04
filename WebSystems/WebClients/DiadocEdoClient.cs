@@ -123,6 +123,23 @@ namespace WebSystems.WebClients
             return CallApiSafe(new Func<MessagePatch>(() => { return _api.PostMessagePatch(_authToken, messageToPost); }));
         }
 
+        public MessagePatch SendPatchSignedDocument(string messageId, string parentEntityId, byte[] signature)
+        {
+            var messageToPost = new MessagePatchToPost
+            {
+                BoxId = _actualBoxId,
+                MessageId = messageId
+            };
+
+            messageToPost.AddSignature(new DocumentSignature
+            {
+                ParentEntityId = parentEntityId,
+                Signature = signature
+            });
+
+            return CallApiSafe(new Func<MessagePatch>(() => { return _api.PostMessagePatch(_authToken, messageToPost); }));
+        }
+
         public List<Counteragent> GetKontragents(string orgId = null)
         {
             CounteragentList list;
@@ -333,9 +350,9 @@ namespace WebSystems.WebClients
             return documentsList.Documents;
         }
 
-        public Message GetMessage(string messageId, string entityId)
+        public Message GetMessage(string messageId, string entityId, bool includedContent = false)
         {
-            var message = CallApiSafe(new Func<Message>(() => _api.GetMessage(_authToken, _actualBoxId, messageId, entityId)));
+            var message = CallApiSafe(new Func<Message>(() => _api.GetMessage(_authToken, _actualBoxId, messageId, entityId, false, includedContent)));
             return message;
         }
 

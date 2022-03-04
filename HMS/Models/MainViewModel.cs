@@ -731,130 +731,185 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            var revokeWindow = new RevokeWindow();
-            if(revokeWindow.ShowDialog() == true)
+            LoadWindow loadWindow = new LoadWindow("Подождите, идёт загрузка данных");
+
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
             {
-                string errorMessage = null;
-                string titleErrorText = null;
-
-                LoadWindow loadWindow = new LoadWindow("Подождите, идёт загрузка данных");
-
-                if (this.Owner != null)
-                    loadWindow.Owner = this.Owner;
-
-                var loadContext = loadWindow.GetLoadContext();
-                var report = revokeWindow.Report;
-                await Task.Run(() =>
+                try
                 {
-                    try
+                    string fileName = null;
+
+                    if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
                     {
-                        loadContext.SetLoadingText("Формирование файла");
-                        var sellerXmlDocument = new XmlDocument();
-                        sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
-                        var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+                        var revokeDocumentEntity = (Diadoc.Api.Proto.Events.Entity)_edoSystem.GetRevokeDocument(out fileName, SelectedItem.CounteragentEdoBoxId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                        var revokeDocumentContent = revokeDocumentEntity?.Content?.Data;
 
-                        var reporterDll = new Reporter.ReporterDll();
-                        var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+                        if (revokeDocumentContent == null)
+                            throw new Exception("Не удалось загрузить документ Запрос на аннулирование.");
 
-                        report.FileName = $"DP_PRANNUL_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
-                        report.EdoProgramVersion = _edoSystem.ProgramVersion;
+                        var signature = _cryptoUtil.Sign(revokeDocumentContent, true);
 
-                        report.CreatorEdoId = sellerReport.ReceiverEdoId;
-                        report.JuridicalCreatorInn = SelectedItem.ReceiverInn;
-                        report.JuridicalCreatorKpp = SelectedItem.ReceiverKpp;
-                        report.OrgCreatorName = SelectedItem.ReceiverName;
+                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}", revokeDocumentContent);
+                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}.sig", signature);
 
-                        report.ReceivedFileName = SelectedItem.FileName;
+                        _edoSystem.SendRevokeConfirmation(signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
 
-                        report.ReceiverEdoId = sellerReport.SenderEdoId;
-                        report.JuridicalReceiverInn = SelectedItem.SenderInn;
-                        report.JuridicalReceiverKpp = SelectedItem.SenderKpp;
-                        report.OrgReceiverName = SelectedItem.SenderName;
-
-                        var subject = _edoSystem.GetCertSubject();
-                        var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
-                        report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
-                        report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
-                        report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-                        report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
-
-                        string signedFilePath;
-
-                        if (_edoSystem.HasZipContent)
-                        {
-                            using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
-                            {
-                                var signedEntry = zipArchive.Entries.FirstOrDefault(x => x.Name.StartsWith(SelectedItem.FileName) && x.Name != $"{SelectedItem.FileName}.xml");
-
-                                if (signedEntry == null)
-                                    throw new Exception("Не найден файл подписи продавца.");
-
-                                if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}"))
-                                    signedEntry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}");
-
-                                signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}";
-                            }
-
-                        }
-                        else
-                        {
-                            signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml.sig";
-
-                            if (!File.Exists(signedFilePath))
-                            {
-                                System.Windows.MessageBox.Show("Не найден файл подписи продавца.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                                return;
-                            }
-                        }
-
-                        var sellerSignature = File.ReadAllBytes(signedFilePath);
-                        report.Signature = Convert.ToBase64String(sellerSignature);
-
-                        loadContext.SetLoadingText("Сохранение документов");
-                        var xmlContent = report.GetXmlContent();
-                        var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
-                        var signature = _cryptoUtil.Sign(contentBytes, true);
-
-                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml", contentBytes);
-                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml.sig", signature);
-
-                        loadContext.SetLoadingText("Отправка");
-
-                        if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
-                            _edoSystem.SendRevocationDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
-
-                        if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
-                            SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;
-                        else
-                            SelectedItem.DocStatus = (int)DocEdoStatus.RevokeRequested;
-
+                        SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;
                         _dataBaseAdapter.Commit();
+                    }
 
-                        if(SelectedItem.DocStatus == (int)DocEdoStatus.Revoked)
-                            loadContext.SetSuccessFullLoad("Документ успешно аннулирован.");
-                        else
-                            loadContext.SetSuccessFullLoad("Успешно выполнен запрос.");
-                    }
-                    catch (System.Net.WebException webEx)
+                    if (!string.IsNullOrEmpty(fileName))
                     {
-                        _dataBaseAdapter.Rollback();
-                        errorMessage = _log.GetRecursiveInnerException(webEx);
-                        titleErrorText = "Произошла ошибка аннулирования документа на удалённом сервере.";
+                        loadWindow.GetLoadContext().SetSuccessFullLoad("Документ успешно аннулирован.");
+                        loadWindow.ShowDialog();
                     }
-                    catch (Exception ex)
-                    {
-                        _dataBaseAdapter.Rollback();
-                        errorMessage = _log.GetRecursiveInnerException(ex);
-                        titleErrorText = "Произошла ошибка аннулирования документа.";
-                    }
-                });
-
-                if (!string.IsNullOrEmpty(errorMessage))
+                }
+                catch (System.Net.WebException webEx)
                 {
-                    loadWindow.Close();
-                    _log.Log(errorMessage);
-                    var errorsWindow = new ErrorsWindow(titleErrorText, new List<string>(new string[] { errorMessage }));
+                    _dataBaseAdapter.Rollback();
+                    string errMessage = _log.GetRecursiveInnerException(webEx);
+                    _log.Log(errMessage);
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка аннулирования документа на удалённом сервере.", new List<string>(new string[] { errMessage }));
                     errorsWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    _dataBaseAdapter.Rollback();
+                    string errMessage = _log.GetRecursiveInnerException(ex);
+                    _log.Log(errMessage);
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка аннулирования документа.", new List<string>(new string[] { errMessage }));
+                    errorsWindow.ShowDialog();
+                }
+            }
+            else
+            {
+                var revokeWindow = new RevokeWindow();
+                if(revokeWindow.ShowDialog() == true)
+                {
+                    string errorMessage = null;
+                    string titleErrorText = null;
+
+                    if (this.Owner != null)
+                        loadWindow.Owner = this.Owner;
+
+                    var loadContext = loadWindow.GetLoadContext();
+                    var report = revokeWindow.Report;
+
+                    loadWindow.Show();
+                    await Task.Run(() =>
+                    {
+                        try
+                        {
+                            loadContext.SetLoadingText("Формирование файла");
+                            var sellerXmlDocument = new XmlDocument();
+                            sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                            var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+
+                            var reporterDll = new Reporter.ReporterDll();
+                            var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+
+                            report.FileName = $"DP_PRANNUL_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                            report.EdoProgramVersion = _edoSystem.ProgramVersion;
+
+                            report.CreatorEdoId = sellerReport.ReceiverEdoId;
+                            report.JuridicalCreatorInn = SelectedItem.ReceiverInn;
+                            report.JuridicalCreatorKpp = SelectedItem.ReceiverKpp;
+                            report.OrgCreatorName = SelectedItem.ReceiverName;
+
+                            report.ReceivedFileName = SelectedItem.FileName;
+
+                            report.ReceiverEdoId = sellerReport.SenderEdoId;
+                            report.JuridicalReceiverInn = SelectedItem.SenderInn;
+                            report.JuridicalReceiverKpp = SelectedItem.SenderKpp;
+                            report.OrgReceiverName = SelectedItem.SenderName;
+
+                            var subject = _edoSystem.GetCertSubject();
+                            var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
+                            report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
+                            report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+                            report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                            report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                            string signedFilePath;
+
+                            if (_edoSystem.HasZipContent)
+                            {
+                                using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                                {
+                                    var signedEntry = zipArchive.Entries.FirstOrDefault(x => x.Name.StartsWith(SelectedItem.FileName) && x.Name != $"{SelectedItem.FileName}.xml");
+
+                                    if (signedEntry == null)
+                                        throw new Exception("Не найден файл подписи продавца.");
+
+                                    if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}"))
+                                        signedEntry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}");
+
+                                    signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{signedEntry.Name}";
+                                }
+
+                            }
+                            else
+                            {
+                                signedFilePath = $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml.sig";
+
+                                if (!File.Exists(signedFilePath))
+                                {
+                                    System.Windows.MessageBox.Show("Не найден файл подписи продавца.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                                    return;
+                                }
+                            }
+
+                            var sellerSignature = File.ReadAllBytes(signedFilePath);
+                            report.Signature = Convert.ToBase64String(sellerSignature);
+
+                            loadContext.SetLoadingText("Сохранение документов");
+                            var xmlContent = report.GetXmlContent();
+                            var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
+                            var signature = _cryptoUtil.Sign(contentBytes, true);
+
+                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml", contentBytes);
+                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml.sig", signature);
+
+                            loadContext.SetLoadingText("Отправка");
+
+                            if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                                _edoSystem.SendRevocationDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+
+                            if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
+                                SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;
+                            else
+                                SelectedItem.DocStatus = (int)DocEdoStatus.RevokeRequested;
+
+                            _dataBaseAdapter.Commit();
+
+                            if(SelectedItem.DocStatus == (int)DocEdoStatus.Revoked)
+                                loadContext.SetSuccessFullLoad("Документ успешно аннулирован.");
+                            else
+                                loadContext.SetSuccessFullLoad("Успешно выполнен запрос.");
+                        }
+                        catch (System.Net.WebException webEx)
+                        {
+                            _dataBaseAdapter.Rollback();
+                            errorMessage = _log.GetRecursiveInnerException(webEx);
+                            titleErrorText = "Произошла ошибка аннулирования документа на удалённом сервере.";
+                        }
+                        catch (Exception ex)
+                        {
+                            _dataBaseAdapter.Rollback();
+                            errorMessage = _log.GetRecursiveInnerException(ex);
+                            titleErrorText = "Произошла ошибка аннулирования документа.";
+                        }
+                    });
+
+                    if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        loadWindow.Close();
+                        _log.Log(errorMessage);
+                        var errorsWindow = new ErrorsWindow(titleErrorText, new List<string>(new string[] { errorMessage }));
+                        errorsWindow.ShowDialog();
+                    }
                 }
             }
         }
