@@ -192,6 +192,9 @@
     <Compile Include="ChangeMarkedCodesWindow.xaml.cs">
       <DependentUpon>ChangeMarkedCodesWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ConfirmRevokeWindow.xaml.cs">
+      <DependentUpon>ConfirmRevokeWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Implementations\DiadocEdoToDataBase.cs" />
     <Compile Include="MarkedCodesWindow.xaml.cs">
       <DependentUpon>MarkedCodesWindow.xaml</DependentUpon>
@@ -221,6 +224,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ChangeMarkedCodesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfirmRevokeWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

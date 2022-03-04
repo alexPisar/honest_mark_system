@@ -297,6 +297,20 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if(SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired || SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequested)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ находится в статусе, ожидающем аннулирование.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.Revoked)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ аннулирован.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (SelectedItem.IdDocPurchasing == null)
             {
                 System.Windows.MessageBox.Show(
@@ -735,12 +749,24 @@ namespace HonestMarkSystem.Models
 
             if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
             {
+                var comfirmRevokeWindow = new ConfirmRevokeWindow();
+                string fileName = null;
+
                 try
                 {
-                    string fileName = null;
+                    Exception exception = null;
+
+                    if (this.Owner != null)
+                        loadWindow.Owner = this.Owner;
+
+                    comfirmRevokeWindow.ShowDialog();
+
+                    if (comfirmRevokeWindow.Result == RevokeRequestDialogResult.None)
+                        return;
 
                     if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
                     {
+                        loadWindow.Show();
                         byte[] sellerSignature;
                         var revokeDocumentEntity = (Diadoc.Api.Proto.Events.Entity)_edoSystem.GetRevokeDocument(out fileName, out sellerSignature, SelectedItem.CounteragentEdoBoxId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
                         var revokeDocumentContent = revokeDocumentEntity?.Content?.Data;
@@ -748,25 +774,103 @@ namespace HonestMarkSystem.Models
                         if (revokeDocumentContent == null)
                             throw new Exception("Не удалось загрузить документ Запрос на аннулирование.");
 
-                        var signature = _cryptoUtil.Sign(revokeDocumentContent, true);
+                        if (comfirmRevokeWindow.Result == RevokeRequestDialogResult.Revoke)
+                        {
+                            var signature = _cryptoUtil.Sign(revokeDocumentContent, true);
 
-                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}", revokeDocumentContent);
-                        File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}.sig", signature);
+                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}", revokeDocumentContent);
+                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}.sig", signature);
 
-                        _edoSystem.SendRevokeConfirmation(signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
+                            _edoSystem.SendRevokeConfirmation(signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
 
-                        SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;
-                        _dataBaseAdapter.Commit();
+                            SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;
+                            _dataBaseAdapter.Commit();
+                        }
+                        else if(comfirmRevokeWindow.Result == RevokeRequestDialogResult.RejectRevoke)
+                        {
+                            var report = comfirmRevokeWindow.Report;
+                            var loadContext = loadWindow.GetLoadContext();
+
+                            await Task.Run(() => 
+                            {
+                                try
+                                {
+                                    loadContext.SetLoadingText("Формирование файла отказа");
+                                    var sellerXmlDocument = new XmlDocument();
+                                    sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                                    var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+
+                                    var reporterDll = new Reporter.ReporterDll();
+                                    var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+
+                                    report.FileName = $"DP_UVUTOCH_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                                    report.EdoProgramVersion = _edoSystem.ProgramVersion;
+
+                                    report.CreatorEdoId = sellerReport.ReceiverEdoId;
+                                    report.JuridicalInn = SelectedItem.ReceiverInn;
+                                    report.JuridicalKpp = SelectedItem.ReceiverKpp;
+                                    report.OrgCreatorName = SelectedItem.ReceiverName;
+
+                                    var fileNameLength = fileName.LastIndexOf('.');
+
+                                    if (fileNameLength < 0)
+                                        fileNameLength = fileName.Length;
+
+                                    report.ReceiveDate = DateTime.Now;
+                                    report.ReceivedFileName = fileName.Substring(0, fileNameLength);
+                                    report.ReceivedFileSignature = Convert.ToBase64String(sellerSignature);
+
+                                    report.SenderEdoId = sellerReport.SenderEdoId;
+                                    report.SenderJuridicalInn = SelectedItem.SenderInn;
+                                    report.SenderJuridicalKpp = SelectedItem.SenderKpp;
+                                    report.OrgSenderName = SelectedItem.SenderName;
+
+                                    var subject = _edoSystem.GetCertSubject();
+                                    var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
+                                    report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
+                                    report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+                                    report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                                    report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                                    loadContext.SetLoadingText("Сохранение документов");
+                                    var xmlContent = report.GetXmlContent();
+                                    var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
+                                    var signature = _cryptoUtil.Sign(contentBytes, true);
+
+                                    File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml", contentBytes);
+                                    File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml.sig", signature);
+
+                                    loadContext.SetLoadingText("Отправка");
+
+                                    _edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
+
+                                    SelectedItem.DocStatus = (int)DocEdoStatus.RejectRevoke;
+                                    _dataBaseAdapter.Commit();
+                                }
+                                catch(Exception ex)
+                                {
+                                    exception = ex;
+                                }
+                            });
+
+                            if (exception != null)
+                                throw exception;
+                        }
                     }
 
-                    if (!string.IsNullOrEmpty(fileName))
+                    if (comfirmRevokeWindow.Result == RevokeRequestDialogResult.Revoke && !string.IsNullOrEmpty(fileName))
                     {
                         loadWindow.GetLoadContext().SetSuccessFullLoad("Документ успешно аннулирован.");
-                        loadWindow.ShowDialog();
                     }
+                    else if (comfirmRevokeWindow.Result == RevokeRequestDialogResult.RejectRevoke && !string.IsNullOrEmpty(fileName))
+                    {
+                        loadWindow.GetLoadContext().SetSuccessFullLoad("В аннулировании отказано.");
+                    }
+                    
                 }
                 catch (System.Net.WebException webEx)
                 {
+                    loadWindow.Close();
                     _dataBaseAdapter.Rollback();
                     string errMessage = _log.GetRecursiveInnerException(webEx);
                     _log.Log(errMessage);
@@ -776,6 +880,7 @@ namespace HonestMarkSystem.Models
                 }
                 catch (Exception ex)
                 {
+                    loadWindow.Close();
                     _dataBaseAdapter.Rollback();
                     string errMessage = _log.GetRecursiveInnerException(ex);
                     _log.Log(errMessage);
