@@ -152,7 +152,7 @@ namespace WebSystems.EdoSystems
             return docStatus;
         }
 
-        public override object GetRevokeDocument(out string fileName, params object[] parameters)
+        public override object GetRevokeDocument(out string fileName, out byte[] signature, params object[] parameters)
         {
             var initiatorBoxId = (string)parameters[0];
             var messageId = (string)parameters[1];
@@ -164,6 +164,9 @@ namespace WebSystems.EdoSystems
             c.RevocationRequestInfo?.InitiatorBoxId == initiatorBoxId);
 
             fileName = entity.FileName;
+            signature = currentMessage?.Entities?
+                .FirstOrDefault(s => s.ParentEntityId == entity.EntityId && s.EntityType == Diadoc.Api.Proto.Events.EntityType.Signature)?
+                .Content?.Data;
 
             return entity;
         }

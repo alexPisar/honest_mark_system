@@ -59,7 +59,7 @@ namespace WebSystems
             return DocEdoStatus.New;
         }
 
-        public virtual object GetRevokeDocument(out string fileName, params object[] parameters){ fileName = string.Empty; return new byte[] { }; }
+        public virtual object GetRevokeDocument(out string fileName, out byte[] signature, params object[] parameters){ fileName = string.Empty; signature = null;  return new byte[] { }; }
 
         public virtual void SendRevokeConfirmation(byte[] signature, params object[] parameters) { }
 

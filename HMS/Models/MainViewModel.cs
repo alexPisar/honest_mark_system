@@ -30,7 +30,7 @@ namespace HonestMarkSystem.Models
         public DateTime DateTo { get; set; } = DateTime.Now.AddDays(1);
         public DateTime DateFrom { get; set; } = DateTime.Now.AddMonths(-6);
 
-        public bool IsRevokedDocument => SelectedItem?.DocStatus == (int?)DocEdoStatus.RevokeRequired || SelectedItem?.DocStatus == (int?)DocEdoStatus.New;
+        public bool IsRevokedDocument => SelectedItem?.DocStatus == (int?)DocEdoStatus.RevokeRequired || SelectedItem?.DocStatus == (int?)DocEdoStatus.Processed;
 
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public override RelayCommand EditCommand => new RelayCommand((o) => { Save(); });
@@ -741,7 +741,8 @@ namespace HonestMarkSystem.Models
 
                     if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
                     {
-                        var revokeDocumentEntity = (Diadoc.Api.Proto.Events.Entity)_edoSystem.GetRevokeDocument(out fileName, SelectedItem.CounteragentEdoBoxId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                        byte[] sellerSignature;
+                        var revokeDocumentEntity = (Diadoc.Api.Proto.Events.Entity)_edoSystem.GetRevokeDocument(out fileName, out sellerSignature, SelectedItem.CounteragentEdoBoxId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
                         var revokeDocumentContent = revokeDocumentEntity?.Content?.Data;
 
                         if (revokeDocumentContent == null)
