@@ -30,6 +30,8 @@ namespace HonestMarkSystem.Interfaces
 
         void AddMarkedCodes(decimal idDocJournal, decimal idGood, IEnumerable<string> markedCodes);
 
+        void AddMarkedCodes(decimal idDocJournal, List<KeyValuePair<decimal, List<string>>> markedCodesByGoods);
+
         List<object> GetRefGoodsByBarCode(string barCode);
 
         List<object> GetAllRefGoods();

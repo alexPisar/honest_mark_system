@@ -1077,6 +1077,8 @@ namespace HonestMarkSystem.Models
                 throw new Exception("Для документа закупок не найден трейдер документ.");
 
             productGroups = productGroups.ToList();
+
+            var markedCodesByGoods = new List<KeyValuePair<decimal, List<string>>>();
             foreach (var productGroup in productGroups)
             {
                 var detail = Details?.FirstOrDefault(d => d.DetailNumber == productGroup.Number);
@@ -1084,8 +1086,10 @@ namespace HonestMarkSystem.Models
                 if (detail == null)
                     throw new Exception($"Не найден товар с названием {productGroup.Description}.");
 
-                _dataBaseAdapter.AddMarkedCodes(((DocPurchasing)docPurchasing).IdDocLink.Value, detail.IdGood.Value, productGroup.Items);
+                markedCodesByGoods.Add(new KeyValuePair<decimal, List<string>>(detail.IdGood.Value, productGroup.Items));
             }
+
+            _dataBaseAdapter.AddMarkedCodes(((DocPurchasing)docPurchasing).IdDocLink.Value, markedCodesByGoods);
         }
 
         private void UpdateProperties()

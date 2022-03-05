@@ -124,6 +124,24 @@ namespace HonestMarkSystem.Implementations
                 _abt.DocGoodsDetailsLabels.Add(label);
         }
 
+        public void AddMarkedCodes(decimal idDocJournal, List<KeyValuePair<decimal, List<string>>> markedCodesByGoods)
+        {
+            var labels = markedCodesByGoods.SelectMany(m => m.Value.Select(s => new DocGoodsDetailsLabels
+            {
+                IdDoc = idDocJournal,
+                DmLabel = s,
+                IdGood = m.Key,
+                InsertDateTime = DateTime.Now
+            }));
+
+            labels = labels.Where(label => !_abt.DocGoodsDetailsLabels.Any(l => l.IdDoc == idDocJournal && l.IdGood == label.IdGood && l.DmLabel == label.DmLabel));
+
+            if (labels.Count() == 0)
+                return;
+
+            _abt.DocGoodsDetailsLabels.AddRange(labels);
+        }
+
         public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
         {
             var doc = document as DiadocEdoDocument;
