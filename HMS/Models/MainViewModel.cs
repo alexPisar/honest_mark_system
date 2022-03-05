@@ -18,11 +18,15 @@ namespace HonestMarkSystem.Models
     public class MainViewModel : ListViewModel<DocEdoPurchasing>, Interfaces.IEdoDocumentsView
     {
         private const string edoFilesPath = "Files";
+        private const string _applicationName = "Вирэй Приходная";
+        private string currentVersion => System.Reflection.Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
 
         private IEdoSystem _edoSystem;
         private Interfaces.IEdoDataBaseAdapter<AbtDbContext> _dataBaseAdapter;
         private UtilitesLibrary.Service.CryptoUtil _cryptoUtil;
         private WebSystems.Systems.HonestMarkSystem _honestMarkSystem;
+
+        public string EdoProgramVersion => $"{_applicationName} {currentVersion}";
 
         public List<DocEdoPurchasingDetail> Details => SelectedItem?.Details;
         public DocEdoPurchasingDetail SelectedDetail { get; set; }
@@ -370,7 +374,7 @@ namespace HonestMarkSystem.Models
 
             var signWindow = new BuyerSignWindow(_cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
             signWindow.SetDefaultParameters(_edoSystem.GetCertSubject(), SelectedItem);
-            signWindow.Report.EdoProgramVersion = _edoSystem.ProgramVersion;
+            signWindow.Report.EdoProgramVersion = this.EdoProgramVersion;
 
             string signedFilePath;
 
@@ -633,7 +637,7 @@ namespace HonestMarkSystem.Models
                         var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
 
                         report.FileName = $"DP_UVUTOCH_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
-                        report.EdoProgramVersion = _edoSystem.ProgramVersion;
+                        report.EdoProgramVersion = this.EdoProgramVersion;
 
                         report.CreatorEdoId = sellerReport.ReceiverEdoId;
                         report.JuridicalInn = SelectedItem.ReceiverInn;
@@ -804,7 +808,7 @@ namespace HonestMarkSystem.Models
                                     var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
 
                                     report.FileName = $"DP_UVUTOCH_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
-                                    report.EdoProgramVersion = _edoSystem.ProgramVersion;
+                                    report.EdoProgramVersion = this.EdoProgramVersion;
 
                                     report.CreatorEdoId = sellerReport.ReceiverEdoId;
                                     report.JuridicalInn = SelectedItem.ReceiverInn;
@@ -917,7 +921,7 @@ namespace HonestMarkSystem.Models
                             var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
 
                             report.FileName = $"DP_PRANNUL_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
-                            report.EdoProgramVersion = _edoSystem.ProgramVersion;
+                            report.EdoProgramVersion = this.EdoProgramVersion;
 
                             report.CreatorEdoId = sellerReport.ReceiverEdoId;
                             report.JuridicalCreatorInn = SelectedItem.ReceiverInn;
