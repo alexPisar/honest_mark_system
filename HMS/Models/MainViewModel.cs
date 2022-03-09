@@ -34,7 +34,8 @@ namespace HonestMarkSystem.Models
         public DateTime DateTo { get; set; } = DateTime.Now.AddDays(1);
         public DateTime DateFrom { get; set; } = DateTime.Now.AddMonths(-6);
 
-        public bool IsRevokedDocument => SelectedItem?.DocStatus == (int?)DocEdoStatus.RevokeRequired || SelectedItem?.DocStatus == (int?)DocEdoStatus.Processed;
+        public bool IsRevokedDocument => SelectedItem?.DocStatus == (int?)DocEdoStatus.RevokeRequired || SelectedItem?.DocStatus == (int?)DocEdoStatus.Processed
+            || SelectedItem?.DocStatus == (int?)DocEdoStatus.ProcessingError;
 
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public override RelayCommand EditCommand => new RelayCommand((o) => { Save(); });
