@@ -454,9 +454,6 @@ namespace HonestMarkSystem.Models
 
                         var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
 
-                        loadContext.SetLoadingText("Сохранение в базе данных");
-                        SaveMarkedCodesToDataBase(docSellerContent);
-
                         loadContext.SetLoadingText("Подписание и отправка");
                         if (_edoSystem.GetType() == typeof(EdoLiteSystem))
                         {
@@ -540,7 +537,7 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        private void ExportToTrader()
+        private async void ExportToTrader()
         {
             if (SelectedItem == null)
             {
@@ -556,23 +553,68 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            try
+            string errorMessage = null;
+            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
             {
-                _dataBaseAdapter.ExportDocument(SelectedItem);
+                if (_edoSystem.HasZipContent)
+                {
+                    try
+                    {
+                        using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                        {
+                            var entry = zipArchive.Entries.FirstOrDefault(x => x.Name == $"{SelectedItem.FileName}.xml");
+                            entry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessage = _log.GetRecursiveInnerException(ex);
+                        _log.Log(errorMessage);
 
-                LoadWindow loadWindow = new LoadWindow();
-                var loadContext = loadWindow.GetLoadContext();
-                loadContext.SetSuccessFullLoad("Экспорт выполнен успешно.");
-
-                _dataBaseAdapter.Commit();
-                loadWindow.ShowDialog();
+                        var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла xml из архива.", new List<string>(new string[] { errorMessage }));
+                        errorsWindow.ShowDialog();
+                        return;
+                    }
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
             }
-            catch (Exception ex)
-            {
-                _dataBaseAdapter.Rollback();
-                string errorMessage = _log.GetRecursiveInnerException(ex);
-                _log.Log(errorMessage);
 
+            LoadWindow loadWindow = new LoadWindow();
+            var loadContext = loadWindow.GetLoadContext();
+            loadWindow.Show();
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    var sellerXmlDocument = new XmlDocument();
+                    sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                    var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+
+                    loadContext.SetLoadingText("Сохранение документа");
+                    var docJournalId = _dataBaseAdapter.ExportDocument(SelectedItem);
+
+                    loadContext.SetLoadingText("Сохранение кодов маркировки");
+                    SaveMarkedCodesToDataBase(docSellerContent, docJournalId);
+
+                    _dataBaseAdapter.Commit();
+                    loadContext.SetSuccessFullLoad("Экспорт выполнен успешно.");
+                }
+                catch (Exception ex)
+                {
+                    _dataBaseAdapter.Rollback();
+                    errorMessage = _log.GetRecursiveInnerException(ex);
+                }
+            });
+
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                loadWindow.Close();
+                _log.Log(errorMessage);
                 var errorsWindow = new ErrorsWindow("Произошла ошибка экспорта.", new List<string>(new string[] { errorMessage }));
                 errorsWindow.ShowDialog();
             }
@@ -1025,7 +1067,7 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent)
+        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null)
         {
             var reporterDll = new Reporter.ReporterDll();
             var report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
@@ -1073,13 +1115,18 @@ namespace HonestMarkSystem.Models
                         System.Windows.MessageBoxImage.Question) != System.Windows.MessageBoxResult.Yes)
                     throw new Exception("Попытка отправки прервана пользователем." + errorMessage);
 
-            var docPurchasing = _dataBaseAdapter.GetPurchasingDocumentById(SelectedItem.IdDocPurchasing.Value);
+            if (idDoc == null)
+            {
+                var docPurchasing = _dataBaseAdapter.GetPurchasingDocumentById(SelectedItem.IdDocPurchasing.Value);
 
-            if (docPurchasing == null)
-                throw new Exception("Не найден документ закупок в базе.");
+                if (docPurchasing == null)
+                    throw new Exception("Не найден документ закупок в базе.");
 
-            if (((DocPurchasing)docPurchasing)?.IdDocLink == null)
-                throw new Exception("Для документа закупок не найден трейдер документ.");
+                if (((DocPurchasing)docPurchasing)?.IdDocLink == null)
+                    throw new Exception("Для документа закупок не найден трейдер документ.");
+
+                idDoc = ((DocPurchasing)docPurchasing).IdDocLink.Value;
+            }
 
             productGroups = productGroups.ToList();
 
@@ -1094,7 +1141,7 @@ namespace HonestMarkSystem.Models
                 markedCodesByGoods.Add(new KeyValuePair<decimal, List<string>>(detail.IdGood.Value, productGroup.Items));
             }
 
-            _dataBaseAdapter.AddMarkedCodes(((DocPurchasing)docPurchasing).IdDocLink.Value, markedCodesByGoods);
+            _dataBaseAdapter.AddMarkedCodes(idDoc.Value, markedCodesByGoods);
         }
 
         private void UpdateProperties()

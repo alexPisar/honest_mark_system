@@ -340,7 +340,7 @@ namespace HonestMarkSystem.Implementations
             return _abt.DocGoodsDetailsLabels.Where(l => l.DmLabel.Length == 31 && l.SaleDmLabel == null).ToList<object>();
         }
 
-        public void ExportDocument(object documentObject)
+        public decimal ExportDocument(object documentObject)
         {
             var document = (DocEdoPurchasing)documentObject;
 
@@ -398,6 +398,7 @@ namespace HonestMarkSystem.Implementations
 
             _abt.ExecuteProcedure("ABT.Add_document_purchasing", parameters);
             document.IdDocPurchasing = ((Oracle.ManagedDataAccess.Types.OracleDecimal)((Oracle.ManagedDataAccess.Client.OracleParameter)parameters[2]).Value).Value;
+            return idDoc.Value;
         }
 
         public void Commit()

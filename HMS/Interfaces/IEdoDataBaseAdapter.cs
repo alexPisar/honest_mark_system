@@ -38,7 +38,7 @@ namespace HonestMarkSystem.Interfaces
 
         List<object> GetAllMarkedCodes();
 
-        void ExportDocument(object documentObject);
+        decimal ExportDocument(object documentObject);
 
         void Rollback();
 
