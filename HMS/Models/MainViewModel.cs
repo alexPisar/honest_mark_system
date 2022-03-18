@@ -39,6 +39,7 @@ namespace HonestMarkSystem.Models
 
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public override RelayCommand EditCommand => new RelayCommand((o) => { Save(); });
+        public override RelayCommand DeleteCommand => new RelayCommand((o) => { UnbindDocument(); });
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
         public RelayCommand ExportToTraderCommand => new RelayCommand((o) => { ExportToTrader(); });
@@ -214,6 +215,56 @@ namespace HonestMarkSystem.Models
                 _dataBaseAdapter.Rollback();
                 var errorMessage = $"Exception: {_log.GetRecursiveInnerException(ex)}";
                 var errorsWindow = new ErrorsWindow("Произошла ошибка сохранения базы данных.", new List<string>(new string[] { errorMessage }));
+                _log.Log(errorMessage);
+                errorsWindow.ShowDialog();
+            }
+        }
+
+        private void UnbindDocument()
+        {
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ для отвязывания.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.IdDocPurchasing == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ не сопоставлен с документом закупок.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.Sent)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ был подписан и отправлен, его нельзя отвязать.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.DocStatus == (int)DocEdoStatus.Processed)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ уже был успешно обработан, его нельзя отвязать.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                SelectedItem.IdDocPurchasing = null;
+                OnPropertyChanged("SelectedItem");
+                _dataBaseAdapter.Commit();
+
+                LoadWindow loadWindow = new LoadWindow();
+                loadWindow.GetLoadContext().SetSuccessFullLoad("Документ отвязан успешно.");
+                loadWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                _dataBaseAdapter.Rollback();
+                var errorMessage = $"Exception: {_log.GetRecursiveInnerException(ex)}";
+                var errorsWindow = new ErrorsWindow("Произошла ошибка отвязки документа.", new List<string>(new string[] { errorMessage }));
                 _log.Log(errorMessage);
                 errorsWindow.ShowDialog();
             }
@@ -550,6 +601,13 @@ namespace HonestMarkSystem.Models
             {
                 System.Windows.MessageBox.Show(
                     "В списке товаров есть несопоставленные с ID товары.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.IdDocPurchasing != null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ уже сопоставлен с документом в трейдере.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 

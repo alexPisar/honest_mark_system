@@ -123,6 +123,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem Command="{Binding DeleteCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/Outlook Inspired/Delete.svg}" />
+                            <TextBlock Text="Отвязать" HorizontalAlignment="Center" />
+                            <TextBlock Text="документ" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
         </dxb:StatusBarControl>
         <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList}" 
                          SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
