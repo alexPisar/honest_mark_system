@@ -1092,6 +1092,20 @@ namespace HonestMarkSystem.Models
             if (markedCodes.Count == 0)
                 return;
 
+            var positionInArray = 0;
+            var markedCodesArray = markedCodes.Select(m => m.Key);
+
+            while (positionInArray < markedCodesArray.Count())
+            {
+                int length = markedCodesArray.Count() - positionInArray > 500 ? 500 : markedCodesArray.Count() - positionInArray;
+                var markedCodesInfo = _honestMarkSystem.GetMarkedCodesInfo(ProductGroupsEnum.Perfumery, markedCodesArray.Skip(positionInArray).Take(length).ToArray());
+
+                if (markedCodesInfo.Any(m => m?.CisInfo?.OwnerInn != SelectedItem.SenderInn))
+                    throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
+
+                positionInArray += 500;
+            }
+
             var productGroups = from markedCode in markedCodes
                                 group markedCode by markedCode.Value into gr
                                 join product in report.Products on gr.Key equals product.BarCode

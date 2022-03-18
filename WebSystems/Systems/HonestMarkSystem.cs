@@ -44,6 +44,11 @@ namespace WebSystems.Systems
             resultCodes.AddRange(codes);
         }
 
+        public Models.MarkCodeInfo[] GetMarkedCodesInfo(ProductGroupsEnum productGroup, string[] markCodes)
+        {
+            return HonestMarkClient.GetInstance().GetMarkCodesInfo(productGroup, markCodes);
+        }
+
         public Models.DocumentEdoProcessResultInfo GetEdoDocumentProcessInfo(string documentId)
         {
             return HonestMarkClient.GetInstance().GetEdoDocumentProcessInfo(documentId);
