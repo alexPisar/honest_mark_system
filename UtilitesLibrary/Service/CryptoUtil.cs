@@ -97,7 +97,7 @@ namespace UtilitesLibrary.Service
             if (string.IsNullOrEmpty(inn) || inn.Length == 12)
             {
                 var crypt = new WinApiCryptWrapper(certificate);
-                inn = crypt.GetValueBySubjectOid("1.2.643.100.4");
+                inn = crypt.GetValueBySubjectOid("1.2.643.100.4") ?? inn;
             }
 
             return inn;
