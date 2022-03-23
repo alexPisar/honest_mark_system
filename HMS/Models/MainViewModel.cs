@@ -46,6 +46,7 @@ namespace HonestMarkSystem.Models
         public RelayCommand WithdrawalCodesCommand => new RelayCommand((o) => { WithdrawalCodes(); });
         public RelayCommand RejectDocumentCommand => new RelayCommand((o) => { RejectDocument(); });
         public RelayCommand RevokeDocumentCommand => new RelayCommand((o) => { RevokeDocument(); });
+        public RelayCommand SaveDocumentFileCommand => new RelayCommand((o) => { SaveDocumentFile(); });
 
         public MainViewModel(IEdoSystem edoSystem,
             WebSystems.Systems.HonestMarkSystem honestMarkSystem, 
@@ -1122,6 +1123,74 @@ namespace HonestMarkSystem.Models
                         errorsWindow.ShowDialog();
                     }
                 }
+            }
+        }
+
+        private void SaveDocumentFile()
+        {
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ для сохранения.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            object[] parameters = null;
+            string fileName = null;
+
+            try
+            {
+                if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                {
+                    parameters = new object[] { SelectedItem.IdDocEdo, SelectedItem.ParentEntityId };
+
+                    string createDate = SelectedItem.CreateDate?.ToString("dd.MM.yyyy");
+
+                    if (!string.IsNullOrEmpty(createDate))
+                        fileName = $"УПД № {SelectedItem.Name} от {SelectedItem.CreateDate?.ToString("dd.MM.yyyy")}";
+                    else
+                        fileName = $"УПД № {SelectedItem.Name}";
+                }
+                else if (_edoSystem.GetType() == typeof(EdoLiteSystem))
+                {
+                    parameters = new object[] { SelectedItem.IdDocEdo };
+                    fileName = SelectedItem.Name;
+                }
+
+                if (parameters == null)
+                    return;
+
+                var contentBytes = _edoSystem.GetDocumentPrintForm(parameters);
+
+                var changePathDialog = new Microsoft.Win32.SaveFileDialog();
+                changePathDialog.Title = "Сохранение файла";
+                changePathDialog.Filter = "PDF Files|*.pdf";
+                changePathDialog.FileName = fileName;
+
+                if(changePathDialog.ShowDialog() == true)
+                {
+                    File.WriteAllBytes(changePathDialog.FileName, contentBytes);
+
+                    var loadWindow = new LoadWindow();
+                    loadWindow.GetLoadContext().SetSuccessFullLoad("Файл успешно сохранён.");
+                    loadWindow.ShowDialog();
+                }
+            }
+            catch (System.Net.WebException webEx)
+            {
+                string errorMessage = _log.GetRecursiveInnerException(webEx);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка сохранения документа в файл на удалённом сервере.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = _log.GetRecursiveInnerException(ex);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка сохранения документа в файл.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
             }
         }
 

@@ -356,6 +356,22 @@ namespace WebSystems.WebClients
             return message;
         }
 
+        public PrintFormContent GetPrintForm(string messageId, string entityId)
+        {
+            PrintFormResult printResult = null;
+            var indx = 15;
+
+            while (printResult?.Content == null && indx-- > 0)
+            {
+                printResult = _api.GeneratePrintForm(_authToken, _actualBoxId, messageId, entityId);
+            }
+
+            if (printResult?.Content == null)
+                throw new Exception("Не удалось получить печатную форму документа");
+
+            return printResult.Content;
+        }
+
         /// <summary>
 		/// Получить токен аутентификации
 		/// </summary>

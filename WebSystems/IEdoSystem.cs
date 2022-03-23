@@ -39,7 +39,7 @@ namespace WebSystems
             return 0;
         }
 
-        public virtual byte[] GetDocumentPrintForm(Models.IEdoSystemDocument<string> document)
+        public virtual byte[] GetDocumentPrintForm(params object[] parameters)
         {
             return null;
         }

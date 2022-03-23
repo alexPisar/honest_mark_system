@@ -198,6 +198,15 @@ namespace WebSystems.EdoSystems
             ((WebClients.DiadocEdoClient)_webClient).SendRevocationDocument(messageId, entityId, fileBytes, signature);
         }
 
+        public override byte[] GetDocumentPrintForm(params object[] parameters)
+        {
+            var messageId = (string)parameters[0];
+            var entityId = (string)parameters[1];
+
+            var printForm = ((WebClients.DiadocEdoClient)_webClient).GetPrintForm(messageId, entityId);
+            return printForm.Bytes;
+        }
+
         public List<KeyValuePair<Diadoc.Api.Proto.Box, Diadoc.Api.Proto.Organization>> GetCounteragentsBoxesForOrganization(string inn)
         {
             var organization = ((WebClients.DiadocEdoClient)_webClient).GetMyOrganizationByInnKpp(inn);

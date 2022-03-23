@@ -101,6 +101,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Сохранить документ в формате PDF" Command="{Binding SaveDocumentFileCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/PDF Viewer/DocumentPDF.svg}"></Image>
+                            <TextBlock Text="Сохранить" />
+                            <TextBlock Text="Документ" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
             <dxb:BarButtonItem ToolTip="Отклонить документ" Command="{Binding RejectDocumentCommand}">
                 <dxb:BarButtonItem.ContentTemplate>
                     <DataTemplate>

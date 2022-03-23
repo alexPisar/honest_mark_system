@@ -58,5 +58,17 @@ namespace HmsTests
             }
             //var signContent = edo.GetDocument(doc.MessageId, signatureDoc.EntityId);
         }
+
+        [TestMethod]
+        public void GetPrintFormTest()
+        {
+            var crypto = new WinApiCryptWrapper();
+            var cert = crypto.GetCertificateWithPrivateKey("055DC379848800792FFF265DA204C8C101D293C8", false);
+            var edo = DiadocEdoClient.GetInstance();
+            edo.Authenticate(cert);
+
+            var printDoc = edo.GetPrintForm("fab419ed-5982-4ae3-909c-b54f70607574", "bd8d219d-632d-4ed8-b93f-c4227632b32e");
+            printDoc.SaveToFile($"C:\\Users\\systech\\Desktop\\{printDoc.FileName}");
+        }
     }
 }
