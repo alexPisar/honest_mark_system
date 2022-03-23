@@ -38,6 +38,8 @@ namespace HonestMarkSystem.Interfaces
 
         List<object> GetAllMarkedCodes();
 
+        IEnumerable<string> GetMarkedCodesByDocumentId(decimal? docJournalId);
+
         decimal ExportDocument(object documentObject);
 
         void Rollback();

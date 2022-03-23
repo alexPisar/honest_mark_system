@@ -247,6 +247,14 @@ namespace HonestMarkSystem.Implementations
             return _abt.DocGoodsDetailsLabels.Where(l => l.DmLabel.Length == 31 && l.SaleDmLabel == null).ToList<object>();
         }
 
+        public IEnumerable<string> GetMarkedCodesByDocumentId(decimal? docJournalId)
+        {
+            if (docJournalId == null)
+                return null;
+
+            return _abt.DocGoodsDetailsLabels.Where(l => l.IdDoc == docJournalId).Select(l => l.DmLabel);
+        }
+
         public decimal ExportDocument(object documentObject)
         {
             var document = (DocEdoPurchasing)documentObject;

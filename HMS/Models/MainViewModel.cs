@@ -497,6 +497,12 @@ namespace HonestMarkSystem.Models
                 {
                     try
                     {
+                        var docPurchasing = (DocPurchasing)_dataBaseAdapter.GetPurchasingDocumentById(SelectedItem.IdDocPurchasing.Value);
+                        var markedCodesArray = _dataBaseAdapter.GetMarkedCodesByDocumentId(docPurchasing?.IdDocLink);
+
+                        if (markedCodesArray != null && !MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
+                            throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
+
                         var xml = reportForSend.GetXmlContent();
                         var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
                         var signature = _cryptoUtil.Sign(fileBytes, true);
@@ -1194,6 +1200,24 @@ namespace HonestMarkSystem.Models
             }
         }
 
+        private bool MarkedCodesOwnerCheck(IEnumerable<string> markedCodes, string ownerInn)
+        {
+            var positionInArray = 0;
+
+            while (positionInArray < markedCodes.Count())
+            {
+                int length = markedCodes.Count() - positionInArray > 500 ? 500 : markedCodes.Count() - positionInArray;
+                var markedCodesInfo = _honestMarkSystem.GetMarkedCodesInfo(ProductGroupsEnum.Perfumery, markedCodes.Skip(positionInArray).Take(length).ToArray());
+
+                if (markedCodesInfo.Any(m => m?.CisInfo?.OwnerInn != ownerInn))
+                    return false;
+
+                positionInArray += 500;
+            }
+
+            return true;
+        }
+
         private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null)
         {
             var reporterDll = new Reporter.ReporterDll();
@@ -1219,19 +1243,10 @@ namespace HonestMarkSystem.Models
             if (markedCodes.Count == 0)
                 return;
 
-            var positionInArray = 0;
             var markedCodesArray = markedCodes.Select(m => m.Key);
 
-            while (positionInArray < markedCodesArray.Count())
-            {
-                int length = markedCodesArray.Count() - positionInArray > 500 ? 500 : markedCodesArray.Count() - positionInArray;
-                var markedCodesInfo = _honestMarkSystem.GetMarkedCodesInfo(ProductGroupsEnum.Perfumery, markedCodesArray.Skip(positionInArray).Take(length).ToArray());
-
-                if (markedCodesInfo.Any(m => m?.CisInfo?.OwnerInn != SelectedItem.SenderInn))
-                    throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
-
-                positionInArray += 500;
-            }
+            if (!MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
+                throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
 
             var productGroups = from markedCode in markedCodes
                                 group markedCode by markedCode.Value into gr
