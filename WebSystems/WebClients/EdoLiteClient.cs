@@ -170,6 +170,28 @@ namespace WebSystems.WebClients
             return fileBytes;
         }
 
+        public byte[] GetIncomingDocumentPrintForm(string documentId)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("Authorization", $"Bearer {_token}");
+
+            var contentStr = _webService.GetRequest($"{Properties.Settings.Default.UrlAddressEdoLite}/api/v1/incoming-documents/{documentId}/print", headerData, Encoding.GetEncoding(1251));
+
+            var contentBytes = Encoding.GetEncoding(1251).GetBytes(contentStr);
+            return contentBytes;
+        }
+
+        public byte[] GetOutgoingDocumentPrintForm(string documentId)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("Authorization", $"Bearer {_token}");
+
+            var contentStr = _webService.GetRequest($"{Properties.Settings.Default.UrlAddressEdoLite}/api/v1/outgoing-documents/{documentId}/print", headerData, Encoding.GetEncoding(1251));
+
+            var contentBytes = Encoding.GetEncoding(1251).GetBytes(contentStr);
+            return contentBytes;
+        }
+
         public string LoadTitleDocument(string content, string idDocument, string signature)
         {
             var authData = new Dictionary<string, string>();

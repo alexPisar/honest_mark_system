@@ -71,6 +71,12 @@ namespace WebSystems.EdoSystems
             return zipBytes;
         }
 
+        public override byte[] GetDocumentPrintForm(params object[] parameters)
+        {
+            var documentId = (string)parameters[0];
+            return ((WebClients.EdoLiteClient)_webClient).GetIncomingDocumentPrintForm(documentId);
+        }
+
         public override bool Authorization()
         {
             if (_certificate == null)

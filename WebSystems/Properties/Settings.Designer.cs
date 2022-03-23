@@ -37,7 +37,7 @@ namespace WebSystems.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://elk.edo.crpt.tech")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://edo-gismt.crpt.ru")]
         public string UrlAddressEdoLite {
             get {
                 return ((string)(this["UrlAddressEdoLite"]));
