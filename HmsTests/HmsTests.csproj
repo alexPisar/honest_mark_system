@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="DiadocEdoTests.cs" />
     <Compile Include="EdoLiteTests.cs" />
+    <Compile Include="HonestMarkTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReporterTests.cs" />
   </ItemGroup>
