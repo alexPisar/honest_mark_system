@@ -46,7 +46,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
 
         public virtual string ReceiverName { get; set; }
 
-        public virtual decimal? IdDocPurchasing { get; set; }
+        public virtual decimal? IdDocJournal { get; set; }
 
         public virtual string SenderEdoId { get; set; }
 

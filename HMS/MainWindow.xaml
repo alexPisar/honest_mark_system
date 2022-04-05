@@ -164,7 +164,7 @@
             <dxg:GridColumn FieldName="ReceiveDate" Header="Дата принятия" Width="100"/>
             <dxg:GridColumn FieldName="TotalVatAmount" Header="Сумма налога" Width="100"/>
             <dxg:GridColumn FieldName="TotalPrice" Header="Общая стоимость" Width="120"/>
-            <dxg:GridColumn FieldName="IdDocPurchasing" Header="ID приходного документа" Width="150"/>
+            <dxg:GridColumn FieldName="IdDocJournal" Header="ID трейдер документа" Width="150"/>
             <dxg:GridControl.View>
                 <dxg:TableView  FixedLineHeight="50" AllowEditing="False"/>
             </dxg:GridControl.View>

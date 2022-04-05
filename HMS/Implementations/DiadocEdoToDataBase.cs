@@ -77,11 +77,12 @@ namespace HonestMarkSystem.Implementations
                 .ToArray();
         }
 
-        public object[] GetPurchasingDocuments()
+        public System.Collections.IEnumerable GetJournalDocuments()
         {
-            return _abt.DocPurchasings
-                .Where(d => d.Firm != null && d.Firm.Customer != null && d.Firm.Customer.Inn == _orgInn)
-                .ToArray();
+            return from doc in _abt.DocJournals where doc.DocGoods != null
+                   join docGood in _abt.DocGoods on doc.Id equals docGood.IdDoc
+                   join customer in _abt.RefCustomers on docGood.IdCustomer equals customer.IdContractor
+                   where customer.Inn == _orgInn select doc;
         }
 
         public object GetPurchasingDocumentById(decimal idDocPurchasing)
@@ -405,7 +406,7 @@ namespace HonestMarkSystem.Implementations
             };
 
             _abt.ExecuteProcedure("ABT.Add_document_purchasing", parameters);
-            document.IdDocPurchasing = ((Oracle.ManagedDataAccess.Types.OracleDecimal)((Oracle.ManagedDataAccess.Client.OracleParameter)parameters[2]).Value).Value;
+            document.IdDocJournal = idDoc.Value;
             return idDoc.Value;
         }
 

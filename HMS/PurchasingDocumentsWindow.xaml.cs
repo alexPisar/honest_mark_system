@@ -19,9 +19,54 @@ namespace HonestMarkSystem
     /// </summary>
     public partial class PurchasingDocumentsWindow : Window
     {
+        public DateTime? DateTo
+        {
+            get {
+                return dateToPicker.SelectedDate;
+            }
+            set {
+                dateToPicker.SelectedDate = value;
+            }
+        }
+
+        public DateTime? DateFrom
+        {
+            get {
+                return dateFromPicker.SelectedDate;
+            }
+            set {
+                dateFromPicker.SelectedDate = value;
+            }
+        }
+
+        public string Number
+        {
+            get {
+                return numberTextBox.Text;
+            }
+            set {
+                numberTextBox.Text = value;
+            }
+        }
+
+        public string Comment
+        {
+            get {
+                return commentTextBox.Text;
+            }
+            set {
+                commentTextBox.Text = value;
+            }
+        }
+
         public PurchasingDocumentsWindow()
         {
             InitializeComponent();
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            ((Models.PurchasingDocumentsModel)DataContext).SetDocuments(Number, Comment, DateFrom, DateTo);
         }
 
         private void ChangeButton_Click(object sender, RoutedEventArgs e)

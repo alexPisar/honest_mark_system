@@ -11,44 +11,65 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HonestMarkSystem"
         mc:Ignorable="d"
-        Title="Выбор закупочного документа" WindowState="Maximized" Height="450" Width="800">
+        Title="Выбор трейдер документа" WindowState="Maximized" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="120" />
             <RowDefinition Height="*" />
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
-        <dxg:GridControl Grid.Row="0" ItemsSource="{Binding ItemsList}" 
+        <DockPanel  Grid.Row="0" LastChildFill="True">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" DockPanel.Dock="Bottom" Height="40">
+                <Button Margin="5" Content="Найти" Width="60" Click="SearchButton_Click"></Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
+                    <StackPanel Orientation="Horizontal">
+                        <Label Margin="5" Content="Дата с" Width="60"/>
+                        <DatePicker Name="dateFromPicker" Margin="5"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Margin="5" Content="Дата по" Width="60"/>
+                        <DatePicker Name="dateToPicker" Margin="5"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
+                    <StackPanel Orientation="Horizontal">
+                        <Label Margin="15 5 0 5" Content="Номер документа" Width="100"/>
+                        <TextBox Margin="5" Width="100" Name="numberTextBox"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Margin="15 5 0 5" Content="Комментарий" Width="100"/>
+                        <TextBox Margin="5" Width="200" Name="commentTextBox"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+        <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList}" 
                          SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}">
             <dxg:GridControl.Bands>
                 <dxg:GridControlBand Header="Документ">
                     <dxg:GridColumn FieldName="Id" Header="ID" Width="120"/>
-                    <dxg:GridColumn FieldName="UpdCode" Header="Номер документа ЭДО" Width="150"/>
+                    <dxg:GridColumn FieldName="Code" Header="Номер документа" Width="150"/>
                     <dxg:GridColumn FieldName="UserName" Header="Имя пользователя" Width="120"/>
-                    <dxg:GridColumn FieldName="CreateDate" Header="Дата создания" Width="120"/>
-                    <dxg:GridColumn FieldName="UpdDate" Header="Дата изменения" Width="120"/>
-                    <dxg:GridColumn FieldName="InvoiceDate" Header="Дата УПД" Width="120"/>
-                    <dxg:GridColumn FieldName="WaybillDate" Header="Дата Накладной" Width="120"/>
+                    <dxg:GridColumn FieldName="DocDatetime" Header="Дата создания" Width="120"/>
+                    <dxg:GridColumn FieldName="DeliveryDate" Header="Дата доставки" Width="120"/>
+                    <dxg:GridColumn FieldName="Comment" Header="Комментарий" Width="200"/>
                 </dxg:GridControlBand>
-                <dxg:GridControlBand Header="Трейдер документ">
-                    <dxg:GridColumn FieldName="DocLink.Id" Header="ID" Width="120"/>
-                    <dxg:GridColumn FieldName="DocLink.Code" Header="Номер" Width="150"/>
-                    <dxg:GridColumn FieldName="DocLink.UserName" Header="Имя пользователя" Width="120"/>
+                <dxg:GridControlBand Header="Продавец">
+                    <dxg:GridColumn FieldName="DocGoods.Seller.Customer.Name" Header="Название"/>
+                    <dxg:GridColumn FieldName="DocGoods.Seller.Customer.Inn" Header="ИНН"/>
                 </dxg:GridControlBand>
-                <dxg:GridControlBand Header="Закупщик">
-                    <dxg:GridColumn FieldName="Firm.Name" Header="Название"/>
-                    <dxg:GridColumn FieldName="Firm.Customer.Inn" Header="ИНН"/>
-                </dxg:GridControlBand>
-                <dxg:GridControlBand Header="Поставщик">
-                    <dxg:GridColumn FieldName="Supplier.Name" Header="Название"/>
-                    <dxg:GridColumn FieldName="Supplier.Customer.Inn" Header="ИНН"/>
+                <dxg:GridControlBand Header="Покупатель">
+                    <dxg:GridColumn FieldName="DocGoods.Customer.Customer.Name" Header="Название"/>
+                    <dxg:GridColumn FieldName="DocGoods.Customer.Customer.Inn" Header="ИНН"/>
                 </dxg:GridControlBand>
                 <dxg:GridControlBand Header="Итог">
-                    <dxg:GridColumn FieldName="Amount" Header="Сумма" />
-                    <dxg:GridColumn FieldName="AmountWithoutVat" Header="Сумма без НДС" />
+                    <dxg:GridColumn FieldName="DocGoods.TotalSumm" Header="Сумма" />
                 </dxg:GridControlBand>
             </dxg:GridControl.Bands>
         </dxg:GridControl>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
             <Button Margin="5 5" Content="Выбрать" Click="ChangeButton_Click"></Button>
             <Button Margin="5 5" Content="Отмена" Click="CancelButton_Click"></Button>
         </StackPanel>

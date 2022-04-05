@@ -230,10 +230,10 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if (SelectedItem.IdDocPurchasing == null)
+            if (SelectedItem.IdDocJournal == null)
             {
                 System.Windows.MessageBox.Show(
-                    "Данный документ не сопоставлен с документом закупок.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    "Данный документ не сопоставлен с документом из трейдера.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
@@ -253,7 +253,7 @@ namespace HonestMarkSystem.Models
 
             try
             {
-                SelectedItem.IdDocPurchasing = null;
+                SelectedItem.IdDocJournal = null;
                 OnPropertyChanged("SelectedItem");
                 _dataBaseAdapter.Commit();
 
@@ -280,20 +280,20 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            var docs = _dataBaseAdapter.GetPurchasingDocuments();
+            var docs = _dataBaseAdapter.GetJournalDocuments();
 
             var docPurchasingWindow = new PurchasingDocumentsWindow();
-            var docPurchasingModel = new PurchasingDocumentsModel(docs.Cast<DocPurchasing>());
+            var docPurchasingModel = new PurchasingDocumentsModel(docs.Cast<DocJournal>());
 
-            if (SelectedItem.IdDocPurchasing != null)
-                docPurchasingModel.SetChangedDocument(SelectedItem.IdDocPurchasing.Value);
+            if (SelectedItem.IdDocJournal != null)
+                docPurchasingModel.SetChangedDocument(SelectedItem.IdDocJournal.Value);
 
             docPurchasingWindow.DataContext = docPurchasingModel;
             if(docPurchasingWindow.ShowDialog() == true)
             {
                 try
                 {
-                    SelectedItem.IdDocPurchasing = docPurchasingModel.SelectedItem.Id;
+                    SelectedItem.IdDocJournal = docPurchasingModel.SelectedItem.Id;
                     _dataBaseAdapter.Commit();
                     OnPropertyChanged("SelectedItem");
                 }
@@ -368,10 +368,10 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if (SelectedItem.IdDocPurchasing == null)
+            if (SelectedItem.IdDocJournal == null)
             {
                 System.Windows.MessageBox.Show(
-                    "Данный документ не сопоставлен с документом закупок.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    "Данный документ не сопоставлен с документом из трейдера.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
@@ -497,8 +497,7 @@ namespace HonestMarkSystem.Models
                 {
                     try
                     {
-                        var docPurchasing = (DocPurchasing)_dataBaseAdapter.GetPurchasingDocumentById(SelectedItem.IdDocPurchasing.Value);
-                        var markedCodesArray = _dataBaseAdapter.GetMarkedCodesByDocumentId(docPurchasing?.IdDocLink);
+                        var markedCodesArray = _dataBaseAdapter.GetMarkedCodesByDocumentId(SelectedItem.IdDocJournal.Value);
 
                         if (markedCodesArray != null && !MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
                             throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
@@ -611,7 +610,7 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if (SelectedItem.IdDocPurchasing != null)
+            if (SelectedItem.IdDocJournal != null)
             {
                 System.Windows.MessageBox.Show(
                     "Данный документ уже сопоставлен с документом в трейдере.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
@@ -1272,17 +1271,7 @@ namespace HonestMarkSystem.Models
                     throw new Exception("Попытка отправки прервана пользователем." + errorMessage);
 
             if (idDoc == null)
-            {
-                var docPurchasing = _dataBaseAdapter.GetPurchasingDocumentById(SelectedItem.IdDocPurchasing.Value);
-
-                if (docPurchasing == null)
-                    throw new Exception("Не найден документ закупок в базе.");
-
-                if (((DocPurchasing)docPurchasing)?.IdDocLink == null)
-                    throw new Exception("Для документа закупок не найден трейдер документ.");
-
-                idDoc = ((DocPurchasing)docPurchasing).IdDocLink.Value;
-            }
+                idDoc = SelectedItem.IdDocJournal.Value;
 
             productGroups = productGroups.ToList();
 

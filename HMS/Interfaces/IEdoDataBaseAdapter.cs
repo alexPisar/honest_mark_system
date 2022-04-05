@@ -22,7 +22,7 @@ namespace HonestMarkSystem.Interfaces
 
         object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo);
 
-        object[] GetPurchasingDocuments();
+        System.Collections.IEnumerable GetJournalDocuments();
 
         object GetPurchasingDocumentById(decimal idDocPurchasing);
 
