@@ -388,12 +388,29 @@ namespace HonestMarkSystem.Implementations
 
             foreach (var detail in document.Details)
             {
-                parameters = new object[]
+                if (detail?.Quantity == null || detail?.Quantity == 0)
+                    continue;
+
+                if (detail.Subtotal != null)
                 {
-                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc", idDoc),
-                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_good", detail.IdGood),
-                    new Oracle.ManagedDataAccess.Client.OracleParameter("p_quantity", detail.Quantity)
-                };
+                    decimal? detailPrice = detail.Subtotal / detail.Quantity;
+                    parameters = new object[]
+                    {
+                        new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc", idDoc),
+                        new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_good", detail.IdGood),
+                        new Oracle.ManagedDataAccess.Client.OracleParameter("p_quantity", detail.Quantity),
+                        new Oracle.ManagedDataAccess.Client.OracleParameter("p_price", detailPrice)
+                    };
+                }
+                else
+                {
+                    parameters = new object[]
+                    {
+                        new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_doc", idDoc),
+                        new Oracle.ManagedDataAccess.Client.OracleParameter("p_id_good", detail.IdGood),
+                        new Oracle.ManagedDataAccess.Client.OracleParameter("p_quantity", detail.Quantity)
+                    };
+                }
 
                 _abt.ExecuteProcedure("ABT.Add_document_row", parameters);
             }
