@@ -142,6 +142,9 @@ namespace HonestMarkSystem.Models
                     {
                         processingDocument.DocStatus = (int)DocEdoStatus.Processed;
                         LoadStatus(processingDocument);
+
+                        if (processingDocument.IdDocJournal != null)
+                            _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(processingDocument.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
                     }
                     else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
                     {

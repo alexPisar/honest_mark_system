@@ -32,6 +32,8 @@ namespace HonestMarkSystem.Interfaces
 
         void AddMarkedCodes(decimal idDocJournal, List<KeyValuePair<decimal, List<string>>> markedCodesByGoods);
 
+        void UpdateMarkedCodeIncomingStatuses(decimal idDocJournal, WebSystems.MarkedCodeComingStatus status);
+
         List<object> GetRefGoodsByBarCode(string barCode);
 
         List<object> GetAllRefGoods();

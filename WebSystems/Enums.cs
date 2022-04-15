@@ -345,6 +345,13 @@ namespace WebSystems
         Revoked
     }
 
+    public enum MarkedCodeComingStatus
+    {
+        New = 0,
+        Received,
+        Accepted
+    }
+
     public enum EdoLiteDocumentStatus
     {
         /// <summary>

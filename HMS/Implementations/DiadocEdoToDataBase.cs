@@ -135,7 +135,7 @@ namespace HonestMarkSystem.Implementations
                 InsertDateTime = DateTime.Now
             }));
 
-            labels = labels.Where(label => !_abt.DocGoodsDetailsLabels.Any(l => l.IdDoc == idDocJournal && l.IdGood == label.IdGood && l.DmLabel == label.DmLabel));
+            labels = labels.Where(label => !_abt.DocGoodsDetailsLabels.Any(l => l.IdDoc == idDocJournal /*&& l.IdGood == label.IdGood*/ && l.DmLabel == label.DmLabel));
 
             if (labels.Count() == 0)
                 return;
@@ -318,6 +318,11 @@ namespace HonestMarkSystem.Implementations
             doc.Status = null;
             _abt.Entry(doc).Reference("Status").IsLoaded = false;
             _abt.Entry(doc).Reference("Status").Load();
+        }
+
+        public void UpdateMarkedCodeIncomingStatuses(decimal idDocJournal, WebSystems.MarkedCodeComingStatus status)
+        {
+            _abt.Database.ExecuteSqlCommand($"UPDATE doc_goods_details_labels SET LABEL_STATUS = {(int)status} where id_doc = {idDocJournal}");
         }
 
         public List<object> GetRefGoodsByBarCode(string barCode)
