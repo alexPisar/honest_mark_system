@@ -226,6 +226,8 @@ namespace WebSystems.WebClients
             string signerFirstName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
             string signerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
 
+            var position = cryptoUtil.ParseCertAttribute(_certificate.Subject, "T");
+
             var receipt = _api.GenerateReceiptXml(_authToken, _actualBoxId, messageId, entityId, 
                 new Diadoc.Api.Proto.Invoicing.Signer
                 {
@@ -237,7 +239,7 @@ namespace WebSystems.WebClients
                         FirstName = signerFirstName,
                         Patronymic = signerPatronymic,
                         Inn = cryptoUtil.ParseCertAttribute(_certificate.Subject, "ИНН").TrimStart('0'),
-                        JobTitle = cryptoUtil.ParseCertAttribute(_certificate.Subject, "T")
+                        JobTitle = string.IsNullOrEmpty(position) ? "Сотрудник с правом подписи" : position
                     }
                 });
 

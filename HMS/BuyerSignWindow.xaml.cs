@@ -159,6 +159,9 @@ namespace HonestMarkSystem
             var orgInn = _cryptoUtil.GetCertificateAttributeValueByOid("1.2.643.100.4");
             var orgName = _cryptoUtil.ParseCertAttribute(subject, "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
 
+            if (string.IsNullOrEmpty(orgInn))
+                orgInn = ((Reporter.Entities.IndividualEntity)Report.SignerEntity).Inn;
+
             Report.BasisOfAuthority = _cryptoUtil.ParseCertAttribute(subject, "T");
             Report.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoMadeOperation;
             Report.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;

@@ -750,9 +750,13 @@ namespace HonestMarkSystem.Models
                         report.EdoProgramVersion = this.EdoProgramVersion;
 
                         report.CreatorEdoId = sellerReport.ReceiverEdoId;
-                        report.JuridicalInn = SelectedItem.ReceiverInn;
-                        report.JuridicalKpp = SelectedItem.ReceiverKpp;
-                        report.OrgCreatorName = SelectedItem.ReceiverName;
+
+                        if (SelectedItem.ReceiverInn.Length == 10)
+                        {
+                            report.JuridicalInn = SelectedItem.ReceiverInn;
+                            report.JuridicalKpp = SelectedItem.ReceiverKpp;
+                            report.OrgCreatorName = SelectedItem.ReceiverName;
+                        }
 
                         report.ReceiveDate = DateTime.Now;
                         report.ReceivedFileName = sellerReport.FileName;
@@ -768,6 +772,20 @@ namespace HonestMarkSystem.Models
                         report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
                         report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
                         report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                        if (string.IsNullOrEmpty(report.SignerPosition))
+                            report.SignerPosition = "Сотрудник с правом подписи";
+
+                        if (SelectedItem.ReceiverInn.Length == 12)
+                        {
+                            report.IndividualCreator = new Reporter.Entities.IndividualEntity
+                            {
+                                Inn = SelectedItem.ReceiverInn,
+                                Surname = report.SignerSurname,
+                                Name = report.SignerName,
+                                Patronymic = report.SignerPatronymic
+                            };
+                        }
 
                         string signedFilePath;
 
@@ -921,9 +939,13 @@ namespace HonestMarkSystem.Models
                                     report.EdoProgramVersion = this.EdoProgramVersion;
 
                                     report.CreatorEdoId = sellerReport.ReceiverEdoId;
-                                    report.JuridicalInn = SelectedItem.ReceiverInn;
-                                    report.JuridicalKpp = SelectedItem.ReceiverKpp;
-                                    report.OrgCreatorName = SelectedItem.ReceiverName;
+
+                                    if (SelectedItem.ReceiverInn.Length == 10)
+                                    {
+                                        report.JuridicalInn = SelectedItem.ReceiverInn;
+                                        report.JuridicalKpp = SelectedItem.ReceiverKpp;
+                                        report.OrgCreatorName = SelectedItem.ReceiverName;
+                                    }
 
                                     var fileNameLength = fileName.LastIndexOf('.');
 
@@ -945,6 +967,20 @@ namespace HonestMarkSystem.Models
                                     report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
                                     report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
                                     report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                                    if (string.IsNullOrEmpty(report.SignerPosition))
+                                        report.SignerPosition = "Сотрудник с правом подписи";
+
+                                    if (SelectedItem.ReceiverInn.Length == 12)
+                                    {
+                                        report.IndividualCreator = new Reporter.Entities.IndividualEntity
+                                        {
+                                            Inn = SelectedItem.ReceiverInn,
+                                            Surname = report.SignerSurname,
+                                            Name = report.SignerName,
+                                            Patronymic = report.SignerPatronymic
+                                        };
+                                    }
 
                                     loadContext.SetLoadingText("Сохранение документов");
                                     var xmlContent = report.GetXmlContent();
@@ -1034,9 +1070,13 @@ namespace HonestMarkSystem.Models
                             report.EdoProgramVersion = this.EdoProgramVersion;
 
                             report.CreatorEdoId = sellerReport.ReceiverEdoId;
-                            report.JuridicalCreatorInn = SelectedItem.ReceiverInn;
-                            report.JuridicalCreatorKpp = SelectedItem.ReceiverKpp;
-                            report.OrgCreatorName = SelectedItem.ReceiverName;
+
+                            if (SelectedItem.ReceiverInn.Length == 10)
+                            {
+                                report.JuridicalCreatorInn = SelectedItem.ReceiverInn;
+                                report.JuridicalCreatorKpp = SelectedItem.ReceiverKpp;
+                                report.OrgCreatorName = SelectedItem.ReceiverName;
+                            }
 
                             report.ReceivedFileName = SelectedItem.FileName;
 
@@ -1051,6 +1091,20 @@ namespace HonestMarkSystem.Models
                             report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
                             report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
                             report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                            if (string.IsNullOrEmpty(report.SignerPosition))
+                                report.SignerPosition = "Сотрудник с правом подписи";
+
+                            if (SelectedItem.ReceiverInn.Length == 12)
+                            {
+                                report.IndividualCreator = new Reporter.Entities.IndividualEntity
+                                {
+                                    Inn = SelectedItem.ReceiverInn,
+                                    Surname = report.SignerSurname,
+                                    Name = report.SignerName,
+                                    Patronymic = report.SignerPatronymic
+                                };
+                            }
 
                             string signedFilePath;
 
