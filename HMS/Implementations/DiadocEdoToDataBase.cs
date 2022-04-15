@@ -322,7 +322,7 @@ namespace HonestMarkSystem.Implementations
 
         public void UpdateMarkedCodeIncomingStatuses(decimal idDocJournal, WebSystems.MarkedCodeComingStatus status)
         {
-            _abt.Database.ExecuteSqlCommand($"UPDATE doc_goods_details_labels SET LABEL_STATUS = {(int)status} where id_doc = {idDocJournal}");
+            _abt.Database.ExecuteSqlCommand($"UPDATE doc_goods_details_labels SET LABEL_STATUS = {(int)status}, POST_DATETIME = sysdate where id_doc = {idDocJournal}");
         }
 
         public List<object> GetRefGoodsByBarCode(string barCode)
