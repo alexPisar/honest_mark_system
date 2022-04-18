@@ -283,7 +283,7 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            var docs = _dataBaseAdapter.GetJournalDocuments();
+            var docs = _dataBaseAdapter.GetJournalDocuments(SelectedItem);
 
             var docPurchasingWindow = new PurchasingDocumentsWindow();
             var docPurchasingModel = new PurchasingDocumentsModel(docs.Cast<DocJournal>());

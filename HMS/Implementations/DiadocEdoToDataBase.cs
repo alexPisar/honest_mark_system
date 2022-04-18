@@ -77,12 +77,14 @@ namespace HonestMarkSystem.Implementations
                 .ToArray();
         }
 
-        public System.Collections.IEnumerable GetJournalDocuments()
+        public System.Collections.IEnumerable GetJournalDocuments(object selectedDocument)
         {
+            var docEdoDocument = (DocEdoPurchasing)selectedDocument;
+
             return from doc in _abt.DocJournals where doc.DocGoods != null
                    join docGood in _abt.DocGoods on doc.Id equals docGood.IdDoc
-                   join customer in _abt.RefCustomers on docGood.IdCustomer equals customer.IdContractor
-                   where customer.Inn == _orgInn select doc;
+                   join seller in _abt.RefCustomers on docGood.IdSeller equals seller.IdContractor
+                   where seller.Inn == docEdoDocument.SenderInn select doc;
         }
 
         public object GetPurchasingDocumentById(decimal idDocPurchasing)
