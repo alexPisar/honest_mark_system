@@ -437,6 +437,13 @@ namespace HonestMarkSystem.Implementations
             return idDoc.Value;
         }
 
+        public bool IsExistsNotReceivedCodes(decimal idDoc)
+        {
+            var count = _abt.Database.SqlQuery<int>($"select count(*) from doc_goods_details_labels where id_doc = {idDoc} and LABEL_STATUS <> 1").First();
+
+            return count > 0;
+        }
+
         public void Commit()
         {
             _abt.SaveChanges();

@@ -44,6 +44,8 @@ namespace HonestMarkSystem.Interfaces
 
         decimal ExportDocument(object documentObject);
 
+        bool IsExistsNotReceivedCodes(decimal idDoc);
+
         void Rollback();
 
         void Commit();
