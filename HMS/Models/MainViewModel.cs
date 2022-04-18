@@ -136,36 +136,39 @@ namespace HonestMarkSystem.Models
 
                 foreach (var processingDocument in processingDocuments)
                 {
-                    var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
-
-                    if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
+                    if (_honestMarkSystem != null)
                     {
-                        processingDocument.DocStatus = (int)DocEdoStatus.Processed;
-                        LoadStatus(processingDocument);
+                        var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
 
-                        if (processingDocument.IdDocJournal != null)
-                            _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(processingDocument.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
-                    }
-                    else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
-                    {
-                        processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
-
-                        var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
-
-                        var errors = failedOperations.SelectMany(f => f.Errors);
-
-                        var errorsList = new List<string>();
-                        foreach(var error in errors)
+                        if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
                         {
-                            if (!string.IsNullOrEmpty(error.Text))
-                                errorsList.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
-                            else if (!string.IsNullOrEmpty(error?.Error?.Detail))
-                                errorsList.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
-                            else
-                                errorsList.Add($"Произошла ошибка с кодом:{error.Code}\n");
+                            processingDocument.DocStatus = (int)DocEdoStatus.Processed;
+                            LoadStatus(processingDocument);
+
+                            if (processingDocument.IdDocJournal != null)
+                                _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(processingDocument.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
                         }
-                        processingDocument.ErrorMessage = string.Join("\n\n", errorsList);
-                        LoadStatus(processingDocument);
+                        else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
+                        {
+                            processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
+
+                            var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
+
+                            var errors = failedOperations.SelectMany(f => f.Errors);
+
+                            var errorsList = new List<string>();
+                            foreach(var error in errors)
+                            {
+                                if (!string.IsNullOrEmpty(error.Text))
+                                    errorsList.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
+                                else if (!string.IsNullOrEmpty(error?.Error?.Detail))
+                                    errorsList.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
+                                else
+                                    errorsList.Add($"Произошла ошибка с кодом:{error.Code}\n");
+                            }
+                            processingDocument.ErrorMessage = string.Join("\n\n", errorsList);
+                            LoadStatus(processingDocument);
+                        }
                     }
                 }
 
@@ -502,7 +505,7 @@ namespace HonestMarkSystem.Models
                     {
                         var markedCodesArray = _dataBaseAdapter.GetMarkedCodesByDocumentId(SelectedItem.IdDocJournal.Value);
 
-                        if (markedCodesArray != null && !MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
+                        if (_honestMarkSystem != null && markedCodesArray != null && !MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
                             throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
 
                         var xml = reportForSend.GetXmlContent();
@@ -620,6 +623,13 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if(_honestMarkSystem == null)
+            {
+                if(System.Windows.MessageBox.Show(
+                    "Авторизация в Честном знаке не была успешной. \nНевозможно экспортировать коды маркировки.\nВы точно хотите экспортировать документ?", "Ошибка авторизации", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question) != System.Windows.MessageBoxResult.Yes)
+                    return;
+            }
+
             string errorMessage = null;
             if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
             {
@@ -665,8 +675,11 @@ namespace HonestMarkSystem.Models
                     loadContext.SetLoadingText("Сохранение документа");
                     var docJournalId = _dataBaseAdapter.ExportDocument(SelectedItem);
 
-                    loadContext.SetLoadingText("Сохранение кодов маркировки");
-                    SaveMarkedCodesToDataBase(docSellerContent, docJournalId);
+                    if (_honestMarkSystem != null)
+                    {
+                        loadContext.SetLoadingText("Сохранение кодов маркировки");
+                        SaveMarkedCodesToDataBase(docSellerContent, docJournalId);
+                    }
 
                     _dataBaseAdapter.Commit();
                     loadContext.SetSuccessFullLoad("Экспорт выполнен успешно.");
@@ -689,6 +702,13 @@ namespace HonestMarkSystem.Models
 
         private void WithdrawalCodes()
         {
+            if(_honestMarkSystem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Невозможно оформить вывод из оборота.\nНе пройдена авторизация в Честном знаке.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             var markedCodes = _dataBaseAdapter.GetAllMarkedCodes().Cast<DocGoodsDetailsLabels>().ToList();
 
             var withdrawalWindow = new ChangeMarkedCodesWindow();

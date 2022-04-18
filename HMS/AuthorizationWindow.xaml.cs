@@ -117,8 +117,32 @@ namespace HonestMarkSystem
                 edoSystem = new DiadocEdoSystem(certificate);
                 bool result = edoSystem.Authorization();
 
-                markSystem = new WebSystems.Systems.HonestMarkSystem(certificate);
-                result = result && markSystem.Authorization();
+                try
+                {
+                    if(((Config)DataContext).ConsignorInn != "9652306541")
+                        markSystem = new WebSystems.Systems.HonestMarkSystem(certificate);
+
+                    if (markSystem != null && !markSystem.Authorization())
+                        throw new Exception("Авторизация в Честном знаке не была успешной");
+                }
+                catch(System.Net.WebException webEx)
+                {
+                    string errorMessage = _log.GetRecursiveInnerException(webEx);
+                    _log.Log($"Произошла ошибка авторизации в Честном знаке на удалённом сервере: {errorMessage}");
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка авторизации в Честном знаке на удалённом сервере.", new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
+                    markSystem = null;
+                }
+                catch(Exception ex)
+                {
+                    string errorMessage = _log.GetRecursiveInnerException(ex);
+                    _log.Log($"Произошла ошибка авторизации в Честном знаке: {errorMessage}");
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка авторизации в Честном знаке.", new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
+                    markSystem = null;
+                }
 
                 return result;
             }
