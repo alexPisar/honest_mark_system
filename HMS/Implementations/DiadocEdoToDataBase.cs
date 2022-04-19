@@ -81,7 +81,7 @@ namespace HonestMarkSystem.Implementations
         {
             var docEdoDocument = (DocEdoPurchasing)selectedDocument;
 
-            return from doc in _abt.DocJournals where doc.DocGoods != null
+            return from doc in _abt.DocJournals where doc.DocGoods != null && (doc.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Receipt || doc.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
                    join docGood in _abt.DocGoods on doc.Id equals docGood.IdDoc
                    join seller in _abt.RefCustomers on docGood.IdSeller equals seller.IdContractor
                    where seller.Inn == docEdoDocument.SenderInn select doc;
@@ -326,7 +326,7 @@ namespace HonestMarkSystem.Implementations
         {
             var docJournal = _abt.DocJournals.First(d => d.Id == idDocJournal);
 
-            if(docJournal.IdDocType == 1)
+            if(docJournal.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
                 _abt.Database.ExecuteSqlCommand($"UPDATE doc_goods_details_labels SET LABEL_STATUS = {(int)status}, POST_DATETIME = sysdate where id_doc = {idDocJournal}");
         }
 

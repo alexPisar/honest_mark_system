@@ -23,26 +23,56 @@ namespace HonestMarkSystem.Models
             OnPropertyChanged("SelectedItem");
         }
 
-        public void SetDocuments(string code, string comment, DateTime? dateFrom, DateTime? dateTo)
+        public async void SetDocuments(string code, string comment, DateTime? dateFrom, DateTime? dateTo, System.Windows.Window owner = null)
         {
-            var items = _allDocs;
+            var loadWindow = new LoadWindow("Идёт поиск...");
 
-            if (!string.IsNullOrEmpty(code))
-                items = items.Where(i => i.Code.Contains(code));
+            if(owner != null)
+                loadWindow.Owner = owner;
 
-            if (!string.IsNullOrEmpty(comment))
-                items = items.Where(i => i.Comment?.Contains(comment) ?? false);
+            loadWindow.Show();
+            Exception exception = null;
+            var loadContext = loadWindow.GetLoadContext();
 
-            if(dateFrom != null)
-                items = items.Where(i => i.DocDatetime >= dateFrom);
+            await Task.Run(() =>
+            {
+                try
+                {
+                    var items = _allDocs;
 
-            if (dateTo != null)
-                items = items.Where(i => i.DocDatetime <= dateTo);
+                    if (!string.IsNullOrEmpty(code))
+                        items = items.Where(i => i.Code.Contains(code));
 
-            ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocJournal>(items);
-            SelectedItem = null;
-            OnPropertyChanged("SelectedItem");
-            OnPropertyChanged("ItemsList");
+                    if (!string.IsNullOrEmpty(comment))
+                        items = items.Where(i => i.Comment?.Contains(comment) ?? false);
+
+                    if(dateFrom != null)
+                        items = items.Where(i => i.DocDatetime >= dateFrom);
+
+                    if (dateTo != null)
+                        items = items.Where(i => i.DocDatetime <= dateTo);
+
+                    ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocJournal>(items);
+                    SelectedItem = null;
+                    OnPropertyChanged("SelectedItem");
+                    OnPropertyChanged("ItemsList");
+                    loadContext.SetSuccessFullLoad();
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            });
+
+            if (exception != null)
+            {
+                loadWindow.Close();
+                string errorMessage = _log.GetRecursiveInnerException(exception);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
         }
     }
 }

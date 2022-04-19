@@ -66,7 +66,7 @@ namespace HonestMarkSystem
 
         private void SearchButton_Click(object sender, RoutedEventArgs e)
         {
-            ((Models.PurchasingDocumentsModel)DataContext).SetDocuments(Number, Comment, DateFrom, DateTo);
+            ((Models.PurchasingDocumentsModel)DataContext).SetDocuments(Number, Comment, DateFrom, DateTo, this);
         }
 
         private void ChangeButton_Click(object sender, RoutedEventArgs e)
