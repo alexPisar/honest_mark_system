@@ -40,17 +40,17 @@ namespace HonestMarkSystem.Models
                 {
                     var items = _allDocs;
 
+                    if (dateFrom != null)
+                        items = items.Where(i => i.DocDatetime >= dateFrom);
+
+                    if (dateTo != null)
+                        items = items.Where(i => i.DocDatetime <= dateTo);
+
                     if (!string.IsNullOrEmpty(code))
                         items = items.Where(i => i.Code.Contains(code));
 
                     if (!string.IsNullOrEmpty(comment))
                         items = items.Where(i => i.Comment?.Contains(comment) ?? false);
-
-                    if(dateFrom != null)
-                        items = items.Where(i => i.DocDatetime >= dateFrom);
-
-                    if (dateTo != null)
-                        items = items.Where(i => i.DocDatetime <= dateTo);
 
                     ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocJournal>(items);
                     SelectedItem = null;

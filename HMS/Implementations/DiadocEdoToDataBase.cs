@@ -18,12 +18,18 @@ namespace HonestMarkSystem.Implementations
         private string _orgName;
         private string _orgInn;
         private string _orgKpp;
-        private AbtDbContext _abt;
+        private AbtDbContext _abt = null;
         private List<Diadoc.Api.Proto.Box> _permittedBoxes;
         private List<DocEdoPurchasing> _documents;
 
         public void InitializeContext()
         {
+            if (_abt != null)
+            {
+                _abt.Dispose();
+                _abt = null;
+            }
+
             _abt = new AbtDbContext();
 
             _dataBaseUser = ConfigSet.Configs.Config.GetInstance().DataBaseUser;
