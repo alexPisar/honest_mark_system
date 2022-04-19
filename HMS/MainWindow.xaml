@@ -11,7 +11,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HonestMarkSystem"
         mc:Ignorable="d"
-        Title="ЭДО" WindowState="Maximized" Height="450" Width="800">
+        Title="ЭДО" WindowState="Maximized" Height="450" Width="800" Closing="MainWindow_Closing">
     <dxmvvm:Interaction.Behaviors>
         <dxmvvm:EventToCommand EventName="Loaded" Command="{Binding RefreshCommand}">
         </dxmvvm:EventToCommand>

@@ -1560,5 +1560,10 @@ namespace HonestMarkSystem.Models
                 errorsWindow.ShowDialog();
             }
         }
+
+        protected override void OnDispose()
+        {
+            _dataBaseAdapter.Dispose();
+        }
     }
 }

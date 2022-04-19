@@ -49,5 +49,6 @@ namespace HonestMarkSystem.Interfaces
         void Rollback();
 
         void Commit();
+        void Dispose();
     }
 }

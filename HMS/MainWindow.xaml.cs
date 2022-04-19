@@ -36,5 +36,10 @@ namespace HonestMarkSystem
         {
             ((Interfaces.IEdoDocumentsView)DataContext).UpdateIdGood();
         }
+
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            ((UtilitesLibrary.ModelBase.ViewModelBase)DataContext).Dispose();
+        }
     }
 }

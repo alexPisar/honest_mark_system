@@ -343,5 +343,10 @@ namespace HonestMarkSystem.Implementations
         {
             InitializeContext();
         }
+
+        public void Dispose()
+        {
+            _abt?.Dispose();
+        }
     }
 }
