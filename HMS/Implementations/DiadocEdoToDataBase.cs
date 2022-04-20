@@ -24,12 +24,6 @@ namespace HonestMarkSystem.Implementations
 
         public void InitializeContext()
         {
-            if (_abt != null)
-            {
-                _abt.Dispose();
-                _abt = null;
-            }
-
             _abt = new AbtDbContext();
 
             _dataBaseUser = ConfigSet.Configs.Config.GetInstance().DataBaseUser;
@@ -463,6 +457,7 @@ namespace HonestMarkSystem.Implementations
         public void Dispose()
         {
             _abt?.Dispose();
+            _abt = null;
         }
     }
 }

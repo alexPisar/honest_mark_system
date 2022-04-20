@@ -65,6 +65,7 @@ namespace HonestMarkSystem.Models
 
         private void Refresh()
         {
+            _dataBaseAdapter.Dispose();
             _dataBaseAdapter.InitializeContext();
             object[] parameters = null;
 

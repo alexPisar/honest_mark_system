@@ -347,6 +347,7 @@ namespace HonestMarkSystem.Implementations
         public void Dispose()
         {
             _abt?.Dispose();
+            _abt = null;
         }
     }
 }
