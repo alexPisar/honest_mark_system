@@ -127,7 +127,7 @@ namespace HonestMarkSystem.Implementations
                 _abt.DocGoodsDetailsLabels.Add(label);
         }
 
-        public void AddMarkedCodes(decimal idDocJournal, List<KeyValuePair<decimal, List<string>>> markedCodesByGoods)
+        public void AddMarkedCodes(decimal idDocJournal, List<KeyValuePair<decimal, List<string>>> markedCodesByGoods, IEnumerable<string> updatedCodes = null)
         {
             var labels = markedCodesByGoods.SelectMany(m => m.Value.Select(s => new DocGoodsDetailsLabels
             {
@@ -137,12 +137,36 @@ namespace HonestMarkSystem.Implementations
                 InsertDateTime = DateTime.Now
             }));
 
+            if (updatedCodes != null && updatedCodes?.Count() > 0)
+                labels = labels.Where(l => !updatedCodes.Any(u => u == l.DmLabel));
+
+            if (labels.Count() == 0)
+                return;
+
             labels = labels.Where(label => !_abt.DocGoodsDetailsLabels.Any(l => l.IdDoc == idDocJournal /*&& l.IdGood == label.IdGood*/ && l.DmLabel == label.DmLabel));
 
             if (labels.Count() == 0)
                 return;
 
             _abt.DocGoodsDetailsLabels.AddRange(labels);
+        }
+
+        public IEnumerable<string> UpdateCodes(decimal idDocJournal, IEnumerable<string> markedCodes, decimal? oldIdDocJournal = null)
+        {
+            IEnumerable<DocGoodsDetailsLabels> labels = null;
+
+            if(oldIdDocJournal != null)
+                labels = _abt.DocGoodsDetailsLabels.Where(l => l.IdDoc == oldIdDocJournal && markedCodes.Any(m => m == l.DmLabel));
+            else
+                labels = _abt.DocGoodsDetailsLabels.Where(l => markedCodes.Any(m => m == l.DmLabel));
+
+            if (labels.Count() == 0)
+                return new List<string>();
+
+            foreach (var label in labels)
+                label.IdDoc = idDocJournal;
+
+            return labels.Select(l => l.DmLabel);
         }
 
         public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)

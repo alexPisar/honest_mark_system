@@ -278,12 +278,19 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        private void ChangePurchasingDocument()
+        private async void ChangePurchasingDocument()
         {
             if(SelectedItem == null)
             {
                 System.Windows.MessageBox.Show(
                     "Не выбран документ для сопоставления.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (Details.Exists(d => d?.IdGood == null))
+            {
+                System.Windows.MessageBox.Show(
+                    "В списке товаров есть несопоставленные с ID товары.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
@@ -298,19 +305,48 @@ namespace HonestMarkSystem.Models
             docPurchasingWindow.DataContext = docPurchasingModel;
             if(docPurchasingWindow.ShowDialog() == true)
             {
-                try
-                {
-                    SelectedItem.IdDocJournal = docPurchasingModel.SelectedItem.Id;
-                    _dataBaseAdapter.Commit();
-                    OnPropertyChanged("SelectedItem");
-                }
-                catch(Exception ex)
-                {
-                    _dataBaseAdapter.Rollback();
-                    string errorMessage = _log.GetRecursiveInnerException(ex);
-                    _log.Log(errorMessage);
+                string errorMessage = null;
 
-                    var errorsWindow = new ErrorsWindow("Произошла ошибка сопоставления.", new List<string>(new string[] { errorMessage }));
+                LoadWindow loadWindow = new LoadWindow("Подождите, идёт сопоставление");
+
+                if (this.Owner != null)
+                    loadWindow.Owner = this.Owner;
+
+                var loadContext = loadWindow.GetLoadContext();
+
+                loadWindow.Show();
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        decimal? oldIdDoc = SelectedItem?.IdDocJournal;
+                        SelectedItem.IdDocJournal = docPurchasingModel.SelectedItem.Id;
+
+                        if (_honestMarkSystem != null)
+                        {
+                            loadContext.SetLoadingText("Сохранение кодов");
+                            var sellerXmlDocument = new XmlDocument();
+                            sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                            var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+                            SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc);
+                        }
+
+                        _dataBaseAdapter.Commit();
+                        OnPropertyChanged("SelectedItem");
+                        loadContext.SetSuccessFullLoad("Документ был успешно сопоставлен.");
+                    }
+                    catch (Exception ex)
+                    {
+                        _dataBaseAdapter.Rollback();
+                        errorMessage = _log.GetRecursiveInnerException(ex);
+                        _log.Log(errorMessage);
+                    }
+                });
+
+                if (errorMessage != null)
+                {
+                    loadWindow.Close();
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка сопоставления трейдер-документа.", new List<string>(new string[] { errorMessage }));
                     errorsWindow.ShowDialog();
                 }
             }
@@ -1298,7 +1334,7 @@ namespace HonestMarkSystem.Models
             return true;
         }
 
-        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null)
+        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null, decimal? oldIdDoc = null)
         {
             var reporterDll = new Reporter.ReporterDll();
             var report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
@@ -1367,7 +1403,11 @@ namespace HonestMarkSystem.Models
                 markedCodesByGoods.Add(new KeyValuePair<decimal, List<string>>(detail.IdGood.Value, productGroup.Items));
             }
 
-            _dataBaseAdapter.AddMarkedCodes(idDoc.Value, markedCodesByGoods);
+            IEnumerable<string> updatedCodes = null;
+            if(oldIdDoc != null)
+                updatedCodes = _dataBaseAdapter.UpdateCodes(idDoc.Value, markedCodesByGoods.SelectMany(s => s.Value), oldIdDoc);
+
+            _dataBaseAdapter.AddMarkedCodes(idDoc.Value, markedCodesByGoods, updatedCodes);
         }
 
         private void UpdateProperties()

@@ -30,7 +30,9 @@ namespace HonestMarkSystem.Interfaces
 
         void AddMarkedCodes(decimal idDocJournal, decimal idGood, IEnumerable<string> markedCodes);
 
-        void AddMarkedCodes(decimal idDocJournal, List<KeyValuePair<decimal, List<string>>> markedCodesByGoods);
+        void AddMarkedCodes(decimal idDocJournal, List<KeyValuePair<decimal, List<string>>> markedCodesByGoods, IEnumerable<string> updatedCodes = null);
+
+        IEnumerable<string> UpdateCodes(decimal idDocJournal, IEnumerable<string> markedCodes, decimal? oldIdDocJournal = null);
 
         void UpdateMarkedCodeIncomingStatuses(decimal idDocJournal, WebSystems.MarkedCodeComingStatus status);
 
