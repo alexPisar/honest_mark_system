@@ -1403,11 +1403,11 @@ namespace HonestMarkSystem.Models
                 markedCodesByGoods.Add(new KeyValuePair<decimal, List<string>>(detail.IdGood.Value, productGroup.Items));
             }
 
-            IEnumerable<string> updatedCodes = null;
-            if(oldIdDoc != null)
-                updatedCodes = _dataBaseAdapter.UpdateCodes(idDoc.Value, markedCodesByGoods.SelectMany(s => s.Value), oldIdDoc);
+            //IEnumerable<string> updatedCodes = null;
+            //if(oldIdDoc != null)
+            //    updatedCodes = _dataBaseAdapter.UpdateCodes(idDoc.Value, markedCodesByGoods.SelectMany(s => s.Value), oldIdDoc);
 
-            _dataBaseAdapter.AddMarkedCodes(idDoc.Value, markedCodesByGoods, updatedCodes);
+            _dataBaseAdapter.AddMarkedCodes(idDoc.Value, markedCodesByGoods);//, updatedCodes);
         }
 
         private void UpdateProperties()
