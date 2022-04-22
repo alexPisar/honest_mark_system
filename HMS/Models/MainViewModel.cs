@@ -322,7 +322,7 @@ namespace HonestMarkSystem.Models
                         decimal? oldIdDoc = SelectedItem?.IdDocJournal;
                         SelectedItem.IdDocJournal = docPurchasingModel.SelectedItem.Id;
 
-                        if (_honestMarkSystem != null)
+                        if (_honestMarkSystem != null && docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
                         {
                             loadContext.SetLoadingText("Сохранение кодов");
                             var sellerXmlDocument = new XmlDocument();
