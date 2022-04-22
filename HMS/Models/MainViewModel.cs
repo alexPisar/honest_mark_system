@@ -540,14 +540,16 @@ namespace HonestMarkSystem.Models
                 {
                     try
                     {
-                        var markedCodesArray = _dataBaseAdapter.GetMarkedCodesByDocumentId(SelectedItem.IdDocJournal.Value);
+                        var markedCodesArray = _dataBaseAdapter.GetMarkedCodesByDocumentId(SelectedItem.IdDocJournal) ?? new List<string>();
 
-                        if (_honestMarkSystem != null && markedCodesArray != null && !MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
-                            throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
+                        if (markedCodesArray.Count() > 0)
+                        {
+                            if (_honestMarkSystem != null && !MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
+                                throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
 
-                        if (_dataBaseAdapter.IsExistsNotReceivedCodes(SelectedItem.IdDocJournal.Value))
-                            throw new Exception("В списке кодов есть непропиканные, либо оприходованные коды");
-
+                            if (_dataBaseAdapter.IsExistsNotReceivedCodes(SelectedItem.IdDocJournal.Value))
+                                throw new Exception("В списке кодов есть непропиканные, либо оприходованные коды");
+                        }
                         var xml = reportForSend.GetXmlContent();
                         var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
                         var signature = _cryptoUtil.Sign(fileBytes, true);
