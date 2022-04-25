@@ -48,9 +48,11 @@ namespace HonestMarkSystem.Interfaces
 
         bool IsExistsNotReceivedCodes(decimal idDoc);
 
-        void Rollback();
+        System.Data.Entity.DbContextTransaction BeginTransaction();
 
-        void Commit();
+        void ReloadEntry(object entry);
+
+        void Commit(System.Data.Entity.DbContextTransaction transaction = null);
         void Dispose();
     }
 }

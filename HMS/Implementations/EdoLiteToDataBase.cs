@@ -358,14 +358,20 @@ namespace HonestMarkSystem.Implementations
             return count > 0;
         }
 
-        public void Commit()
+        public System.Data.Entity.DbContextTransaction BeginTransaction()
         {
-            _abt.SaveChanges();
+            return _abt.Database.BeginTransaction();
         }
 
-        public void Rollback()
+        public void ReloadEntry(object entry)
         {
-            InitializeContext();
+            _abt.Entry(entry)?.Reload();
+        }
+
+        public void Commit(System.Data.Entity.DbContextTransaction transaction = null)
+        {
+            _abt.SaveChanges();
+            transaction?.Commit();
         }
 
         public void Dispose()
