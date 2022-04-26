@@ -141,11 +141,12 @@ namespace HonestMarkSystem.Models
 
                 using (var transaction = _dataBaseAdapter.BeginTransaction())
                 {
+                    int i = 1;
                     foreach (var processingDocument in processingDocuments)
                     {
                         try
                         {
-                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save(processingDocument.IdDocEdo);
+                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"ProcessingDocumentPoint_{i}");
                             if (_honestMarkSystem != null)
                             {
                                 var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
@@ -186,7 +187,7 @@ namespace HonestMarkSystem.Models
                         }
                         catch (Exception ex)
                         {
-                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback(processingDocument.IdDocEdo);
+                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback($"ProcessingDocumentPoint_{i}");
                             _dataBaseAdapter.ReloadEntry(processingDocument);
                             string errorMessage = _log.GetRecursiveInnerException(ex);
                             _log.Log(errorMessage);
@@ -195,6 +196,7 @@ namespace HonestMarkSystem.Models
                             //errorsWindow.ShowDialog();
                         }
 
+                        i++;
                     }
 
                     if (processingDocuments.Exists(p => p.DocStatus != (int)DocEdoStatus.Sent))
@@ -205,11 +207,12 @@ namespace HonestMarkSystem.Models
 
                 using (var transaction = _dataBaseAdapter.BeginTransaction())
                 {
+                    int i = 1;
                     foreach (var newDocument in newDocuments)
                     {
                         try
                         {
-                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save(newDocument.IdDocEdo);
+                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"RevokeStatusPoint_{i}");
 
                             if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
                                 newDocument.DocStatus = (int)_edoSystem.GetCurrentStatus(newDocument.DocStatus, newDocument.IdDocEdo, newDocument.ParentEntityId);
@@ -218,13 +221,15 @@ namespace HonestMarkSystem.Models
                         }
                         catch (Exception ex)
                         {
-                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback(newDocument.IdDocEdo);
+                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback($"RevokeStatusPoint_{i}");
                             _dataBaseAdapter.ReloadEntry(newDocument);
                             string errorMessage = _log.GetRecursiveInnerException(ex);
                             _log.Log(errorMessage);
 
                             errorsList.Add(errorMessage);
                         }
+
+                        i++;
                     }
 
                     transaction.Commit();
