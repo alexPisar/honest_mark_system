@@ -365,7 +365,8 @@ namespace HonestMarkSystem.Implementations
 
         public void ReloadEntry(object entry)
         {
-            _abt.Entry(entry)?.Reload();
+            if (_abt.Entry(entry)?.State != System.Data.Entity.EntityState.Added)
+                _abt.Entry(entry)?.Reload();
         }
 
         public void Commit(System.Data.Entity.DbContextTransaction transaction = null)
