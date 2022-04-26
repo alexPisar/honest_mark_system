@@ -134,103 +134,118 @@ namespace HonestMarkSystem.Models
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>(docs);
             SelectedItem = null;
 
-            var transaction = _dataBaseAdapter.BeginTransaction();
-
-            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save("DocProcessedPoint");
             try
             {
-                var processingDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.Sent).ToList();
+                var errorsList = new List<string>();
+                var processingDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.Sent).ToList() ?? new List<DocEdoPurchasing>();
 
-                foreach (var processingDocument in processingDocuments)
+                using (var transaction = _dataBaseAdapter.BeginTransaction())
                 {
-                    if (_honestMarkSystem != null)
+                    foreach (var processingDocument in processingDocuments)
                     {
-                        var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
-
-                        if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
+                        try
                         {
-                            processingDocument.DocStatus = (int)DocEdoStatus.Processed;
-                            LoadStatus(processingDocument);
-
-                            if (processingDocument.IdDocJournal != null)
-                                _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(processingDocument.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
-                        }
-                        else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
-                        {
-                            processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
-
-                            var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
-
-                            var errors = failedOperations.SelectMany(f => f.Errors);
-
-                            var errorsList = new List<string>();
-                            foreach(var error in errors)
+                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save(processingDocument.IdDocEdo);
+                            if (_honestMarkSystem != null)
                             {
-                                if (!string.IsNullOrEmpty(error.Text))
-                                    errorsList.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
-                                else if (!string.IsNullOrEmpty(error?.Error?.Detail))
-                                    errorsList.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
-                                else
-                                    errorsList.Add($"Произошла ошибка с кодом:{error.Code}\n");
+                                var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
+
+                                if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
+                                {
+                                    processingDocument.DocStatus = (int)DocEdoStatus.Processed;
+                                    LoadStatus(processingDocument);
+
+                                    if (processingDocument.IdDocJournal != null)
+                                        _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(processingDocument.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
+
+                                    _dataBaseAdapter.Commit();
+                                }
+                                else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
+                                {
+                                    processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
+
+                                    var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
+
+                                    var errors = failedOperations.SelectMany(f => f.Errors);
+
+                                    var errorsListStr = new List<string>();
+                                    foreach (var error in errors)
+                                    {
+                                        if (!string.IsNullOrEmpty(error.Text))
+                                            errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
+                                        else if (!string.IsNullOrEmpty(error?.Error?.Detail))
+                                            errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
+                                        else
+                                            errorsListStr.Add($"Произошла ошибка с кодом:{error.Code}\n");
+                                    }
+                                    processingDocument.ErrorMessage = string.Join("\n\n", errorsListStr);
+                                    LoadStatus(processingDocument);
+                                    _dataBaseAdapter.Commit();
+                                }
                             }
-                            processingDocument.ErrorMessage = string.Join("\n\n", errorsList);
-                            LoadStatus(processingDocument);
                         }
+                        catch (Exception ex)
+                        {
+                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback(processingDocument.IdDocEdo);
+                            _dataBaseAdapter.ReloadEntry(processingDocument);
+                            string errorMessage = _log.GetRecursiveInnerException(ex);
+                            _log.Log(errorMessage);
+
+                            //var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
+                            //errorsWindow.ShowDialog();
+                        }
+
                     }
+
+                    if (processingDocuments.Exists(p => p.DocStatus != (int)DocEdoStatus.Sent))
+                        transaction.Commit();
                 }
 
-                if(processingDocuments.Exists(p => p.DocStatus != (int)DocEdoStatus.Sent))
-                    _dataBaseAdapter.Commit();
+                var newDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.New || d.DocStatus == (int)DocEdoStatus.RevokeRequested).ToList() ?? new List<DocEdoPurchasing>();
+
+                using (var transaction = _dataBaseAdapter.BeginTransaction())
+                {
+                    foreach (var newDocument in newDocuments)
+                    {
+                        try
+                        {
+                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save(newDocument.IdDocEdo);
+
+                            if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                                newDocument.DocStatus = (int)_edoSystem.GetCurrentStatus(newDocument.DocStatus, newDocument.IdDocEdo, newDocument.ParentEntityId);
+
+                            _dataBaseAdapter.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback(newDocument.IdDocEdo);
+                            _dataBaseAdapter.ReloadEntry(newDocument);
+                            string errorMessage = _log.GetRecursiveInnerException(ex);
+                            _log.Log(errorMessage);
+
+                            errorsList.Add(errorMessage);
+                        }
+                    }
+
+                    transaction.Commit();
+                }
+
+                if(errorsList.Count > 0)
+                {
+                    var errorsWindow = new ErrorsWindow("Произошли ошибки.", errorsList);
+                    errorsWindow.ShowDialog();
+                }
+                
             }
             catch (Exception ex)
             {
-                ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback("DocProcessedPoint");
                 string errorMessage = _log.GetRecursiveInnerException(ex);
                 _log.Log(errorMessage);
 
-                //var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
-                //errorsWindow.ShowDialog();
-            }
-
-            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save("DocRevokeStatusPoint");
-            try
-            {
-                var newDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.New || d.DocStatus == (int)DocEdoStatus.RevokeRequested).ToList();
-
-                foreach (var newDocument in newDocuments)
-                {
-                    if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
-                        newDocument.DocStatus = (int)_edoSystem.GetCurrentStatus(newDocument.DocStatus, newDocument.IdDocEdo, newDocument.ParentEntityId);
-                }
-
-                if(newDocuments.Exists(d => d.DocStatus != (int)DocEdoStatus.New && d.DocStatus != (int)DocEdoStatus.RevokeRequested))
-                    _dataBaseAdapter.Commit();
-            }
-            catch(Exception ex)
-            {
-                ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback("DocRevokeStatusPoint");
-                string errorMessage = _log.GetRecursiveInnerException(ex);
-                _log.Log(errorMessage);
-
-                var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
+                var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов документов.", new List<string>(new string[] { errorMessage }));
                 errorsWindow.ShowDialog();
             }
 
-            try
-            {
-                transaction.Commit();
-            }
-            catch (Exception ex)
-            {
-                string errorMessage = _log.GetRecursiveInnerException(ex);
-                _log.Log(errorMessage);
-
-                transaction.Rollback();
-            }
-            finally
-            {
-                transaction.Dispose();
-            }
 
             UpdateProperties();
         }
