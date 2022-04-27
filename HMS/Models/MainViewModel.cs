@@ -207,7 +207,6 @@ namespace HonestMarkSystem.Models
 
                 using (var transaction = _dataBaseAdapter.BeginTransaction())
                 {
-                    int i = 1;
                     foreach (var newDocument in newDocuments)
                     {
                         try
@@ -225,8 +224,6 @@ namespace HonestMarkSystem.Models
 
                             errorsList.Add(errorMessage);
                         }
-
-                        i++;
                     }
 
                     transaction.Commit();
