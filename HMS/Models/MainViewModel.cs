@@ -212,8 +212,6 @@ namespace HonestMarkSystem.Models
                     {
                         try
                         {
-                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"RevokeStatusPoint_{i}");
-
                             if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
                                 newDocument.DocStatus = (int)_edoSystem.GetCurrentStatus(newDocument.DocStatus, newDocument.IdDocEdo, newDocument.ParentEntityId);
 
@@ -221,7 +219,6 @@ namespace HonestMarkSystem.Models
                         }
                         catch (Exception ex)
                         {
-                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback($"RevokeStatusPoint_{i}");
                             _dataBaseAdapter.ReloadEntry(newDocument);
                             string errorMessage = _log.GetRecursiveInnerException(ex);
                             _log.Log(errorMessage);
