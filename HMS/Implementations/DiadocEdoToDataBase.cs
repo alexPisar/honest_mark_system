@@ -354,6 +354,14 @@ namespace HonestMarkSystem.Implementations
                 _abt.Database.ExecuteSqlCommand($"UPDATE doc_goods_details_labels SET LABEL_STATUS = {(int)status}, POST_DATETIME = sysdate where id_doc = {idDocJournal}");
         }
 
+        public void UpdateRefGoodForMarkedCodes(decimal idDocJournal, decimal oldIdGood, decimal newIdGood)
+        {
+            var labels = _abt.DocGoodsDetailsLabels.Where(l => l.IdDoc == idDocJournal && l.IdGood == oldIdGood);
+
+            foreach (var label in labels)
+                label.IdGood = newIdGood;
+        }
+
         public List<object> GetRefGoodsByBarCode(string barCode)
         {
             var refGoods = (from refBarCode in _abt.RefBarCodes

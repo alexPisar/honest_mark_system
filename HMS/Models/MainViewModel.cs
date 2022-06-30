@@ -1676,8 +1676,16 @@ namespace HonestMarkSystem.Models
 
                 if (refGoodsWindow.ShowDialog() == true)
                 {
+                    var oldIdGood = SelectedDetail?.IdGood;
                     SelectedDetail.IdGood = refGoodsModel.SelectedItem.Id;
                     OnPropertyChanged("SelectedDetail");
+
+                    if(SelectedItem?.IdDocJournal != null && SelectedItem?.IdDocJournal != 0 &&
+                        oldIdGood != null && oldIdGood != 0)
+                    {
+                        _dataBaseAdapter.UpdateRefGoodForMarkedCodes(SelectedItem.IdDocJournal.Value, oldIdGood.Value, SelectedDetail.IdGood.Value);
+                        _dataBaseAdapter.Commit();
+                    }
                 }
             }
             catch(Exception ex)
