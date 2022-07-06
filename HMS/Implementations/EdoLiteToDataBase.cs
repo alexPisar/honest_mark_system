@@ -366,6 +366,14 @@ namespace HonestMarkSystem.Implementations
             return count > 0;
         }
 
+        public List<string> GetErrorsWithMarkedCodes(decimal idDoc)
+        {
+            var errors = _abt.Database.SqlQuery<string>($"select DECODE(d.label_status, 2, 'Код маркировки '|| d.dm_label || ' уже был оприходован', " +
+                $"DECODE(d.label_status, 0, 'Код маркировки ' || d.dm_label || ' не был пропикан', '') ) " +
+                $"from doc_goods_details_labels d where d.label_status <> 1 and length(d.dm_label) = 31 and d.id_doc = {idDoc}");
+            return errors.ToList();
+        }
+
         public System.Data.Entity.DbContextTransaction BeginTransaction()
         {
             return _abt.Database.BeginTransaction();

@@ -50,6 +50,8 @@ namespace HonestMarkSystem.Interfaces
 
         bool IsExistsNotReceivedCodes(decimal idDoc);
 
+        List<string> GetErrorsWithMarkedCodes(decimal idDoc);
+
         System.Data.Entity.DbContextTransaction BeginTransaction();
 
         void ReloadEntry(object entry);

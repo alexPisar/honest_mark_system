@@ -23,6 +23,7 @@ namespace UtilitesLibrary.Controls
         private List<string> _errors;
 
         public EventHandler<RoutedEventArgs> OkButtonClick { get; set; }
+        public EventHandler<RoutedEventArgs> AfterSuccessSaveErrorFile { get; set; }
 
         public string MainText
         {
@@ -63,6 +64,23 @@ namespace UtilitesLibrary.Controls
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             OkButtonClick?.Invoke(sender, e);
+        }
+
+        private void SaveErrorsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+            saveFileDialog.Title = "Сохранение файла";
+            saveFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            saveFileDialog.FileName = "Errors.txt";
+
+            var errStr = MainText + "\n" + string.Join("\n", _errors);
+            var errBytes = Encoding.UTF8.GetBytes(errStr);
+
+            if(saveFileDialog.ShowDialog() == true)
+            {
+                System.IO.File.WriteAllBytes(saveFileDialog.FileName, errBytes);
+                AfterSuccessSaveErrorFile?.Invoke(sender, e);
+            }
         }
     }
 }

@@ -579,6 +579,8 @@ namespace HonestMarkSystem.Models
                 string errorMessage = null;
                 string titleErrorText = null;
 
+                var errorsPostingCodes = new List<string>();
+
                 loadWindow.Show();
 
                 await Task.Run(() => 
@@ -595,7 +597,10 @@ namespace HonestMarkSystem.Models
                                     throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
 
                                 if (_dataBaseAdapter.IsExistsNotReceivedCodes(SelectedItem.IdDocJournal.Value))
-                                    throw new Exception("В списке кодов есть непропиканные, либо оприходованные коды");
+                                {
+                                    errorsPostingCodes = _dataBaseAdapter.GetErrorsWithMarkedCodes(SelectedItem.IdDocJournal.Value);
+                                    return;
+                                }
                             }
                             var xml = reportForSend.GetXmlContent();
                             var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
@@ -687,6 +692,13 @@ namespace HonestMarkSystem.Models
                     loadWindow.Close();
                     _log.Log(errorMessage);
                     var errorsWindow = new ErrorsWindow(titleErrorText, new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
+                }
+                else if(errorsPostingCodes.Count > 0)
+                {
+                    loadWindow.Close();
+                    _log.Log(errorMessage);
+                    var errorsWindow = new ErrorsWindow("В списке кодов есть непропиканные, либо оприходованные коды", errorsPostingCodes);
                     errorsWindow.ShowDialog();
                 }
             }

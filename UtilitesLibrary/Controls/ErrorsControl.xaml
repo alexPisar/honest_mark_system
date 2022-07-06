@@ -15,6 +15,7 @@
                 </ScrollViewer>
             </Expander>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Bottom">
+                <Button Content="Сохранить ошибки в файл" Margin="5 5" Width="170" Click="SaveErrorsButton_Click"></Button>
                 <Button Content="OK" Margin="5 5" Width="62" Click="OkButton_Click"></Button>
             </StackPanel>
         </StackPanel>

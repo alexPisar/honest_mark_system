@@ -25,6 +25,12 @@ namespace HonestMarkSystem
             errorsControl.MainText = mainText;
             errorsControl.Errors = errors;
             errorsControl.OkButtonClick += (object sender, RoutedEventArgs e) => { Close(); };
+            errorsControl.AfterSuccessSaveErrorFile += (object sender, RoutedEventArgs e) => 
+            {
+                var loadWindow = new LoadWindow();
+                loadWindow.GetLoadContext().SetSuccessFullLoad("Файл ошибок успешно сохранён.");
+                loadWindow.ShowDialog();
+            };
         }
     }
 }
