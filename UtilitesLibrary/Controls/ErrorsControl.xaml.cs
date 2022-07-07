@@ -73,7 +73,7 @@ namespace UtilitesLibrary.Controls
             saveFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
             saveFileDialog.FileName = "Errors.txt";
 
-            var errStr = MainText + "\n" + string.Join("\n", _errors);
+            var errStr = MainText + "\r\n" + string.Join("\r\n", _errors);
             var errBytes = Encoding.UTF8.GetBytes(errStr);
 
             if(saveFileDialog.ShowDialog() == true)
