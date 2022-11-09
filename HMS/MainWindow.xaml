@@ -79,6 +79,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Просмотр кодов маркировки" Command="{Binding ShowMarkedCodesCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/Reports/AutoModule.svg}" />
+                            <TextBlock Text="Просмотр" HorizontalAlignment="Center" />
+                            <TextBlock Text="кодов" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
             <dxb:BarButtonItem ToolTip="Вывод кодов маркировки из оборота" Command="{Binding WithdrawalCodesCommand}">
                 <dxb:BarButtonItem.ContentTemplate>
                     <DataTemplate>

@@ -298,6 +298,27 @@ namespace HonestMarkSystem.Implementations
             return _abt.DocGoodsDetailsLabels.Where(l => l.IdDoc == docJournalId).Select(l => l.DmLabel);
         }
 
+        public IEnumerable<string> GetMarkedCodesByDocGoodId(object docJournalObj, decimal? idGood)
+        {
+            var docJournal = docJournalObj as DocJournal;
+
+            if (docJournal == null)
+                return null;
+
+            var idDoc = docJournal.Id;
+
+            if (docJournal.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
+                return from label in _abt.DocGoodsDetailsLabels
+                       where label.IdDocSale == idDoc && label.IdGood == idGood
+                       select label.DmLabel;
+            else if (docJournal.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
+                return from label in _abt.DocGoodsDetailsLabels
+                       where label.IdDoc == idDoc && label.IdGood == idGood
+                       select label.DmLabel;
+            else
+                return null;
+        }
+
         public decimal ExportDocument(object documentObject)
         {
             var document = (DocEdoPurchasing)documentObject;

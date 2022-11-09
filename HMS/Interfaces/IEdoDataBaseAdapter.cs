@@ -46,6 +46,8 @@ namespace HonestMarkSystem.Interfaces
 
         IEnumerable<string> GetMarkedCodesByDocumentId(decimal? docJournalId);
 
+        IEnumerable<string> GetMarkedCodesByDocGoodId(object docJournalObj, decimal? idGood);
+
         decimal ExportDocument(object documentObject);
 
         bool IsExistsNotReceivedCodes(decimal idDoc);

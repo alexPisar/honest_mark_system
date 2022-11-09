@@ -43,6 +43,7 @@ namespace HonestMarkSystem.Models
         public RelayCommand ChangePurchasingDocumentCommand => new RelayCommand((o) => { ChangePurchasingDocument(); });
         public RelayCommand SignAndSendCommand => new RelayCommand((o) => { SignAndSend(); });
         public RelayCommand ExportToTraderCommand => new RelayCommand((o) => { ExportToTrader(); });
+        public RelayCommand ShowMarkedCodesCommand => new RelayCommand((o) => { ShowMarkedCodes(); });
         public RelayCommand WithdrawalCodesCommand => new RelayCommand((o) => { WithdrawalCodes(); });
         public RelayCommand RejectDocumentCommand => new RelayCommand((o) => { RejectDocument(); });
         public RelayCommand RevokeDocumentCommand => new RelayCommand((o) => { RevokeDocument(); });
@@ -328,13 +329,6 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if (Details.Exists(d => d?.IdGood == null))
-            {
-                System.Windows.MessageBox.Show(
-                    "В списке товаров есть несопоставленные с ID товары.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                return;
-            }
-
             var docs = _dataBaseAdapter.GetJournalDocuments(SelectedItem);
 
             var docPurchasingWindow = new PurchasingDocumentsWindow();
@@ -347,6 +341,13 @@ namespace HonestMarkSystem.Models
             if(docPurchasingWindow.ShowDialog() == true)
             {
                 string errorMessage = null;
+
+                if(docPurchasingModel.SelectedItem.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Receipt && Details.Exists(d => d?.IdGood == null))
+                {
+                    System.Windows.MessageBox.Show(
+                    "В списке товаров есть несопоставленные с ID товары.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
 
                 LoadWindow loadWindow = new LoadWindow("Подождите, идёт сопоставление");
 
@@ -372,6 +373,23 @@ namespace HonestMarkSystem.Models
                                 sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
                                 var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
                                 SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc);
+                            }
+                            else if(docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
+                            {
+                                loadContext.SetLoadingText("Привязывание кодов");
+
+                                foreach (var detail in Details)
+                                {
+                                    var idGoods = _dataBaseAdapter.GetRefGoodsByBarCode(detail.BarCode)?
+                                    .Where(r => (r as RefGood)?.Id != null)?
+                                    .Select(r => (r as RefGood).Id) ?? new List<decimal>();
+
+                                    var docLine = docPurchasingModel.SelectedItem.Details?
+                                    .FirstOrDefault(g => idGoods.Any(i => i == g.IdGood));
+
+                                    if (docLine != null)
+                                        detail.IdGood = docLine.IdGood;
+                                }
                             }
 
                             _dataBaseAdapter.Commit(transaction);
@@ -806,6 +824,47 @@ namespace HonestMarkSystem.Models
                 var errorsWindow = new ErrorsWindow("Произошла ошибка экспорта.", new List<string>(new string[] { errorMessage }));
                 errorsWindow.ShowDialog();
             }
+        }
+
+        private void ShowMarkedCodes()
+        {
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.IdDocJournal == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Нет сопоставления с документом из Трейдера.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            DocJournal docJournal = null;
+            var docJournals = _dataBaseAdapter?.GetJournalDocuments(SelectedItem);
+
+            if (docJournals as IQueryable<DocJournal> != null)
+                docJournal = (docJournals as IQueryable<DocJournal>)?
+                    .FirstOrDefault(d => d.Id == SelectedItem.IdDocJournal);
+            else
+                docJournal = docJournals?.Cast<DocJournal>()?
+                    .FirstOrDefault(d => d.Id == SelectedItem.IdDocJournal);
+
+            if (docJournal == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Трейдер документ не найден.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var showMarkedCodesModel = new ShowMarkedCodesModel<AbtDbContext>(SelectedItem, _dataBaseAdapter, docJournal);
+            var showMarkedCodesWindow = new ShowMarkedCodesWindow();
+            showMarkedCodesWindow.DataContext = showMarkedCodesModel;
+            showMarkedCodesWindow.SetMarkedItems();
+
+            showMarkedCodesWindow.ShowDialog();
         }
 
         private void WithdrawalCodes()
