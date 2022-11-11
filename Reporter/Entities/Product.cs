@@ -25,5 +25,21 @@ namespace Reporter.Entities
         public List<string> MarkedCodes { get; set; }
 
         public List<string> TransportPackingIdentificationCode { get; set; }
+
+        public decimal? VatRate { get; set; }
+
+        public string UnitCode { get; set; }
+
+        public string UnitName { get; set; }
+
+        public bool WithoutExcise { get; set; } = true;
+
+        public decimal ExciseSumm { get; set; }
+
+        public string OriginCode { get; set; }
+
+        public string CustomsDeclarationCode { get; set; }
+
+        public string OriginCountryName { get; set; }
     }
 }
