@@ -152,5 +152,199 @@ namespace HmsTests
             xmlDocument.LoadXml(xmlContent);
             xmlDocument.Save($"C:\\Users\\systech\\Desktop\\{document.FileName}.xml");
         }
+
+        [TestMethod]
+        public void CreateSellerXmlTest()
+        {
+            var document = new UniversalTransferSellerDocument();
+
+            var senderEdoId = "2BM-2504000010-2012052808301120662630000000000";
+            var receiverEdoId = "2BM-2539108495-253901001-201407110842566644066";
+
+            #region Файл
+            document.EdoProgramVersion = "Вирэй Приходная 1.0.0.0";
+            document.FileName = $"ON_NSCHFDOPPRMARK_{receiverEdoId}_{senderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+
+            #region СвУчДокОбор
+
+            document.EdoProviderOrgName = "АО \"ПФ \"СКБ Контур\"";
+            document.ProviderInn = "6663003127";
+            document.EdoId = "2BM";
+            document.SenderEdoId = "2BM-2504000010-2012052808301120662630000000000";
+            document.ReceiverEdoId = "2BM-2539108495-253901001-201407110842566644066";
+
+            #endregion
+
+            #region Документ
+
+            document.CreateDate = DateTime.Now;
+            document.FinSubjectCreator = "Дикарев Вячеслав Юрьевич";
+            document.Function = "ДОП";
+            document.EconomicLifeDocName = "Документ об отгрузке товаров (выполнении работ), передаче имущественных прав (документ об оказании услуг)";
+            document.DocName = "Документ об отгрузке товаров (выполнении работ), передаче имущественных прав (документ об оказании услуг)";
+
+            #region СвСчФакт
+
+            document.DocNumber = "2/23-147192-К-01";
+            document.DocDate = DateTime.Now.Date;
+            document.CurrencyCode = "643";
+
+            #region СвПрод
+
+            #region ИдСв
+
+            #region СвЮЛУч
+            var sellerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
+
+            sellerOrganizationExchangeParticipant.JuridicalInn = "2504000010";
+            sellerOrganizationExchangeParticipant.JuridicalKpp = "253901001";
+            sellerOrganizationExchangeParticipant.OrgName = "ООО \"ВИРЭЙ\"";
+
+            document.SellerEntity = sellerOrganizationExchangeParticipant;
+
+            #endregion
+
+            #endregion
+
+            #region Адрес
+
+            #region АдрРФ
+
+            document.SellerAddress = new Reporter.Entities.Address
+            {
+                CountryCode = "643",
+                RussianIndex = "690039",
+                RussianRegionCode = "25",
+                RussianCity = "Владивосток",
+                RussianStreet = "ул Енисейская",
+                RussianHouse = "32"
+            };
+
+            #endregion
+
+            #endregion
+
+            #endregion
+
+            #region СвПокуп
+
+            #region ИдСв
+
+            #region СвЮЛУч
+            var buyerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
+
+            buyerOrganizationExchangeParticipant.JuridicalInn = "2539108495";
+            buyerOrganizationExchangeParticipant.JuridicalKpp = "253901001";
+            buyerOrganizationExchangeParticipant.OrgName = "Общество с ограниченной ответственностью \"ВЛАМУР\"";
+
+            document.BuyerEntity = buyerOrganizationExchangeParticipant;
+
+
+            #endregion
+
+            #endregion
+
+            #region Адрес
+
+            #region АдрРф
+
+            document.BuyerAddress = new Reporter.Entities.Address
+            {
+                CountryCode = "643",
+                RussianIndex = "690039",
+                RussianRegionCode = "25",
+                RussianCity = "Владивосток",
+                RussianStreet = "ул Енисейская",
+                RussianHouse = "32"
+            };
+
+            #endregion
+
+            #endregion
+
+            #endregion
+
+            #region ДопСвФХЖ1
+
+            document.CurrencyName = "Российский рубль";
+
+            #endregion
+
+            #region ДокПодтвОтгр
+
+            document.DeliveryDocuments = new List<Reporter.Entities.DeliveryDocument>
+            {
+                new Reporter.Entities.DeliveryDocument
+                {
+                    DocumentName = "Реализация (акт, накладная, УПД)",
+                    DocumentNumber = "п/п 1-8, №2/23-147192-К-01",
+                    DocumentDate = DateTime.Now.Date
+                }
+            };
+
+            #endregion
+
+            #endregion
+
+            #region ТаблСчФакт
+
+            #region СведТов
+
+            document.Products = new List<Reporter.Entities.Product>();
+            document.Products.Add(new Reporter.Entities.Product
+            {
+                Number = 1,
+                Description = "Понти Парфюм Парфюмерная вода Merle le Blanc \"Estella Bloom\" (честный знак)",
+                UnitCode = "796",
+                Quantity = 1,
+                Price = 436.50M,
+                TaxAmount = 87.30M,
+                VatRate = 20,
+                OriginCode = "643",
+                BarCode = "4623721825408",
+                UnitName = "шт",
+                OriginCountryName = "Россия",
+                MarkedCodes = new List<string> { "010462372182540821D*l0'q3EQVQIi" }
+            });
+
+            #endregion
+
+            #endregion
+
+            #region СвПродПер
+
+            document.ContentOperation = "Товары переданы";
+            document.ShippingDate = DateTime.Now.Date;
+            document.BasisDocumentName = "Без документа-основания";
+
+            #endregion
+
+            #region Подписант
+
+            document.ScopeOfAuthority = Reporter.Enums.SellerScopeOfAuthorityEnum.PersonWhoResponsibleForSigning;
+            document.SignerStatus = Reporter.Enums.SellerSignerStatusEnum.EmployeeOfSellerOrganization;
+
+            #region ЮЛ
+
+            document.JuridicalInn = "2504000010";
+            document.SignerOrgName = "ООО \"ВИРЭЙ\"";
+            document.SignerPosition = "Доверенное лицо";
+            document.SignerSurname = "Дикарев";
+            document.SignerName = "Вячеслав";
+            document.SignerPatronymic = "Юрьевич";
+
+            #endregion
+
+            #endregion
+
+            #endregion
+            #endregion
+
+            var xmlContent = document.GetXmlContent();
+
+            var xmlDocument = new XmlDocument();
+            xmlDocument.LoadXml(xmlContent);
+            xmlDocument.Save($"C:\\Users\\systech\\Desktop\\{document.FileName}.xml");
+        }
     }
 }

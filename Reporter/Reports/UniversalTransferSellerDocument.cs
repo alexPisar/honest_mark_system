@@ -600,8 +600,11 @@ namespace Reporter.Reports
                             НаимТов = p.Description,
                             ОКЕИ_Тов = p.UnitCode,
                             КолТов = quantity,
+                            КолТовSpecified = true,
                             ЦенаТов = price,
+                            ЦенаТовSpecified = true,
                             СтТовБезНДС = price * quantity,
+                            СтТовБезНДСSpecified = true,
                             СумНал = new СумНДСТип()
                         };
 
@@ -614,6 +617,7 @@ namespace Reporter.Reports
                         {
                             good.СумНал.Item = taxAmount;
                             good.СтТовУчНал = good.СтТовБезНДС + taxAmount;
+                            good.СтТовУчНалSpecified = true;
 
                             if (p.VatRate == 10)
                                 good.НалСт = ФайлДокументТаблСчФактСведТовНалСт.Item10;
@@ -647,6 +651,8 @@ namespace Reporter.Reports
                         if(p.MarkedCodes != null && p.MarkedCodes.Count > 0)
                         {
                             good.ДопСведТов.НомСредИдентТов = new ФайлДокументТаблСчФактСведТовДопСведТовНомСредИдентТов[1];
+                            good.ДопСведТов.НомСредИдентТов[0] = new ФайлДокументТаблСчФактСведТовДопСведТовНомСредИдентТов();
+
                             good.ДопСведТов.НомСредИдентТов[0].Items = p.MarkedCodes.ToArray();
                             good.ДопСведТов.НомСредИдентТов[0].ItemsElementName = p.MarkedCodes.Select(m => ItemsChoiceType.КИЗ).ToArray();
                         }
@@ -660,7 +666,8 @@ namespace Reporter.Reports
 
             xsdDocument.Документ.ТаблСчФакт.ВсегоОпл = new ФайлДокументТаблСчФактВсегоОпл();
             xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СтТовБезНДСВсего = Products?.Sum(p => (p.Quantity ?? 0) * (p.Price ?? 0)) ?? 0;
-            
+            xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СтТовБезНДСВсегоSpecified = true;
+
             var taxAmountTolal = Products?.Sum(p => (p.TaxAmount ?? 0)) ?? 0;
 
             xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СумНалВсего = new СумНДСТип();
@@ -671,6 +678,7 @@ namespace Reporter.Reports
             {
                 xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СумНалВсего.Item = taxAmountTolal;
                 xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СтТовУчНалВсего = xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СтТовБезНДСВсего + taxAmountTolal;
+                xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СтТовУчНалВсегоSpecified = true;
             }
 
             if (!string.IsNullOrEmpty(ContentOperation))
@@ -733,6 +741,14 @@ namespace Reporter.Reports
             else if (SignerStatus == SellerSignerStatusEnum.Individual)
             {
                 signer.Статус = ФайлДокументПодписантСтатус.Item4;
+            }
+
+            if (string.IsNullOrEmpty(BasisOfAuthority))
+            {
+                if (SignerStatus == SellerSignerStatusEnum.EmployeeOfSellerOrganization ||
+                    SignerStatus == SellerSignerStatusEnum.EmployeeOfMakerSellerDocumentOrganization ||
+                    SignerStatus == SellerSignerStatusEnum.EmployeeOfAnotherAuthorizedOrganization)
+                    BasisOfAuthority = "Должностные обязанности";
             }
 
             if (SignerEntity == null)
