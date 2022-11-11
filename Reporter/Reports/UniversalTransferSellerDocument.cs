@@ -65,6 +65,11 @@ namespace Reporter.Reports
 
         #region Документ
         /// <summary>
+        /// Код документа  по КНД
+        /// </summary>
+        public const string KND = "1115131";
+
+        /// <summary>
         /// Дата и время формирования файла обмена счета-фактуры (информации продавца)
         /// </summary>
         public DateTime CreateDate { get; set; }
