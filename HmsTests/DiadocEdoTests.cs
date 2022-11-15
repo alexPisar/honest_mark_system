@@ -70,5 +70,41 @@ namespace HmsTests
             var printDoc = edo.GetPrintForm("fab419ed-5982-4ae3-909c-b54f70607574", "bd8d219d-632d-4ed8-b93f-c4227632b32e");
             printDoc.SaveToFile($"C:\\Users\\systech\\Desktop\\{printDoc.FileName}");
         }
+
+        [TestMethod]
+        public void GetEdoIdTest()
+        {
+            var crypto = new WinApiCryptWrapper();
+            var cert = crypto.GetCertificateWithPrivateKey("904C041CF1DAED53D1A9323A0199C7125DBC36C9", false);
+            WebSystems.IEdoSystem edo = new WebSystems.EdoSystems.DiadocEdoSystem(cert);
+
+
+            edo.Authorization();
+            object[] parameters = null;
+
+            if(edo as WebSystems.EdoSystems.DiadocEdoSystem != null)
+            {
+                var diadocEdoSystem = edo as WebSystems.EdoSystems.DiadocEdoSystem;
+                var orgId = diadocEdoSystem.GetMyOrgId("253800573557");
+
+                parameters = new[] { orgId };
+            }
+            else if (edo as WebSystems.EdoSystems.EdoLiteSystem != null)
+            {
+                var honestMarkSystem = new WebSystems.Systems.HonestMarkSystem(cert);
+                honestMarkSystem.Authorization();
+
+                parameters = new[] { honestMarkSystem };
+            }
+
+            try
+            {
+                var edoId = edo.GetOrganizationEdoIdByInn("2539108495", parameters);
+            }
+            catch(System.Net.WebException webEx)
+            {
+
+            }
+        }
     }
 }

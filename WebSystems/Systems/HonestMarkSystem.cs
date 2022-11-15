@@ -63,5 +63,10 @@ namespace WebSystems.Systems
         {
             return HonestMarkClient.GetInstance().GetDocumentInfo(productGroup, docId);
         }
+
+        public string GetEdoIdByInn(string inn)
+        {
+            return HonestMarkClient.GetInstance().GetEdoIdByInn(inn);
+        }
     }
 }

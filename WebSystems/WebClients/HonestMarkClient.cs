@@ -195,5 +195,20 @@ namespace WebSystems.WebClients
 
             return docInfo;
         }
+
+        public string GetEdoIdByInn(string inn)
+        {
+            if (string.IsNullOrEmpty(_token) || _certificate == null)
+                throw new Exception("Ошибка авторизации в Честном знаке. Не определён токен либо сертификат пользователя.");
+
+            if(string.IsNullOrEmpty(inn))
+                throw new Exception("Не задан ИНН организации.");
+
+            var authData = new Dictionary<string, string>();
+            authData.Add("Authorization", $"Bearer {_token}");
+
+            var orgEdoId = _webService.GetRequest($"{Properties.Settings.Default.UrlAddressHonestMark}/edo/inn/{inn}");
+            return orgEdoId;
+        }
     }
 }
