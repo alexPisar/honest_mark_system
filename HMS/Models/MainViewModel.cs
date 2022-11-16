@@ -864,6 +864,11 @@ namespace HonestMarkSystem.Models
             showMarkedCodesWindow.DataContext = showMarkedCodesModel;
             showMarkedCodesWindow.SetMarkedItems();
 
+            showMarkedCodesModel.OnReturnSelectedCodesProcess += (object s, EventArgs e) =>
+            {
+                var productList = s as Dictionary<decimal, Reporter.Entities.Product>;
+            };
+
             showMarkedCodesWindow.ShowDialog();
         }
 

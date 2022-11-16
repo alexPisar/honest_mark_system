@@ -16,5 +16,7 @@ namespace HonestMarkSystem.Implementations
         public bool NotAllMarked { get; set; }
         public bool NotMarked { get; set; }
         public bool IsMarkedCode { get; set; }
+        public decimal? Price { get; set; }
+        public decimal? TaxAmount { get; set; }
     }
 }

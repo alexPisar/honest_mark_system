@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.Entity;
+using Reporter.Entities;
 
 namespace HonestMarkSystem.Models
 {
@@ -12,6 +13,8 @@ namespace HonestMarkSystem.Models
         private Interfaces.IEdoDataBaseAdapter<T> _dataBaseAdapter;
         private DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing _selectedDocument;
         private object _docJournal;
+
+        public EventHandler OnReturnSelectedCodesProcess;
 
         public ShowMarkedCodesModel(DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing selectedDocument, Interfaces.IEdoDataBaseAdapter<T> dataBaseAdapter, object docJournal)
         {
@@ -30,6 +33,8 @@ namespace HonestMarkSystem.Models
                 treeItemDetail.BarCode = detail.BarCode;
                 treeItemDetail.IdDoc = _selectedDocument.IdDocJournal;
                 treeItemDetail.Quantity = detail.Quantity;
+                treeItemDetail.Price = detail.Price * detail.Quantity;
+                treeItemDetail.TaxAmount = detail.TaxAmount;
 
                 var markedCodes = _dataBaseAdapter.GetMarkedCodesByDocGoodId(_docJournal, detail.IdGood) ?? new List<string>();
 
@@ -54,6 +59,7 @@ namespace HonestMarkSystem.Models
                     treeItemCode.IdGood = detail.IdGood;
                     treeItemCode.BarCode = detail.BarCode;
                     treeItemCode.IsMarkedCode = true;
+                    treeItemCode.Price = detail.Price;
 
                     var node = new DevExpress.Xpf.Grid.TreeListNode(treeItemCode);
                     node.IsChecked = false;
@@ -64,15 +70,45 @@ namespace HonestMarkSystem.Models
 
         public void ProcessingSelectedItems(IEnumerable<DevExpress.Xpf.Grid.TreeListNode> nodes)
         {
-            var selectedNodes = nodes?
-                .Where(n => !(n.Content as Implementations.TreeListGoodInfo).NotMarked)?
-                .SelectMany(n => n.Nodes)
-                .Where(n => n.IsChecked == true)?? new List<DevExpress.Xpf.Grid.TreeListNode>();
+            var parentNodes = (from node in nodes
+                              where node?.Nodes?.Any(n => n.IsChecked == true) ?? false
+                              select node).Distinct();
 
-            if (selectedNodes.Count() == 0)
-                return;
+            if (parentNodes.Count() == 0)
+                throw new Exception("Не выбраны коды маркировки.");
 
-            var selectedItems = selectedNodes.Select(n => n.Content as Implementations.TreeListGoodInfo);
+            Dictionary<decimal, Product> lines = new Dictionary<decimal, Product>();
+            int i = 0;
+
+            foreach(var parentNode in parentNodes)
+            {
+                var parentTreeListItem = parentNode.Content as Implementations.TreeListGoodInfo;
+                var items = parentNode.Nodes.Where(n => n.IsChecked == true);
+                var quantity = items.Count();
+
+                var product = new Product()
+                {
+                    Number = ++i,
+                    Description = parentTreeListItem.Name,
+                    UnitCode = "796",
+                    Quantity = quantity,
+                    Price = Math.Round(parentTreeListItem.Price ?? 0 / quantity, 2),
+                    TaxAmount = Math.Round(parentTreeListItem.TaxAmount ?? 0, 2),
+                    BarCode = parentTreeListItem.BarCode,
+                    UnitName = "шт",
+                    OriginCode = "643"
+                };
+
+                if((parentTreeListItem.TaxAmount ?? 0) == 0)
+                    product.VatRate = 0;
+                else
+                    product.VatRate = 20;
+
+                product.MarkedCodes = items?.Select(item => (item.Content as Implementations.TreeListGoodInfo)?.Name)?.Where(s => !string.IsNullOrEmpty(s))?.ToList();
+                lines.Add(parentTreeListItem.IdGood.Value, product);
+            }
+
+            OnReturnSelectedCodesProcess?.Invoke(lines, new EventArgs());
         }
     }
 }

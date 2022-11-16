@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HonestMarkSystem"
         mc:Ignorable="d"
-        Title="Коды маркировки" Height="450" Width="900">
+        Title="Коды маркировки" Height="450" Width="1080">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -27,6 +27,8 @@
                     <dxg:GridColumn FieldName="IdGood" Header="Id товара" Width="*"/>
                     <dxg:GridColumn FieldName="BarCode" Header="Код товара" Width="1.5*"/>
                     <dxg:GridColumn FieldName="Quantity" Header="Количество" Width="*"/>
+                    <dxg:GridColumn FieldName="Price" Header="Цена" Width="*"/>
+                    <dxg:GridColumn FieldName="TaxAmount" Header="Сумма НДС" Width="*"/>
                     <dxg:GridColumn FieldName="NotAllDocumentsMarked" Visible="False"/>
                     <dxg:GridColumn FieldName="NotMarked" Visible="False"/>
                 </dxg:GridControl.Columns>
