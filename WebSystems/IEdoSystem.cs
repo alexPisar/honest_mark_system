@@ -19,6 +19,12 @@ namespace WebSystems
 
         public abstract string ProgramVersion { get; }
 
+        public abstract string EdoId { get; }
+
+        public abstract string EdoOrgName { get; }
+
+        public abstract string EdoOrgInn { get; }
+
         public abstract bool HasZipContent { get; }
 
         public abstract byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None);

@@ -285,6 +285,15 @@ namespace HonestMarkSystem.Implementations
             return _abt.RefGoods.ToList<object>();
         }
 
+        public object GetRefGoodById(decimal idGood)
+        {
+            var refGood = (from r in _abt.RefGoods
+                           where r.Id == idGood
+                           select r).FirstOrDefault();
+
+            return refGood;
+        }
+
         public List<object> GetAllMarkedCodes()
         {
             return _abt.DocGoodsDetailsLabels.Where(l => l.DmLabel.Length == 31 && l.SaleDmLabel == null).ToList<object>();
@@ -317,6 +326,16 @@ namespace HonestMarkSystem.Implementations
                        select label.DmLabel;
             else
                 return null;
+        }
+
+        public object GetCustomerByOrgInn(string inn, string kpp = null)
+        {
+            var custs = from c in _abt.RefCustomers
+                           where c.Inn == inn
+                           let isKppNull = kpp == null
+                           where isKppNull || c.Kpp == kpp
+                           select c;
+            return custs.FirstOrDefault();
         }
 
         public decimal ExportDocument(object documentObject)

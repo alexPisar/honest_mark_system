@@ -83,6 +83,10 @@ namespace HonestMarkSystem.Models
             foreach(var parentNode in parentNodes)
             {
                 var parentTreeListItem = parentNode.Content as Implementations.TreeListGoodInfo;
+
+                if (parentTreeListItem.IdGood == null)
+                    throw new Exception("В документе определены не все товары (ID_GOOD).");
+
                 var items = parentNode.Nodes.Where(n => n.IsChecked == true);
                 var quantity = items.Count();
 
@@ -95,11 +99,18 @@ namespace HonestMarkSystem.Models
                     Price = Math.Round(parentTreeListItem.Price ?? 0 / quantity, 2),
                     TaxAmount = Math.Round(parentTreeListItem.TaxAmount ?? 0, 2),
                     BarCode = parentTreeListItem.BarCode,
-                    UnitName = "шт",
-                    OriginCode = "643"
+                    UnitName = "шт"
                 };
 
-                if((parentTreeListItem.TaxAmount ?? 0) == 0)
+                var refGood = _dataBaseAdapter.GetRefGoodById(parentTreeListItem.IdGood.Value) as DataContextManagementUnit.DataAccess.Contexts.Abt.RefGood;
+
+                product.OriginCode = refGood?.Country?.NumCode?.ToString();
+                product.OriginCountryName = refGood?.Country?.Name?.ToString();
+
+                if(!string.IsNullOrEmpty(refGood?.CustomsNo))
+                    product.CustomsDeclarationCode = refGood?.CustomsNo;
+
+                if ((parentTreeListItem.TaxAmount ?? 0) == 0)
                     product.VatRate = 0;
                 else
                     product.VatRate = 20;

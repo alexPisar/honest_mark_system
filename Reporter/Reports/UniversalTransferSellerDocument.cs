@@ -612,6 +612,8 @@ namespace Reporter.Reports
                         {
                             good.СумНал.Item = new СумНДСТипБезНДС();
                             good.НалСт = ФайлДокументТаблСчФактСведТовНалСт.Item0;
+                            good.СтТовУчНал = good.СтТовБезНДС;
+                            good.СтТовУчНалSpecified = true;
                         }
                         else
                         {
@@ -673,7 +675,11 @@ namespace Reporter.Reports
             xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СумНалВсего = new СумНДСТип();
 
             if (taxAmountTolal == 0)
+            {
                 xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СумНалВсего.Item = СумНДСТипБезНДС.безНДС;
+                xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СтТовУчНалВсего = xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СтТовБезНДСВсего;
+                xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СтТовУчНалВсегоSpecified = true;
+            }
             else
             {
                 xsdDocument.Документ.ТаблСчФакт.ВсегоОпл.СумНалВсего.Item = taxAmountTolal;
@@ -748,7 +754,7 @@ namespace Reporter.Reports
                 if (SignerStatus == SellerSignerStatusEnum.EmployeeOfSellerOrganization ||
                     SignerStatus == SellerSignerStatusEnum.EmployeeOfMakerSellerDocumentOrganization ||
                     SignerStatus == SellerSignerStatusEnum.EmployeeOfAnotherAuthorizedOrganization)
-                    BasisOfAuthority = "Должностные обязанности";
+                    signer.ОснПолн = "Должностные обязанности";
             }
 
             if (SignerEntity == null)

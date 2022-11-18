@@ -17,6 +17,12 @@ namespace WebSystems.EdoSystems
 
         public override string ProgramVersion => "Diadoc 1.0";
 
+        public override string EdoId => "2BM";
+
+        public override string EdoOrgName => "АО \"ПФ \"СКБ Контур\"";
+
+        public override string EdoOrgInn => "6663003127";
+
         public override bool HasZipContent => false;
 
         public override EventHandler<SendReceivingConfirmationEventArgs> SendReceivingConfirmationEventHandler => (object sender, SendReceivingConfirmationEventArgs e) => 

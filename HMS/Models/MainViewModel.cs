@@ -867,6 +867,201 @@ namespace HonestMarkSystem.Models
             showMarkedCodesModel.OnReturnSelectedCodesProcess += (object s, EventArgs e) =>
             {
                 var productList = s as Dictionary<decimal, Reporter.Entities.Product>;
+                
+                var receiverInn = "2539108495";
+
+                var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil();
+                var certs = cryptoUtil.GetPersonalCertificates().OrderByDescending(c => c.NotBefore);
+
+                var client = new System.Net.WebClient();
+
+                if (ConfigSet.Configs.Config.GetInstance().ProxyEnabled)
+                {
+                    var webProxy = new System.Net.WebProxy();
+
+                    webProxy.Address = new Uri("http://" + ConfigSet.Configs.Config.GetInstance().ProxyAddress);
+                    webProxy.Credentials = new System.Net.NetworkCredential(ConfigSet.Configs.Config.GetInstance().ProxyUserName,
+                        ConfigSet.Configs.Config.GetInstance().ProxyUserPassword);
+
+                    client.Proxy = webProxy;
+                }
+
+                cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(client);
+
+                var receiverCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == receiverInn
+                && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+
+                if (receiverCert == null)
+                    throw new Exception("Не найден сертификат по ИНН организации.");
+
+                cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(receiverCert);
+
+                object[] parameters = null;
+
+                if (_edoSystem as DiadocEdoSystem != null)
+                {
+                    var diadocEdoSystem = _edoSystem as DiadocEdoSystem;
+                    var orgId = diadocEdoSystem.GetMyOrgId(SelectedItem.ReceiverInn, SelectedItem.ReceiverKpp);
+
+                    parameters = new[] { orgId };
+                }
+                else if (_edoSystem as EdoLiteSystem != null)
+                    parameters = new[] { _honestMarkSystem };
+
+                var senderEdoId = SelectedItem.ReceiverEdoId;
+                var receiverEdoId = _edoSystem.GetOrganizationEdoIdByInn(receiverInn, parameters);
+
+                var orgInn = ConfigSet.Configs.Config.GetInstance().ConsignorInn;
+                var orgName = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
+
+                var sellerReport = new Reporter.Reports.UniversalTransferSellerDocument();
+
+                sellerReport.Products = productList.Values.ToList();
+
+                sellerReport.EdoProgramVersion = EdoProgramVersion;
+                sellerReport.FileName = $"ON_NSCHFDOPPRMARK_{receiverEdoId}_{senderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+
+                sellerReport.EdoId = _edoSystem.EdoId;
+                sellerReport.SenderEdoId = senderEdoId;
+                sellerReport.ReceiverEdoId = receiverEdoId;
+
+                if(_edoSystem.EdoId == SelectedItem.SenderEdoOrgId)
+                {
+                    sellerReport.EdoProviderOrgName = SelectedItem.SenderEdoOrgName;
+                    sellerReport.ProviderInn = SelectedItem.SenderEdoOrgInn;
+                }
+                else
+                {
+                    sellerReport.EdoProviderOrgName = _edoSystem.EdoOrgName;
+                    sellerReport.ProviderInn = _edoSystem.EdoOrgInn;
+                }
+
+                sellerReport.CreateDate = DateTime.Now;
+                sellerReport.FinSubjectCreator = $"{orgName}, ИНН: {orgInn}";
+                sellerReport.Function = "ДОП";
+                sellerReport.EconomicLifeDocName = "Документ об отгрузке товаров (выполнении работ), передаче имущественных прав (документ об оказании услуг)";
+                sellerReport.DocName = "Документ об отгрузке товаров (выполнении работ), передаче имущественных прав (документ об оказании услуг)";
+
+                sellerReport.DocNumber = $"{docJournal.Code}-ТЕСТ-001";
+                sellerReport.DocDate = DateTime.Now.Date;
+                sellerReport.CurrencyCode = "643";
+
+                if (receiverInn.Length == 10)
+                {
+                    var receiverCompany = _dataBaseAdapter.GetCustomerByOrgInn(receiverInn) as RefCustomer;
+
+                    if (receiverCompany == null)
+                        throw new Exception("Для получателя не найдена компания в системе.");
+
+                    var buyerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
+
+                    buyerOrganizationExchangeParticipant.JuridicalInn = receiverInn;
+                    buyerOrganizationExchangeParticipant.JuridicalKpp = receiverCompany.Kpp;
+                    buyerOrganizationExchangeParticipant.OrgName = receiverCompany.Name;
+
+                    sellerReport.BuyerEntity = buyerOrganizationExchangeParticipant;
+                }
+                else if(receiverInn.Length == 12)
+                {
+                    var buyerJuridicalEntity = new Reporter.Entities.JuridicalEntity();
+                    buyerJuridicalEntity.Inn = receiverInn;
+
+                    buyerJuridicalEntity.Surname = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "SN");
+
+                    var firstMiddleName = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "G");
+                    buyerJuridicalEntity.Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                    buyerJuridicalEntity.Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                    sellerReport.BuyerEntity = buyerJuridicalEntity;
+                }
+
+                sellerReport.BuyerAddress = new Reporter.Entities.Address
+                {
+                    CountryCode = "643",
+                    RussianRegionCode = receiverInn.Substring(0, 2),
+                    RussianStreet = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "STREET")
+                };
+
+                if (orgInn.Length == 10)
+                {
+                    var sellerCompany = _dataBaseAdapter.GetCustomerByOrgInn(receiverInn) as RefCustomer;
+
+                    if (sellerCompany == null)
+                        throw new Exception("Для получателя не найдена компания в системе.");
+
+                    var sellerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
+
+                    sellerOrganizationExchangeParticipant.JuridicalInn = sellerCompany.Inn;
+                    sellerOrganizationExchangeParticipant.JuridicalKpp = sellerCompany.Kpp;
+                    sellerOrganizationExchangeParticipant.OrgName = sellerCompany.Name;
+
+                    sellerReport.SellerEntity = sellerOrganizationExchangeParticipant;
+                }
+                else if (orgInn.Length == 12)
+                {
+                    var sellerJuridicalEntity = new Reporter.Entities.JuridicalEntity();
+                    sellerJuridicalEntity.Inn = orgInn;
+
+                    sellerJuridicalEntity.Surname = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "SN");
+                    var firstMiddleName = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "G");
+                    sellerJuridicalEntity.Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                    sellerJuridicalEntity.Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                    sellerReport.SellerEntity = sellerJuridicalEntity;
+                }
+
+                sellerReport.SellerAddress = new Reporter.Entities.Address
+                {
+                    CountryCode = "643",
+                    RussianRegionCode = SelectedItem.ReceiverInn.Substring(0, 2)
+                };
+
+                sellerReport.CurrencyName = "Российский рубль";
+                sellerReport.DeliveryDocuments = new List<Reporter.Entities.DeliveryDocument>
+                {
+                    new Reporter.Entities.DeliveryDocument
+                    {
+                        DocumentName = "Реализация (акт, накладная, УПД)",
+                        DocumentNumber = $"п/п 1-{sellerReport.Products.Count}, №{sellerReport.DocNumber}",
+                        DocumentDate = DateTime.Now.Date
+                    }
+                };
+
+                sellerReport.ContentOperation = "Товары переданы";
+                sellerReport.ShippingDate = DateTime.Now.Date;
+                sellerReport.BasisDocumentName = "Без документа-основания";
+
+                sellerReport.ScopeOfAuthority = Reporter.Enums.SellerScopeOfAuthorityEnum.PersonWhoResponsibleForRegistrationExecutionAndSigning;
+                sellerReport.SignerStatus = Reporter.Enums.SellerSignerStatusEnum.EmployeeOfSellerOrganization;
+                if (orgInn.Length == 10)
+                {
+                    var sellerOrganizationExchangeParticipant = sellerReport.SellerEntity as Reporter.Entities.OrganizationExchangeParticipantEntity;
+
+                    sellerReport.JuridicalInn = sellerOrganizationExchangeParticipant?.JuridicalInn;
+                    sellerReport.SignerOrgName = sellerOrganizationExchangeParticipant?.OrgName;
+
+                    sellerReport.SignerPosition = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "T");
+
+                    sellerReport.SignerSurname = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "SN");
+                    var firstMiddleName = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "G");
+                    sellerReport.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                    sellerReport.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+                }
+                else if(orgInn.Length == 12)
+                {
+                    sellerReport.SignerEntity = new Reporter.Entities.JuridicalEntity();
+                    var sellerEntity = sellerReport.SellerEntity as Reporter.Entities.JuridicalEntity;
+
+                    ((Reporter.Entities.JuridicalEntity)sellerReport.SignerEntity).Inn = sellerEntity.Inn;
+                    ((Reporter.Entities.JuridicalEntity)sellerReport.SignerEntity).Surname = sellerEntity.Surname;
+                    ((Reporter.Entities.JuridicalEntity)sellerReport.SignerEntity).Name = sellerEntity.Name;
+                    ((Reporter.Entities.JuridicalEntity)sellerReport.SignerEntity).Patronymic = sellerEntity.Patronymic;
+                }
+
+                var sellerXmlContent = sellerReport.GetXmlContent();
+
+                var sellerXmlDocument = new XmlDocument();
+                sellerXmlDocument.LoadXml(sellerXmlContent);
             };
 
             showMarkedCodesWindow.ShowDialog();

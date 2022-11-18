@@ -42,11 +42,15 @@ namespace HonestMarkSystem.Interfaces
 
         List<object> GetAllRefGoods();
 
+        object GetRefGoodById(decimal idGood);
+
         List<object> GetAllMarkedCodes();
 
         IEnumerable<string> GetMarkedCodesByDocumentId(decimal? docJournalId);
 
         IEnumerable<string> GetMarkedCodesByDocGoodId(object docJournalObj, decimal? idGood);
+
+        object GetCustomerByOrgInn(string inn, string kpp = null);
 
         decimal ExportDocument(object documentObject);
 

@@ -16,6 +16,12 @@ namespace WebSystems.EdoSystems
 
         public override string ProgramVersion => "EDOLite 1.0";
 
+        public override string EdoId => "2LT";
+
+        public override string EdoOrgName => "ООО \"ОПЕРАТОР-ЦРПТ\"";
+
+        public override string EdoOrgInn => "7731376812";
+
         public override bool HasZipContent => true;
 
         public override List<Models.IEdoSystemDocument<string>> GetDocuments(DocumentInOutType inOutType = DocumentInOutType.None, int docCount = 0, DateTime? fromDate = null, DateTime? toDate = null)
