@@ -919,7 +919,7 @@ namespace HonestMarkSystem.Models
                 sellerReport.Products = productList.Values.ToList();
 
                 sellerReport.EdoProgramVersion = EdoProgramVersion;
-                sellerReport.FileName = $"ON_NSCHFDOPPRMARK_{receiverEdoId}_{senderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                sellerReport.FileName = $"ON_NSCHFDOPPR_{receiverEdoId}_{senderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
 
                 sellerReport.EdoId = _edoSystem.EdoId;
                 sellerReport.SenderEdoId = senderEdoId;
@@ -1066,7 +1066,9 @@ namespace HonestMarkSystem.Models
                 File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{sellerReport.FileName}.xml", sellerFileBytes);
                 File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{sellerReport.FileName}.xml.sig", sellerSignature);
 
-                if(_edoSystem as DiadocEdoSystem != null)
+                string localPath = string.Empty;
+
+                if (_edoSystem as DiadocEdoSystem != null)
                 {
                     var orgId = parameters[0] as string;
 
@@ -1074,24 +1076,103 @@ namespace HonestMarkSystem.Models
                 }
                 else if(_edoSystem as EdoLiteSystem != null)
                 {
-                    var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
-
-                    string localPath = directory.Name;
-                    while (directory.Parent != null)
+                    if (string.IsNullOrEmpty(localPath))
                     {
-                        directory = directory.Parent;
+                        var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+                        localPath = directory.Name;
+                        while (directory.Parent != null)
+                        {
+                            directory = directory.Parent;
 
-                        if (directory.Parent == null)
-                            localPath = $"{directory.Name.Replace(":\\", ":")}/{localPath}";
-                        else
-                            localPath = $"{directory.Name}/{localPath}";
+                            if (directory.Parent == null)
+                                localPath = $"{directory.Name.Replace(":\\", ":")}/{localPath}";
+                            else
+                                localPath = $"{directory.Name}/{localPath}";
+                        }
                     }
 
                     string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{sellerReport.FileName}.xml";
                     parameters = new object[] { content };
                 }
 
-                _edoSystem.SendUniversalTransferDocument(sellerFileBytes, sellerSignature, parameters);
+                object sendSellerReportResult = _edoSystem.SendUniversalTransferDocument(sellerFileBytes, sellerSignature, parameters);
+
+                var buyerReport = new Reporter.Reports.UniversalTransferBuyerDocument();
+                buyerReport.BasisOfAuthority = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "T");
+                buyerReport.CreateBuyerFileDate = DateTime.Now;
+                buyerReport.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoMadeOperation;
+                buyerReport.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;
+                buyerReport.AcceptResult = Reporter.Enums.AcceptResultEnum.GoodsAcceptedWithoutDiscrepancy;
+                buyerReport.SellerFileId = sellerReport.FileName;
+                buyerReport.EdoProviderOrgName = sellerReport.EdoProviderOrgName;
+                buyerReport.ProviderInn = sellerReport.ProviderInn;
+                buyerReport.EdoId = _edoSystem.EdoId;
+                buyerReport.SenderEdoId = receiverEdoId;
+                buyerReport.ReceiverEdoId = senderEdoId;
+                buyerReport.CreateSellerFileDate = sellerReport.CreateDate;
+                buyerReport.DocName = sellerReport.DocName;
+                buyerReport.Function = sellerReport.Function;
+                buyerReport.SellerInvoiceNumber = sellerReport.DocNumber;
+                buyerReport.SellerInvoiceDate = sellerReport.DocDate;
+
+                if (receiverInn.Length == 10)
+                {
+                    buyerReport.JuridicalInn = receiverInn;
+                    buyerReport.SignerSurname = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "SN");
+
+                    var firstMiddleName = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "G");
+                    buyerReport.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                    buyerReport.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                    buyerReport.SignerPosition = buyerReport.BasisOfAuthority;
+                    buyerReport.SignerOrgName = (sellerReport.BuyerEntity as Reporter.Entities.OrganizationExchangeParticipantEntity)?.OrgName;
+                    buyerReport.FinSubjectCreator = $"{buyerReport.SignerOrgName}, ИНН: {receiverInn}";
+                }
+                else if(receiverInn.Length == 12)
+                {
+                    buyerReport.SignerEntity = sellerReport.BuyerEntity;
+                    var buyerOrgName = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
+                    buyerReport.FinSubjectCreator = $"{buyerOrgName}, ИНН: {receiverInn}";
+                }
+
+                buyerReport.FileName = $"ON_NSCHFDOPPOK_{senderEdoId}_{receiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                var buyerXmlContent = buyerReport.GetXmlContent();
+
+                var buyerFileBytes = Encoding.GetEncoding(1251).GetBytes(buyerXmlContent);
+                var buyerSignature = cryptoUtil.Sign(buyerFileBytes, true);
+
+                File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{buyerReport.FileName}.xml", buyerFileBytes);
+                File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{buyerReport.FileName}.xml.sig", buyerSignature);
+
+                if (_edoSystem as DiadocEdoSystem != null)
+                {
+                    var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
+                    var entity = sellerMessage.Entities.FirstOrDefault(t => t.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.UniversalTransferDocument);
+
+                    _edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision);
+                }
+                else if (_edoSystem as EdoLiteSystem != null)
+                {
+                    var docId = sendSellerReportResult as string;
+
+                    if (string.IsNullOrEmpty(localPath))
+                    {
+                        var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+                        localPath = directory.Name;
+                        while (directory.Parent != null)
+                        {
+                            directory = directory.Parent;
+
+                            if (directory.Parent == null)
+                                localPath = $"{directory.Name.Replace(":\\", ":")}/{localPath}";
+                            else
+                                localPath = $"{directory.Name}/{localPath}";
+                        }
+                    }
+
+                    string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{buyerReport.FileName}.xml";
+                    _edoSystem.SendDocument(docId, buyerFileBytes, buyerSignature, content);
+                }
             };
 
             showMarkedCodesWindow.ShowDialog();
