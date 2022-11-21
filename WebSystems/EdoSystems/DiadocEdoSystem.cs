@@ -99,6 +99,9 @@ namespace WebSystems.EdoSystems
             documentAttachment.Comment = comment;
             documentAttachment.CustomDocumentId = customDocumentId;
 
+            if(signature != null)
+                documentAttachment.SignedContent.Signature = signature;
+
             var counteragentOrgId = GetCounteragentOrgId(myOrgId, recipientInn, null);
 
             return ((WebClients.DiadocEdoClient)_webClient).SendXmlDocument(myOrgId, counteragentOrgId, false, documentAttachment);
