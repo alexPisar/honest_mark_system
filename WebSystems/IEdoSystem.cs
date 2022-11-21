@@ -76,5 +76,7 @@ namespace WebSystems
         public virtual void SendRevocationDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters) { }
 
         public abstract object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters);
+
+        public abstract object SendUniversalTransferDocument(byte[] content, byte[] signature, params object[] parameters);
     }
 }

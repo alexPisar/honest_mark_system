@@ -1060,8 +1060,38 @@ namespace HonestMarkSystem.Models
 
                 var sellerXmlContent = sellerReport.GetXmlContent();
 
-                var sellerXmlDocument = new XmlDocument();
-                sellerXmlDocument.LoadXml(sellerXmlContent);
+                var sellerFileBytes = Encoding.GetEncoding(1251).GetBytes(sellerXmlContent);
+                var sellerSignature = _cryptoUtil.Sign(sellerFileBytes, true);
+
+                File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{sellerReport.FileName}.xml", sellerFileBytes);
+                File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{sellerReport.FileName}.xml.sig", sellerSignature);
+
+                if(_edoSystem as DiadocEdoSystem != null)
+                {
+                    var orgId = parameters[0] as string;
+
+                    parameters = new object[] { orgId, receiverInn, "ДОП", null, null };
+                }
+                else if(_edoSystem as EdoLiteSystem != null)
+                {
+                    var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
+
+                    string localPath = directory.Name;
+                    while (directory.Parent != null)
+                    {
+                        directory = directory.Parent;
+
+                        if (directory.Parent == null)
+                            localPath = $"{directory.Name.Replace(":\\", ":")}/{localPath}";
+                        else
+                            localPath = $"{directory.Name}/{localPath}";
+                    }
+
+                    string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{sellerReport.FileName}.xml";
+                    parameters = new object[] { content };
+                }
+
+                _edoSystem.SendUniversalTransferDocument(sellerFileBytes, sellerSignature, parameters);
             };
 
             showMarkedCodesWindow.ShowDialog();

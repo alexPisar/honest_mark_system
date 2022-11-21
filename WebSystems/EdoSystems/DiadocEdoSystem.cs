@@ -77,6 +77,33 @@ namespace WebSystems.EdoSystems
             return ((WebClients.DiadocEdoClient)_webClient).SendPatchRecipientXmlDocument(documentId, docType, recipientAttachment);
         }
 
+        public override object SendUniversalTransferDocument(byte[] content, byte[] signature, params object[] parameters)
+        {
+            var myOrgId = parameters[0] as string;
+            var recipientInn = parameters[1] as string;
+            var function = parameters[2] as string;
+            var comment = parameters[3] as string;
+            var customDocumentId = parameters[4] as string;
+
+            var documentAttachment = new Diadoc.Api.Proto.Events.DocumentAttachment
+            {
+                TypeNamedId = "UniversalTransferDocument",
+                Function = function,
+                Version = "utd820_05_01_01_hyphen",
+                SignedContent = new Diadoc.Api.Proto.Events.SignedContent
+                {
+                    Content = content
+                }
+            };
+
+            documentAttachment.Comment = comment;
+            documentAttachment.CustomDocumentId = customDocumentId;
+
+            var counteragentOrgId = GetCounteragentOrgId(myOrgId, recipientInn, null);
+
+            return ((WebClients.DiadocEdoClient)_webClient).SendXmlDocument(myOrgId, counteragentOrgId, false, documentAttachment);
+        }
+
         public string GetMyOrgId(string inn, string kpp = null)
         {
             var organization = ((WebClients.DiadocEdoClient)_webClient).GetMyOrganizationByInnKpp(inn, kpp);
