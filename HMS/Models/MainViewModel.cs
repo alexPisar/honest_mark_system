@@ -1114,6 +1114,8 @@ namespace HonestMarkSystem.Models
                 buyerReport.Function = sellerReport.Function;
                 buyerReport.SellerInvoiceNumber = sellerReport.DocNumber;
                 buyerReport.SellerInvoiceDate = sellerReport.DocDate;
+                buyerReport.Signature = Convert.ToBase64String(sellerSignature);
+                buyerReport.DateReceive = DateTime.Now;
 
                 if (receiverInn.Length == 10)
                 {
@@ -1149,7 +1151,7 @@ namespace HonestMarkSystem.Models
                     var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
                     var entity = sellerMessage.Entities.FirstOrDefault(t => t.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.UniversalTransferDocument);
 
-                    _edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision);
+                    _edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision, sellerMessage.ToBoxId, receiverCert);
                 }
                 else if (_edoSystem as EdoLiteSystem != null)
                 {

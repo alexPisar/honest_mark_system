@@ -62,6 +62,15 @@ namespace WebSystems.EdoSystems
             string entityId = (string)parameters[0];
             int docType = (int)parameters[1];
 
+            string boxId = null;
+            X509Certificate2 cert = null;
+
+            if (parameters.Length > 2)
+            {
+                boxId = parameters[2] as string;
+                cert = parameters[3] as X509Certificate2;
+            }
+
             var recipientAttachment = new Diadoc.Api.Proto.Events.RecipientTitleAttachment
             {
                 ParentEntityId = entityId,
@@ -74,7 +83,10 @@ namespace WebSystems.EdoSystems
             if (signature != null)
                 recipientAttachment.SignedContent.Signature = signature;
 
-            return ((WebClients.DiadocEdoClient)_webClient).SendPatchRecipientXmlDocument(documentId, docType, recipientAttachment);
+            if(string.IsNullOrEmpty(boxId))
+                return ((WebClients.DiadocEdoClient)_webClient).SendPatchRecipientXmlDocument(documentId, docType, recipientAttachment);
+            else
+                return ((WebClients.DiadocEdoClient)_webClient).SendPatchRecipientXmlDocument(documentId, docType, recipientAttachment, boxId, cert);
         }
 
         public override object SendUniversalTransferDocument(byte[] content, byte[] signature, params object[] parameters)

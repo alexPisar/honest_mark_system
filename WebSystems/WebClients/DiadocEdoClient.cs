@@ -123,6 +123,43 @@ namespace WebSystems.WebClients
             return CallApiSafe(new Func<MessagePatch>(() => { return _api.PostMessagePatch(_authToken, messageToPost); }));
         }
 
+        public MessagePatch SendPatchRecipientXmlDocument(string messageId, int docType, RecipientTitleAttachment recipientAttachment, string boxId, X509Certificate2 certificate)
+        {
+            var messageToPost = new MessagePatchToPost
+            {
+                BoxId = boxId,
+                MessageId = messageId
+            };
+
+            if (docType == (int)DocumentType.UniversalTransferDocument || docType == (int)DocumentType.UniversalTransferDocumentRevision)
+                messageToPost.AddUniversalTransferDocumentBuyerTitle(recipientAttachment);
+            else if (docType == (int)DocumentType.XmlTorg12)
+                messageToPost.AddXmlTorg12BuyerTitle(recipientAttachment);
+            else if (docType == (int)DocumentType.XmlAcceptanceCertificate)
+                messageToPost.AddXmlAcceptanceCertificateBuyerTitle(recipientAttachment);
+
+            try
+            {
+                var api = new DiadocHttpApi(_config.DiadocApiId, _api.HttpClient, new Diadoc.Api.Cryptography.WinApiCrypt());
+                var token = (string)CallApiSafe(new Func<object>(() => api.Authenticate(certificate.RawData)));
+
+                var cache = new DiadocEdoTokenCache().Load(_certificate.Thumbprint);
+
+                if (cache == null || cache?.TokenExpirationDate < DateTime.Now)
+                {
+                    cache = new DiadocEdoTokenCache(token, $"Certificate, Serial Number {certificate.SerialNumber}", "");
+                    cache.ActualBoxId = messageToPost.BoxId;
+                    cache.Save(cache, certificate.Thumbprint);
+                }
+
+                return CallApiSafe(new Func<MessagePatch>(() => { return api.PostMessagePatch(token, messageToPost); }));
+            }
+            finally
+            {
+                Authenticate(_certificate);
+            }
+        }
+
         public MessagePatch SendPatchSignedDocument(string messageId, string parentEntityId, byte[] signature)
         {
             var messageToPost = new MessagePatchToPost
