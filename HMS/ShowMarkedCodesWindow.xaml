@@ -48,7 +48,7 @@
                 </dxg:GridControl.View>
             </dxg:GridControl>
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Margin="5 5" Name="returnButton" Content="Оформить возврат" Click="ReturnButton_Click" IsEnabled="False"/>
+                <Button Margin="5 5" Name="returnButton" Content="Оформить возврат" Click="ReturnButton_Click" IsEnabled="{Binding Path=IsReturnButtonEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
         </Grid>
     </Grid>

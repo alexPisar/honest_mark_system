@@ -860,6 +860,7 @@ namespace HonestMarkSystem.Models
             }
 
             var showMarkedCodesModel = new ShowMarkedCodesModel<AbtDbContext>(SelectedItem, _dataBaseAdapter, docJournal);
+            showMarkedCodesModel.IsReturnButtonEnabled = docJournal.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation;
             var showMarkedCodesWindow = new ShowMarkedCodesWindow();
             showMarkedCodesWindow.DataContext = showMarkedCodesModel;
             showMarkedCodesWindow.SetMarkedItems();
@@ -867,8 +868,9 @@ namespace HonestMarkSystem.Models
             showMarkedCodesModel.OnReturnSelectedCodesProcess += (object s, EventArgs e) =>
             {
                 var productList = s as Dictionary<decimal, Reporter.Entities.Product>;
-                
-                var receiverInn = "2539108495";
+
+                var comissionDocumentInfo = WebSystems.WebClients.FinDbWebClient.GetInstance().GetComissionDocInfoByIdDocJournal(docJournal.Id);
+                var receiverInn = comissionDocumentInfo.SenderInn;
 
                 var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil();
                 var certs = cryptoUtil.GetPersonalCertificates().OrderByDescending(c => c.NotBefore);

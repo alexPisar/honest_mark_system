@@ -8,13 +8,25 @@ using Reporter.Entities;
 
 namespace HonestMarkSystem.Models
 {
-    public class ShowMarkedCodesModel<T> : Interfaces.ITreeListView where T:DbContext
+    public class ShowMarkedCodesModel<T> : UtilitesLibrary.ModelBase.ViewModelBase, Interfaces.ITreeListView where T:DbContext
     {
         private Interfaces.IEdoDataBaseAdapter<T> _dataBaseAdapter;
         private DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing _selectedDocument;
         private object _docJournal;
+        private bool _isReturnButtonEnabled;
 
         public EventHandler OnReturnSelectedCodesProcess;
+
+        public bool IsReturnButtonEnabled
+        {
+            get {
+                return _isReturnButtonEnabled;
+            }
+            set {
+                _isReturnButtonEnabled = value;
+                OnPropertyChanged("IsReturnButtonEnabled");
+            }
+        }
 
         public ShowMarkedCodesModel(DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing selectedDocument, Interfaces.IEdoDataBaseAdapter<T> dataBaseAdapter, object docJournal)
         {
