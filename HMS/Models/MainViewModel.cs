@@ -921,7 +921,7 @@ namespace HonestMarkSystem.Models
                 sellerReport.Products = productList.Values.ToList();
 
                 sellerReport.EdoProgramVersion = EdoProgramVersion;
-                sellerReport.FileName = $"ON_NSCHFDOPPR_{receiverEdoId}_{senderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                sellerReport.FileName = $"ON_NSCHFDOPPRMARK_{receiverEdoId}_{senderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
 
                 sellerReport.EdoId = _edoSystem.EdoId;
                 sellerReport.SenderEdoId = senderEdoId;
@@ -1139,7 +1139,7 @@ namespace HonestMarkSystem.Models
                     buyerReport.FinSubjectCreator = $"{buyerOrgName}, ИНН: {receiverInn}";
                 }
 
-                buyerReport.FileName = $"ON_NSCHFDOPPOK_{senderEdoId}_{receiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                buyerReport.FileName = $"ON_NSCHFDOPPOKMARK_{senderEdoId}_{receiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
                 var buyerXmlContent = buyerReport.GetXmlContent();
 
                 var buyerFileBytes = Encoding.GetEncoding(1251).GetBytes(buyerXmlContent);
