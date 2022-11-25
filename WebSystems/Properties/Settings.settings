@@ -6,10 +6,13 @@
       <Value Profile="(Default)">https://markirovka.crpt.ru/api/v3/true-api</Value>
     </Setting>
     <Setting Name="UrlAddressEdoLite" Type="System.String" Scope="User">
-      <Value Profile="(Default)">https://elk.edo.crpt.tech</Value>
+      <Value Profile="(Default)">https://edo-gismt.crpt.ru</Value>
     </Setting>
     <Setting Name="DiadocApiUrl" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://diadoc-api.kontur.ru</Value>
+    </Setting>
+    <Setting Name="DbWebIpAddress" Type="System.String" Scope="User">
+      <Value Profile="(Default)">192.168.1.20</Value>
     </Setting>
   </Settings>
 </SettingsFile>

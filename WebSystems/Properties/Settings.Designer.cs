@@ -58,5 +58,17 @@ namespace WebSystems.Properties {
                 this["DiadocApiUrl"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("192.168.1.20")]
+        public string DbWebIpAddress {
+            get {
+                return ((string)(this["DbWebIpAddress"]));
+            }
+            set {
+                this["DbWebIpAddress"] = value;
+            }
+        }
     }
 }

@@ -31,8 +31,8 @@ namespace HmsTests
             var inns = new List<WebSystems.Models.MarkCodeInfo>(HonestMarkClient.GetInstance().GetMarkCodesInfo(WebSystems.ProductGroupsEnum.Perfumery,
                 new string[]
                 {
-                    "0104610044200449215InM%MXWdHRFa",
-                    "0104610044200449215InhYq2edSvCt"
+                    "0104623721623660215dqmEEEwUBsXI",
+                    "0104623721623660215dSUa:P'Xo*Gx"
                 }));
         }
     }

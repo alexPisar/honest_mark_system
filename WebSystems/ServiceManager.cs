@@ -28,7 +28,7 @@ namespace WebSystems
             return _statusCode;
         }
 
-        public string PostRequest(string url, object contentData, string cookie = null, string contentType = null,
+        public string PostRequest(string url, object contentData, CookieCollection cookies = null, string contentType = null,
             Dictionary<string, string> headers = null, Encoding encoding = null)
         {
             if (contentType == "multipart/form-data")
@@ -118,8 +118,11 @@ namespace WebSystems
                 if (_webProxy != null)
                     request.Proxy = _webProxy;
 
-                if (cookie != null)
-                    request.Headers.Add("Cookie", $"{cookie}");
+                if (cookies != null)
+                {
+                    request.CookieContainer = new CookieContainer();
+                    request.CookieContainer.Add(cookies);
+                }
 
                 if (headers != null)
                 {
@@ -157,10 +160,10 @@ namespace WebSystems
             }
         }
 
-        public T PostRequest<T>(string url, string contentData, string cookie = null, string contentType = null,
+        public T PostRequest<T>(string url, string contentData, CookieCollection cookies = null, string contentType = null,
             Dictionary<string, string> headers = null)
         {
-            string resultAsJsonStr = PostRequest(url, contentData, cookie, contentType, headers);
+            string resultAsJsonStr = PostRequest(url, contentData, cookies, contentType, headers);
 
             var result = JsonConvert.DeserializeObject<T>(resultAsJsonStr);
 

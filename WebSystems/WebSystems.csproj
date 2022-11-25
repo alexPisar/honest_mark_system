@@ -70,6 +70,7 @@
     <Compile Include="Models\EdoProcessingError.cs" />
     <Compile Include="Models\EdoProcessingErrorDescription.cs" />
     <Compile Include="Models\FileParameter.cs" />
+    <Compile Include="Models\FinDb\FinDbDocumentComissionInfo.cs" />
     <Compile Include="Models\IDocument.cs" />
     <Compile Include="Models\IEdoSystemDocument.cs" />
     <Compile Include="Models\MarkCodeInfo.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="WebClientSingleInstance.cs" />
     <Compile Include="WebClients\DiadocEdoClient.cs" />
     <Compile Include="WebClients\EdoLiteClient.cs" />
+    <Compile Include="WebClients\FinDbWebClient.cs" />
     <Compile Include="WebClients\HonestMarkClient.cs" />
   </ItemGroup>
   <ItemGroup>
