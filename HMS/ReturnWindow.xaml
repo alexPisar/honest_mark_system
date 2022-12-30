@@ -1,0 +1,82 @@
+﻿<Window x:Class="HonestMarkSystem.ReturnWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HonestMarkSystem"
+        mc:Ignorable="d"
+        Title="Возвратные документы" Height="500" Width="1080">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Label Grid.Row="0" Content="Просмотр данных маркировки" Margin="5 0"/>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="120"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <DockPanel  Grid.Row="0" LastChildFill="True">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" DockPanel.Dock="Bottom" Height="40">
+                    <Button Margin="5" Content="Найти" Width="60" Click="SearchButton_Click"></Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Margin="5" Content="Дата с" Width="60"/>
+                            <DatePicker Name="dateFromPicker" Margin="5"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Margin="5" Content="Дата по" Width="60"/>
+                            <DatePicker Name="dateToPicker" Margin="5"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Margin="15 5 0 5" Content="Номер документа" Width="100"/>
+                            <TextBox Margin="5" Width="100" Name="numberTextBox"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Margin="15 5 0 5" Content="Комментарий" Width="100"/>
+                            <TextBox Margin="5" Width="200" Name="commentTextBox"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+            <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList}"
+                             SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                             SelectedItemChanged="ReturnDocumentsDataGrid_SelectedItemChanged"
+                             Name="ReturnDocumentsDataGrid"
+                             ShowBorder="False">
+                <dxg:GridControl.Bands>
+                    <dxg:GridControlBand Header="Документ">
+                        <dxg:GridColumn FieldName="Id" Header="ID" Width="120"/>
+                        <dxg:GridColumn FieldName="Code" Header="Номер документа" Width="150"/>
+                        <dxg:GridColumn FieldName="UserName" Header="Имя пользователя" Width="120"/>
+                        <dxg:GridColumn FieldName="DocDatetime" Header="Дата создания" Width="120"/>
+                        <dxg:GridColumn FieldName="DeliveryDate" Header="Дата доставки" Width="120"/>
+                        <dxg:GridColumn FieldName="Comment" Header="Комментарий" Width="200"/>
+                    </dxg:GridControlBand>
+                    <dxg:GridControlBand Header="Продавец">
+                        <dxg:GridColumn FieldName="DocGoods.Seller.Customer.Name" Header="Название"/>
+                        <dxg:GridColumn FieldName="DocGoods.Seller.Customer.Inn" Header="ИНН"/>
+                    </dxg:GridControlBand>
+                    <dxg:GridControlBand Header="Покупатель">
+                        <dxg:GridColumn FieldName="DocGoods.Customer.Customer.Name" Header="Название"/>
+                        <dxg:GridColumn FieldName="DocGoods.Customer.Customer.Inn" Header="ИНН"/>
+                    </dxg:GridControlBand>
+                    <dxg:GridControlBand Header="Итог">
+                        <dxg:GridColumn FieldName="DocGoods.TotalSumm" Header="Сумма" />
+                    </dxg:GridControlBand>
+                </dxg:GridControl.Bands>
+            </dxg:GridControl>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Margin="5 5" Name="returnButton" Content="Оформить возврат" Click="ReturnButton_Click" IsEnabled="{Binding Path=IsReturnButtonEnabled, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button Margin="5 5" Name="cancelButton" Content="Отмена" Click="CancelButton_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

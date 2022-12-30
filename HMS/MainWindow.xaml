@@ -79,12 +79,12 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
-            <dxb:BarButtonItem ToolTip="Просмотр кодов маркировки" Command="{Binding ShowMarkedCodesCommand}">
+            <dxb:BarButtonItem ToolTip="Возврат кодов маркировки" Command="{Binding ReturnMarkedCodesCommand}">
                 <dxb:BarButtonItem.ContentTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Vertical">
                             <Image Source="{dx:DXImage SvgImages/Reports/AutoModule.svg}" />
-                            <TextBlock Text="Просмотр" HorizontalAlignment="Center" />
+                            <TextBlock Text="Возврат" HorizontalAlignment="Center" />
                             <TextBlock Text="кодов" HorizontalAlignment="Center" />
                         </StackPanel>
                     </DataTemplate>

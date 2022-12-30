@@ -87,6 +87,15 @@ namespace HonestMarkSystem.Implementations
                    where seller.Inn == docEdoDocument.SenderInn select doc;
         }
 
+        public System.Collections.IEnumerable GetJournalMarkedDocumentsByType(int docType)
+        {
+            return from doc in _abt.DocJournals
+                   where doc.DocGoods != null && doc.IdDocType == docType
+                   join docGood in _abt.DocGoods on doc.Id equals docGood.IdDoc
+                   where (from label in _abt.DocGoodsDetailsLabels where label.IdDocSale == doc.Id select label).Any()
+                   select doc;
+        }
+
         public object GetPurchasingDocumentById(decimal idDocPurchasing)
         {
             return _abt.DocPurchasings.FirstOrDefault(d => d.Id == idDocPurchasing);
@@ -373,6 +382,15 @@ namespace HonestMarkSystem.Implementations
             return refGoods;
         }
 
+        public string GetBarCodeByIdGood(decimal idGood)
+        {
+            var barCodes = from refBarCode in _abt.RefBarCodes
+                           where refBarCode.IdGood == idGood && refBarCode.IsPrimary == false && refBarCode.BarCode != null
+                           select refBarCode.BarCode;
+
+            return barCodes.FirstOrDefault();
+        }
+
         public List<object> GetAllRefGoods()
         {
             return _abt.RefGoods.ToList<object>();
@@ -509,19 +527,34 @@ namespace HonestMarkSystem.Implementations
             return idDoc.Value;
         }
 
-        public bool IsExistsNotReceivedCodes(decimal idDoc)
+        public bool IsExistsNotReceivedCodes(decimal idDoc, int docType)
         {
-            var count = _abt.Database.SqlQuery<int>($"select count(*) from doc_goods_details_labels where id_doc = {idDoc} and LABEL_STATUS <> 1").First();
+            int count = 0;
+
+            if(docType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
+                count = _abt.Database.SqlQuery<int>($"select count(*) from doc_goods_details_labels where id_doc = {idDoc} and LABEL_STATUS <> 1").First();
+            else if(docType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
+                count = _abt.Database.SqlQuery<int>($"select count(*) from doc_goods_details_labels where id_doc_sale = {idDoc} and LABEL_STATUS <> 2").First();
 
             return count > 0;
         }
 
-        public List<string> GetErrorsWithMarkedCodes(decimal idDoc)
+        public List<string> GetErrorsWithMarkedCodes(decimal idDoc, int docType)
         {
-            var errors = _abt.Database.SqlQuery<string>($"select DECODE(d.label_status, 2, 'Код маркировки '|| d.dm_label || ' уже был оприходован', " +
+            if (docType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
+            {
+                var errors = _abt.Database.SqlQuery<string>($"select DECODE(d.label_status, 1, 'Код маркировки '|| d.dm_label || ' не был оприходован', " +
+                $"DECODE(d.label_status, 0, 'Код маркировки ' || d.dm_label || ' не был пропикан', '') ) " +
+                $"from doc_goods_details_labels d where d.label_status <> 2 and length(d.dm_label) = 31 and d.id_doc_sale = {idDoc}");
+                return errors.ToList();
+            }
+            else
+            {
+                var errors = _abt.Database.SqlQuery<string>($"select DECODE(d.label_status, 2, 'Код маркировки '|| d.dm_label || ' уже был оприходован', " +
                 $"DECODE(d.label_status, 0, 'Код маркировки ' || d.dm_label || ' не был пропикан', '') ) " +
                 $"from doc_goods_details_labels d where d.label_status <> 1 and length(d.dm_label) = 31 and d.id_doc = {idDoc}");
-            return errors.ToList();
+                return errors.ToList();
+            }
         }
 
         public System.Data.Entity.DbContextTransaction BeginTransaction()

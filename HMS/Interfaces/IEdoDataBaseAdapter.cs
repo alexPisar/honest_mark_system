@@ -24,6 +24,8 @@ namespace HonestMarkSystem.Interfaces
 
         System.Collections.IEnumerable GetJournalDocuments(object selectedDocument);
 
+        System.Collections.IEnumerable GetJournalMarkedDocumentsByType(int docType);
+
         object GetPurchasingDocumentById(decimal idDocPurchasing);
 
         void AddMarkedCode(decimal idDocJournal, decimal idGood, string markedCode);
@@ -40,6 +42,8 @@ namespace HonestMarkSystem.Interfaces
 
         List<object> GetRefGoodsByBarCode(string barCode);
 
+        string GetBarCodeByIdGood(decimal idGood);
+
         List<object> GetAllRefGoods();
 
         object GetRefGoodById(decimal idGood);
@@ -54,9 +58,9 @@ namespace HonestMarkSystem.Interfaces
 
         decimal ExportDocument(object documentObject);
 
-        bool IsExistsNotReceivedCodes(decimal idDoc);
+        bool IsExistsNotReceivedCodes(decimal idDoc, int docType);
 
-        List<string> GetErrorsWithMarkedCodes(decimal idDoc);
+        List<string> GetErrorsWithMarkedCodes(decimal idDoc, int docType);
 
         System.Data.Entity.DbContextTransaction BeginTransaction();
 
