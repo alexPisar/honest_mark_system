@@ -10,19 +10,23 @@ using DataContextManagementUnit.DataAccess.Contexts.Abt;
 
 namespace HonestMarkSystem.Models
 {
-    public class ReturnModel : ListViewModel<DocJournal>
+    public class ReturnModel : ListViewModel<DocJournalForLoading>
     {
-        private IEnumerable<DocJournal> _allDocs;
+        private Interfaces.IEdoDataBaseAdapter<AbtDbContext> _dataBaseAdapter;
+        private WebSystems.Systems.HonestMarkSystem _honestMarkSystem;
+        private IEnumerable<DocJournalForLoading> _allDocs;
         private bool _isReturnButtonEnabled;
 
         public Action<object> OnReturnSelectedCodesProcess;
 
-        public ReturnModel(IEnumerable<DocJournal> allDocs)
+        public ReturnModel(WebSystems.Systems.HonestMarkSystem honestMarkSystem, Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter)
         {
-            _allDocs = allDocs;
+            _honestMarkSystem = honestMarkSystem;
+            _dataBaseAdapter = dataBaseAdapter;
+            InitFromBase();
         }
 
-        public bool IsReturnButtonEnabled => SelectedItem?.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation;
+        public bool IsReturnButtonEnabled => SelectedItem?.Item?.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation;
 
         public async void ReturnCodes()
         {
@@ -68,17 +72,9 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        public async void SetDocuments(string code, string comment, DateTime? dateFrom, DateTime? dateTo, System.Windows.Window owner = null)
+        public async Task<Exception> SetDocuments(string code, string comment, DateTime? dateFrom, DateTime? dateTo)
         {
-            var loadWindow = new LoadWindow("Идёт поиск...");
-
-            if (owner != null)
-                loadWindow.Owner = owner;
-
-            loadWindow.Show();
             Exception exception = null;
-            var loadContext = loadWindow.GetLoadContext();
-
             await Task.Run(() =>
             {
                 try
@@ -86,37 +82,122 @@ namespace HonestMarkSystem.Models
                     var items = _allDocs;
 
                     if (dateFrom != null)
-                        items = items.Where(i => i.DocDatetime >= dateFrom);
+                        items = items.Where(i => i.Item?.DocDatetime >= dateFrom);
 
                     if (dateTo != null)
-                        items = items.Where(i => i.DocDatetime <= dateTo);
+                        items = items.Where(i => i.Item?.DocDatetime <= dateTo);
 
                     if (!string.IsNullOrEmpty(code))
-                        items = items.Where(i => i.Code.Contains(code));
+                        items = items.Where(i => i.Item?.Code?.Contains(code) ?? false);
 
                     if (!string.IsNullOrEmpty(comment))
-                        items = items.Where(i => i.Comment?.Contains(comment) ?? false);
+                        items = items.Where(i => i.Item?.Comment?.Contains(comment) ?? false);
 
-                    ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocJournal>(items);
+                    ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocJournalForLoading>(items);
                     SelectedItem = null;
                     OnPropertyChanged("SelectedItem");
                     OnPropertyChanged("ItemsList");
-                    loadContext.SetSuccessFullLoad();
                 }
                 catch (Exception ex)
                 {
+                    string errorMessage = _log.GetRecursiveInnerException(exception);
+                    _log.Log(errorMessage);
                     exception = ex;
                 }
             });
 
-            if (exception != null)
-            {
-                loadWindow.Close();
-                string errorMessage = _log.GetRecursiveInnerException(exception);
-                _log.Log(errorMessage);
+            return exception;
+        }
 
-                var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { errorMessage }));
-                errorsWindow.ShowDialog();
+        private void InitFromBase()
+        {
+            _allDocs = _dataBaseAdapter?
+                .GetJournalMarkedDocumentsByType((int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)?
+                .Cast<DocJournal>()?
+                .Select(d => new DocJournalForLoading
+                {
+                    Item = d,
+                    DocEdoReturnPurchasing = _dataBaseAdapter.GetDocEdoReturnPurchasing(d.Id)
+                });
+        }
+
+        private void LoadStatus(DocEdoReturnPurchasing doc)
+        {
+            if (_dataBaseAdapter?.GetType() == typeof(Implementations.DiadocEdoToDataBase))
+            {
+                ((Implementations.DiadocEdoToDataBase)_dataBaseAdapter).LoadStatus(doc);
+            }
+        }
+
+        public override void Refresh()
+        {
+            if (ItemsList == null)
+                return;
+
+            var docsProcessing = ItemsList.Where(i => i.ReturnStatus == (int)WebSystems.DocEdoStatus.Sent) ?? new List<DocJournalForLoading>();
+
+            if (docsProcessing.Count() == 0)
+                return;
+
+            using (var transaction = _dataBaseAdapter.BeginTransaction())
+            {
+                int i = 1;
+                foreach (var docProcessing in docsProcessing)
+                {
+                    var processingDocument = docProcessing.DocEdoReturnPurchasing as DocEdoReturnPurchasing;
+                    try
+                    {
+                        ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"ReturnProcessingDocument_{i}");
+                        if (_honestMarkSystem != null)
+                        {
+                            var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.SellerFileName);
+
+                            if (docProcessingInfo.Code == WebSystems.EdoLiteProcessResultStatus.SUCCESS)
+                            {
+                                processingDocument.DocStatus = (int)WebSystems.DocEdoStatus.Processed;
+                                LoadStatus(processingDocument);
+                                _dataBaseAdapter.Commit();
+                            }
+                            else if (docProcessingInfo.Code == WebSystems.EdoLiteProcessResultStatus.FAILED)
+                            {
+                                processingDocument.DocStatus = (int)WebSystems.DocEdoStatus.ProcessingError;
+
+                                var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
+
+                                var errors = failedOperations.SelectMany(f => f.Errors);
+
+                                var errorsListStr = new List<string>();
+                                foreach (var error in errors)
+                                {
+                                    if (!string.IsNullOrEmpty(error.Text))
+                                        errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
+                                    else if (!string.IsNullOrEmpty(error?.Error?.Detail))
+                                        errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
+                                    else
+                                        errorsListStr.Add($"Произошла ошибка с кодом:{error.Code}\n");
+                                }
+                                processingDocument.ErrorMessage = string.Join("\n\n", errorsListStr);
+                                LoadStatus(processingDocument);
+                                _dataBaseAdapter.Commit();
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback($"ReturnProcessingDocument_{i}");
+                        _dataBaseAdapter.ReloadEntry(processingDocument);
+                        string errorMessage = _log.GetRecursiveInnerException(ex);
+                        _log.Log(errorMessage);
+
+                        //var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
+                        //errorsWindow.ShowDialog();
+                    }
+
+                    i++;
+                }
+
+                if (docsProcessing.Any(p => p.ReturnStatus != (int)WebSystems.DocEdoStatus.Sent))
+                    transaction.Commit();
             }
         }
     }

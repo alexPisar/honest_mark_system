@@ -206,6 +206,7 @@
       <DependentUpon>MarkedCodesWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\ChangeMarkedCodesModel.cs" />
+    <Compile Include="Models\DocJournalForLoading.cs" />
     <Compile Include="Models\MarkedCodesModel.cs" />
     <Compile Include="Models\PurchasingDocumentsModel.cs" />
     <Compile Include="Models\RefGoodsModel.cs" />

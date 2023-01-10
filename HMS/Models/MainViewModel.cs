@@ -828,9 +828,21 @@ namespace HonestMarkSystem.Models
 
         private void ReturnMarkedCodes()
         {
-            var docJournals = _dataBaseAdapter?.GetJournalMarkedDocumentsByType((int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation);
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
 
-            var returnModel = new ReturnModel(docJournals.Cast<DocJournal>());
+            if (SelectedItem.IdDocJournal == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Данный документ не привязан к документу из Трейдера.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var returnModel = new ReturnModel(_honestMarkSystem, _dataBaseAdapter);
             var returnWindow = new ReturnWindow();
             returnWindow.DataContext = returnModel;
 
@@ -841,7 +853,7 @@ namespace HonestMarkSystem.Models
 
                 try
                 {
-                    var docJournal = returnModel.SelectedItem;
+                    var docJournal = returnModel.SelectedItem.Item;
                     var productList = new List<Reporter.Entities.Product>();
 
                     loadContext.SetLoadingText("Проверка кодов");
@@ -900,7 +912,7 @@ namespace HonestMarkSystem.Models
                         }
                     }
 
-                    var comissionDocumentInfo = WebSystems.WebClients.FinDbWebClient.GetInstance().GetComissionDocInfoByIdDocJournal(docJournal.Id);
+                    var comissionDocumentInfo = WebSystems.WebClients.FinDbWebClient.GetInstance().GetComissionDocInfoByIdDocJournal(SelectedItem.IdDocJournal.Value);
                     var receiverInn = comissionDocumentInfo.SenderInn;
 
                     var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil();
@@ -979,6 +991,7 @@ namespace HonestMarkSystem.Models
                     sellerReport.DocDate = DateTime.Now.Date;
                     sellerReport.CurrencyCode = "643";
 
+                    string receiverOrgName = null;
                     if (receiverInn.Length == 10)
                     {
                         var receiverCompany = _dataBaseAdapter.GetCustomerByOrgInn(receiverInn) as RefCustomer;
@@ -993,6 +1006,7 @@ namespace HonestMarkSystem.Models
                         buyerOrganizationExchangeParticipant.OrgName = receiverCompany.Name;
 
                         sellerReport.BuyerEntity = buyerOrganizationExchangeParticipant;
+                        receiverOrgName = buyerOrganizationExchangeParticipant.OrgName;
                     }
                     else if(receiverInn.Length == 12)
                     {
@@ -1006,6 +1020,7 @@ namespace HonestMarkSystem.Models
                         buyerJuridicalEntity.Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
 
                         sellerReport.BuyerEntity = buyerJuridicalEntity;
+                        receiverOrgName = $"ИП {buyerJuridicalEntity.Surname} {buyerJuridicalEntity.Name} {buyerJuridicalEntity.Patronymic}";
                     }
 
                     sellerReport.BuyerAddress = new Reporter.Entities.Address
@@ -1015,9 +1030,10 @@ namespace HonestMarkSystem.Models
                         RussianStreet = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "STREET")
                     };
 
+                    string sellerOrgName = null;
                     if (orgInn.Length == 10)
                     {
-                        var sellerCompany = _dataBaseAdapter.GetCustomerByOrgInn(receiverInn) as RefCustomer;
+                        var sellerCompany = _dataBaseAdapter.GetCustomerByOrgInn(orgInn) as RefCustomer;
 
                         if (sellerCompany == null)
                             throw new Exception("Для получателя не найдена компания в системе.");
@@ -1029,6 +1045,7 @@ namespace HonestMarkSystem.Models
                         sellerOrganizationExchangeParticipant.OrgName = sellerCompany.Name;
 
                         sellerReport.SellerEntity = sellerOrganizationExchangeParticipant;
+                        sellerOrgName = sellerOrganizationExchangeParticipant.OrgName;
                     }
                     else if (orgInn.Length == 12)
                     {
@@ -1041,6 +1058,7 @@ namespace HonestMarkSystem.Models
                         sellerJuridicalEntity.Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
 
                         sellerReport.SellerEntity = sellerJuridicalEntity;
+                        sellerOrgName = $"ИП {sellerJuridicalEntity.Surname} {sellerJuridicalEntity.Name} {sellerJuridicalEntity.Patronymic}";
                     }
 
                     sellerReport.SellerAddress = new Reporter.Entities.Address
@@ -1210,6 +1228,30 @@ namespace HonestMarkSystem.Models
 
                         string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{buyerReport.FileName}.xml";
                         _edoSystem.SendDocument(docId, buyerFileBytes, buyerSignature, content);
+                    }
+
+                    using (var transaction = _dataBaseAdapter.BeginTransaction())
+                    {
+                        try
+                        {
+                            if (_edoSystem as DiadocEdoSystem != null)
+                            {
+                                var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
+                                var entity = sellerMessage.Entities.FirstOrDefault(t => t.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.UniversalTransferDocument);
+                                _dataBaseAdapter.AddDocEdoReturnPurchasing(docJournal.Id, sellerMessage.MessageId, entity.EntityId, sellerReport.FileName, buyerReport.FileName,
+                                    orgInn, sellerOrgName, receiverInn, receiverOrgName, DateTime.Now);
+                            }
+                            else
+                                _dataBaseAdapter.AddDocEdoReturnPurchasing(docJournal.Id, null, null, sellerReport.FileName, buyerReport.FileName,
+                                    orgInn, sellerOrgName, receiverInn, receiverOrgName, DateTime.Now);
+
+                            _dataBaseAdapter.Commit(transaction);
+                        }
+                        catch(Exception ex)
+                        {
+                            transaction.Rollback();
+                            throw ex;
+                        }
                     }
 
                     loadContext.SetSuccessFullLoad("Процесс завершён успешно");

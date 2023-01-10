@@ -126,6 +126,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
             modelBuilder.Configurations.Add(new Mapping.DocEdoPurchasingConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocEdoPurchasingDetailConfiguration());
             modelBuilder.Configurations.Add(new Mapping.RefUserByEdoShipperConfiguration());
+            modelBuilder.Configurations.Add(new Mapping.DocEdoReturnPurchasingConfiguration());
 
             CustomizeMapping(modelBuilder);
         }
@@ -153,5 +154,6 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual DbSet<DocPurchasing> DocPurchasings { get; set; }
         public virtual DbSet<DocEdoPurchasing> DocEdoPurchasings { get; set; }
         public virtual DbSet<RefUserByEdoShipper> RefUsersByEdoShippers { get; set; }
+        public virtual DbSet<DocEdoReturnPurchasing> DocEdoReturnPurchasings { get; set; }
     }
 }

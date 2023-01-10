@@ -14,6 +14,9 @@ namespace HonestMarkSystem.Interfaces
 
         object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None);
 
+        object AddDocEdoReturnPurchasing(decimal idDocJournal, string messageId, string entityId, string sellerFileName, string buyerFileName, 
+            string senderInn, string senderName, string receiverInn, string receiverName, DateTime docDate, int docStatus = (int)WebSystems.DocEdoStatus.Sent);
+
         bool ExistsDocumentInDataBase(IEdoSystemDocument<string> document);
 
         bool DocumentCanBeAddedByUser(IEdoSystemDocument<string> document);
@@ -55,6 +58,8 @@ namespace HonestMarkSystem.Interfaces
         IEnumerable<string> GetMarkedCodesByDocGoodId(object docJournalObj, decimal? idGood);
 
         object GetCustomerByOrgInn(string inn, string kpp = null);
+
+        object GetDocEdoReturnPurchasing(decimal idDocJournal);
 
         decimal ExportDocument(object documentObject);
 

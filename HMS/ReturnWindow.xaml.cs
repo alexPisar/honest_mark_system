@@ -60,9 +60,73 @@ namespace HonestMarkSystem
             }
         }
 
-        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        private void SetEnableStatuses(bool status)
         {
-            ((Models.ReturnModel)DataContext).SetDocuments(Number, Comment, DateFrom, DateTo, this);
+            searchButton.IsEnabled = status;
+            refreshButton.IsEnabled = status;
+            returnButton.IsEnabled = status;
+            cancelButton.IsEnabled = status;
+        }
+
+        private async void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetEnableStatuses(false);
+
+            try
+            {
+                var loadWindow = new LoadWindow("Идёт поиск...");
+                loadWindow.Owner = this;
+
+                loadWindow.Show();
+                var loadContext = loadWindow.GetLoadContext();
+
+                var exception = await (DataContext as Models.ReturnModel).SetDocuments(Number, Comment, DateFrom, DateTo);
+
+                if (exception != null)
+                {
+                    loadWindow.Close();
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { exception.Message }));
+                    errorsWindow.ShowDialog();
+                    return;
+                }
+
+                loadContext.SetLoadingText("Обновление данных");
+
+                var dataContext = DataContext as Models.ReturnModel;
+                await Task.Run(() => dataContext.Refresh());
+
+                loadContext.SetSuccessFullLoad();
+                (DataContext as Models.ReturnModel).OnPropertyChanged("ItemsList");
+            }
+            finally
+            {
+                SetEnableStatuses(true);
+            }
+        }
+
+        private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetEnableStatuses(false);
+
+            try
+            {
+                var loadWindow = new LoadWindow("Обновление данных");
+                loadWindow.Owner = this;
+
+                loadWindow.Show();
+                var loadContext = loadWindow.GetLoadContext();
+
+                var dataContext = DataContext as Models.ReturnModel;
+                await Task.Run(() => dataContext.Refresh());
+
+                loadContext.SetSuccessFullLoad();
+                (DataContext as Models.ReturnModel).OnPropertyChanged("ItemsList");
+            }
+            finally
+            {
+                SetEnableStatuses(true);
+            }
         }
 
         public ReturnWindow()

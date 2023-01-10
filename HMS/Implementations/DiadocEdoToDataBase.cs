@@ -338,6 +338,34 @@ namespace HonestMarkSystem.Implementations
             return newDoc;
         }
 
+        public object AddDocEdoReturnPurchasing(decimal idDocJournal, string messageId, string entityId, string sellerFileName, string buyerFileName,
+            string senderInn, string senderName, string receiverInn, string receiverName, DateTime docDate, int docStatus = (int)WebSystems.DocEdoStatus.Sent)
+        {
+            var newReturnDoc = new DocEdoReturnPurchasing
+            {
+                Id = Guid.NewGuid().ToString(),
+                IdDocJournal = idDocJournal,
+                MessageId = messageId,
+                EntityId = entityId,
+                SellerFileName = sellerFileName,
+                BuyerFileName = buyerFileName,
+                UserName = _dataBaseUser,
+                SenderInn = senderInn,
+                SenderName = senderName,
+                ReceiverInn = receiverInn,
+                ReceiverName = receiverName,
+                DocDate = docDate,
+                DocStatus = docStatus
+            };
+
+            _abt.DocEdoReturnPurchasings.Add(newReturnDoc);
+
+            if (!_abt.Entry(newReturnDoc).Reference("Status").IsLoaded)
+                _abt.Entry(newReturnDoc).Reference("Status").Load();
+
+            return newReturnDoc;
+        }
+
         public bool ExistsDocumentInDataBase(IEdoSystemDocument<string> document)
         {
             return _documents.Exists(d => d.IdDocEdo == document.EdoId);
@@ -349,6 +377,13 @@ namespace HonestMarkSystem.Implementations
         }
 
         public void LoadStatus(DocEdoPurchasing doc)
+        {
+            doc.Status = null;
+            _abt.Entry(doc).Reference("Status").IsLoaded = false;
+            _abt.Entry(doc).Reference("Status").Load();
+        }
+
+        public void LoadStatus(DocEdoReturnPurchasing doc)
         {
             doc.Status = null;
             _abt.Entry(doc).Reference("Status").IsLoaded = false;
@@ -447,6 +482,13 @@ namespace HonestMarkSystem.Implementations
                         where isKppNull || c.Kpp == kpp
                         select c;
             return custs.FirstOrDefault();
+        }
+
+        public object GetDocEdoReturnPurchasing(decimal idDocJournal)
+        {
+            return from r in _abt.DocEdoReturnPurchasings
+                   where r.IdDocJournal == idDocJournal
+                   select r;
         }
 
         public decimal ExportDocument(object documentObject)

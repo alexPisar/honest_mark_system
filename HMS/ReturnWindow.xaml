@@ -21,7 +21,8 @@
             </Grid.RowDefinitions>
             <DockPanel  Grid.Row="0" LastChildFill="True">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" DockPanel.Dock="Bottom" Height="40">
-                    <Button Margin="5" Content="Найти" Width="60" Click="SearchButton_Click"></Button>
+                    <Button Margin="5" x:Name="searchButton" Content="Найти" Width="80" Click="SearchButton_Click"></Button>
+                    <Button Margin="5" x:Name="refreshButton" Content="Обновить" Width="80" Click="RefreshButton_Click"></Button>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                     <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
@@ -53,25 +54,43 @@
                              ShowBorder="False">
                 <dxg:GridControl.Bands>
                     <dxg:GridControlBand Header="Документ">
-                        <dxg:GridColumn FieldName="Id" Header="ID" Width="120"/>
-                        <dxg:GridColumn FieldName="Code" Header="Номер документа" Width="150"/>
-                        <dxg:GridColumn FieldName="UserName" Header="Имя пользователя" Width="120"/>
-                        <dxg:GridColumn FieldName="DocDatetime" Header="Дата создания" Width="120"/>
-                        <dxg:GridColumn FieldName="DeliveryDate" Header="Дата доставки" Width="120"/>
-                        <dxg:GridColumn FieldName="Comment" Header="Комментарий" Width="200"/>
+                        <dxg:GridColumn FieldName="Item.Id" Header="ID" Width="120"/>
+                        <dxg:GridColumn FieldName="Item.Code" Header="Номер документа" Width="150"/>
+                        <dxg:GridColumn FieldName="Item.UserName" Header="Имя пользователя" Width="120"/>
+                        <dxg:GridColumn FieldName="Item.DocDatetime" Header="Дата создания" Width="120"/>
+                        <dxg:GridColumn FieldName="Item.DeliveryDate" Header="Дата доставки" Width="120"/>
+                        <dxg:GridColumn FieldName="Item.Comment" Header="Комментарий" Width="200"/>
+                    </dxg:GridControlBand>
+                    <dxg:GridControlBand Header="Статус документа">
+                        <dxg:GridColumn FieldName="ResultStatusName" Header="Статус" />
                     </dxg:GridControlBand>
                     <dxg:GridControlBand Header="Продавец">
-                        <dxg:GridColumn FieldName="DocGoods.Seller.Customer.Name" Header="Название"/>
-                        <dxg:GridColumn FieldName="DocGoods.Seller.Customer.Inn" Header="ИНН"/>
+                        <dxg:GridColumn FieldName="Item.DocGoods.Seller.Customer.Name" Header="Название"/>
+                        <dxg:GridColumn FieldName="Item.DocGoods.Seller.Customer.Inn" Header="ИНН"/>
                     </dxg:GridControlBand>
                     <dxg:GridControlBand Header="Покупатель">
-                        <dxg:GridColumn FieldName="DocGoods.Customer.Customer.Name" Header="Название"/>
-                        <dxg:GridColumn FieldName="DocGoods.Customer.Customer.Inn" Header="ИНН"/>
+                        <dxg:GridColumn FieldName="Item.DocGoods.Customer.Customer.Name" Header="Название"/>
+                        <dxg:GridColumn FieldName="Item.DocGoods.Customer.Customer.Inn" Header="ИНН"/>
                     </dxg:GridControlBand>
                     <dxg:GridControlBand Header="Итог">
-                        <dxg:GridColumn FieldName="DocGoods.TotalSumm" Header="Сумма" />
+                        <dxg:GridColumn FieldName="Item.DocGoods.TotalSumm" Header="Сумма" />
                     </dxg:GridControlBand>
                 </dxg:GridControl.Bands>
+                <dxg:GridControl.View>
+                    <dxg:TableView>
+                        <dxg:TableView.FormatConditions>
+                            <dxg:FormatCondition ApplyToRow="True"  Expression="[ReturnStatus] == 1" >
+                                <dxg:Format Background="#FF27C3E6"/>
+                            </dxg:FormatCondition>
+                            <dxg:FormatCondition ApplyToRow="True"  Expression="[ReturnStatus] == 2" >
+                                <dxg:Format Background="#7cfc00"/>
+                            </dxg:FormatCondition>
+                            <dxg:FormatCondition ApplyToRow="True"  Expression="[ReturnStatus] == 8" >
+                                <dxg:Format Background="#FFF95A52"/>
+                            </dxg:FormatCondition>
+                        </dxg:TableView.FormatConditions>
+                    </dxg:TableView>
+                </dxg:GridControl.View>
             </dxg:GridControl>
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Margin="5 5" Name="returnButton" Content="Оформить возврат" Click="ReturnButton_Click" IsEnabled="{Binding Path=IsReturnButtonEnabled, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>

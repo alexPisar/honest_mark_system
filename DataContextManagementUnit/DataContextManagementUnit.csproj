@@ -96,6 +96,7 @@
     <Compile Include="DataAccess\Entities\ConnString.cs" />
     <Compile Include="DataAccess\Entities\DocEdoPurchasing.cs" />
     <Compile Include="DataAccess\Entities\DocEdoPurchasingDetail.cs" />
+    <Compile Include="DataAccess\Entities\DocEdoReturnPurchasing.cs" />
     <Compile Include="DataAccess\Entities\DocGood.cs" />
     <Compile Include="DataAccess\Entities\DocGoodsDetail.cs" />
     <Compile Include="DataAccess\Entities\DocGoodsDetailsI.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="DataAccess\Mappings\ConnStringConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\DocEdoPurchasingConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\DocEdoPurchasingDetailConfiguration.cs" />
+    <Compile Include="DataAccess\Mappings\DocEdoReturnPurchasingConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\DocGoodConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\DocGoodsDetailConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\DocGoodsDetailsIConfiguration.cs" />
