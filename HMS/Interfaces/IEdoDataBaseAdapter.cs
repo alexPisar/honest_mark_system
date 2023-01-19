@@ -31,6 +31,8 @@ namespace HonestMarkSystem.Interfaces
 
         object GetPurchasingDocumentById(decimal idDocPurchasing);
 
+        object GetDocJournal(decimal idDocJournal);
+
         void AddMarkedCode(decimal idDocJournal, decimal idGood, string markedCode);
 
         void AddMarkedCodes(decimal idDocJournal, decimal idGood, IEnumerable<string> markedCodes);

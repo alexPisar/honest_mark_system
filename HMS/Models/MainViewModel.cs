@@ -481,6 +481,35 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            DocJournal docJournal = null;
+            try
+            {
+                docJournal = _dataBaseAdapter.GetDocJournal(SelectedItem.IdDocJournal.Value) as DocJournal;
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = _log.GetRecursiveInnerException(ex);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка поиска трейдер документа в базе.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+                return;
+            }
+
+            if (docJournal == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не найден трейдер документ.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (docJournal.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation && docJournal.ActStatus != (int)DataContextManagementUnit.DataAccess.DocJournalActStatus.Confirmed)
+            {
+                System.Windows.MessageBox.Show(
+                    "Для трейдер документа перемещения статус документа некорректный для подписания.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (_edoSystem.HasZipContent && !File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip"))
             {
                 System.Windows.MessageBox.Show(

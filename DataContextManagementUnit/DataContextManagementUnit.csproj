@@ -90,10 +90,13 @@
     <Compile Include="Config\DcmuConfiguration.cs" />
     <Compile Include="DataAccess\AbtDbContext.cs" />
     <Compile Include="DataAccess\DbContextExtensions.cs" />
+    <Compile Include="DataAccess\DocJournalActStatus.cs" />
     <Compile Include="DataAccess\DocJournalTypes.cs" />
     <Compile Include="DataAccess\EdiDbContext.cs" />
     <Compile Include="DataAccess\Entities\ConnectedBuyers.cs" />
     <Compile Include="DataAccess\Entities\ConnString.cs" />
+    <Compile Include="DataAccess\Entities\DocComissionEdoProcessing.cs" />
+    <Compile Include="DataAccess\Entities\DocEdoProcessing.cs" />
     <Compile Include="DataAccess\Entities\DocEdoPurchasing.cs" />
     <Compile Include="DataAccess\Entities\DocEdoPurchasingDetail.cs" />
     <Compile Include="DataAccess\Entities\DocEdoReturnPurchasing.cs" />
@@ -137,6 +140,8 @@
     <Compile Include="DataAccess\ExchangeTypes.cs" />
     <Compile Include="DataAccess\Mappings\ConnectedBuyersConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\ConnStringConfiguration.cs" />
+    <Compile Include="DataAccess\Mappings\DocComissionEdoProcessingConfiguration.cs" />
+    <Compile Include="DataAccess\Mappings\DocEdoProcessingConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\DocEdoPurchasingConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\DocEdoPurchasingDetailConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\DocEdoReturnPurchasingConfiguration.cs" />

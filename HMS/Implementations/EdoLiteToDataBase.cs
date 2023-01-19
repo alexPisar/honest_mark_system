@@ -208,6 +208,12 @@ namespace HonestMarkSystem.Implementations
             return _abt.DocPurchasings.FirstOrDefault(d => d.Id == idDocPurchasing);
         }
 
+        public object GetDocJournal(decimal idDocJournal)
+        {
+            var docJournal = _abt.DocJournals.FirstOrDefault(d => d.Id == idDocJournal);
+            return docJournal;
+        }
+
         public void SaveOrgData(string orgInn, string orgName)
         {
             _orgInn = orgInn;

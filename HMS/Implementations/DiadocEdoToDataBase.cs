@@ -101,6 +101,12 @@ namespace HonestMarkSystem.Implementations
             return _abt.DocPurchasings.FirstOrDefault(d => d.Id == idDocPurchasing);
         }
 
+        public object GetDocJournal(decimal idDocJournal)
+        {
+            var docJournal = _abt.DocJournals.FirstOrDefault(d => d.Id == idDocJournal);
+            return docJournal;
+        }
+
         public void AddMarkedCode(decimal idDocJournal, decimal idGood, string markedCode)
         {
             if (_abt.DocGoodsDetailsLabels.FirstOrDefault(l => l.IdDoc == idDocJournal && l.IdGood == idGood && l.DmLabel == markedCode) != null)
@@ -296,6 +302,13 @@ namespace HonestMarkSystem.Implementations
                     parent.Children.Add(newDoc);
                 }
             }
+
+            var docProcessing = (from d in _abt.DocEdoProcessings
+                                 where d.MessageId == newDoc.IdDocEdo && d.EntityId == newDoc.ParentEntityId
+                                 select d)?.FirstOrDefault();
+
+            if (docProcessing != null)
+                newDoc.IdDocJournal = docProcessing.IdDoc;
 
             foreach(var product in report.Products)
             {
