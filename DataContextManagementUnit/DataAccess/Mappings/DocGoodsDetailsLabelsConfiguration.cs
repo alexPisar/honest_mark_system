@@ -48,6 +48,15 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .Property(l => l.SaleDateTime)
                 .HasColumnName(@"SALE_DATETIME");
 
+            this
+                .Property(l => l.IdDocReturn)
+                .HasColumnName(@"ID_DOC_RETURN")
+                .HasDatabaseGeneratedOption(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.None);
+
+            this
+                .Property(l => l.ReturnDateTime)
+                .HasColumnName(@"RETURN_DATETIME");
+
             OnCreated();
         }
 

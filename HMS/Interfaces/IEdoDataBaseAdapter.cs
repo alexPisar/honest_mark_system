@@ -63,6 +63,8 @@ namespace HonestMarkSystem.Interfaces
 
         object GetDocEdoReturnPurchasing(decimal idDocJournal);
 
+        Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(decimal idDocReturn);
+
         decimal ExportDocument(object documentObject);
 
         bool IsExistsNotReceivedCodes(decimal idDoc, int docType);

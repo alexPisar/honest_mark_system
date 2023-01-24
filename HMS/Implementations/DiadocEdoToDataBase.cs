@@ -92,7 +92,7 @@ namespace HonestMarkSystem.Implementations
             return from doc in _abt.DocJournals
                    where doc.DocGoods != null && doc.IdDocType == docType
                    join docGood in _abt.DocGoods on doc.Id equals docGood.IdDoc
-                   where (from label in _abt.DocGoodsDetailsLabels where label.IdDocSale == doc.Id select label).Any()
+                   where (from label in _abt.DocGoodsDetailsLabels where label.IdDocReturn == doc.Id select label).Any()
                    select doc;
         }
 
@@ -502,6 +502,54 @@ namespace HonestMarkSystem.Implementations
             return from r in _abt.DocEdoReturnPurchasings
                    where r.IdDocJournal == idDocJournal
                    select r;
+        }
+
+        public Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(decimal idDocReturn)
+        {
+            var idDocSaleCollection = (from label in _abt.DocGoodsDetailsLabels
+                                       where label.IdDocReturn == idDocReturn && label.IdDocSale != null
+                                       select label.IdDocSale.Value).Distinct();
+
+            if (idDocSaleCollection.Count() == 0)
+                throw new Exception("Не найдены документы отгрузки.");
+
+            var docComissionEdoProcessings = from docComissionEdoProcessing in _abt.DocComissionEdoProcessings
+                                             join docEdoProcessing in _abt.DocEdoProcessings
+                                             on docComissionEdoProcessing.Id equals (docEdoProcessing.IdComissionDocument)
+                                             join docEdoPurchasing in _abt.DocEdoPurchasings
+                                             on docEdoProcessing.MessageId equals (docEdoPurchasing.IdDocEdo)
+                                             where docEdoPurchasing.IdDocJournal == docEdoProcessing.IdDoc && docEdoProcessing.ReceiverInn == _orgInn
+                                             join idDocSale in idDocSaleCollection on docEdoPurchasing.IdDocJournal equals (idDocSale)
+                                             where docComissionEdoProcessing != null && docEdoPurchasing != null
+                                             let labels = from label in _abt.DocGoodsDetailsLabels
+                                                          where label.IdDocReturn == idDocReturn && label.IdDocSale == idDocSale
+                                                          select label
+                                             select new { DocComissionEdoProcessing = docComissionEdoProcessing,
+                                                 DocEdoPurchasing = docEdoPurchasing,
+                                                 Labels = labels
+                                             };
+
+            var docsCount = docComissionEdoProcessings.Count();
+
+            if (idDocSaleCollection.Count() > docsCount)
+                throw new Exception("Не все документы отгрузки были отправлены.");
+
+            var idDocSaleList = idDocSaleCollection.ToList();
+            if (idDocSaleList.Exists(i => docComissionEdoProcessings
+            .FirstOrDefault(d => d.DocComissionEdoProcessing.IdDoc == i && d.DocComissionEdoProcessing.DocStatus == (int)WebSystems.DocEdoStatus.Processed) == null))
+                throw new Exception("Не все документы отгрузки были обработаны при комиссионной отправке.");
+
+            if (idDocSaleList.Exists(i => docComissionEdoProcessings
+            .FirstOrDefault(d => d.DocEdoPurchasing.IdDocJournal == i && d.DocEdoPurchasing.DocStatus == (int)WebSystems.DocEdoStatus.Processed) == null))
+                throw new Exception("Не все документы отгрузки были оприходованы.");
+
+            var resultCollection = new Dictionary<string, IEnumerable<object>>();
+            var groups = docComissionEdoProcessings.GroupBy(d => d.DocComissionEdoProcessing.SenderInn);
+
+            foreach(var group in groups)
+                resultCollection.Add(group.Key, group.SelectMany(v => v.Labels));
+
+            return resultCollection;
         }
 
         public decimal ExportDocument(object documentObject)

@@ -277,14 +277,22 @@ namespace WebSystems.EdoSystems
 
         public override string GetOrganizationEdoIdByInn(string inn, params object[] parameters)
         {
-            var myOrgId = parameters[0] as string;
-            var counteragents = ((WebClients.DiadocEdoClient)_webClient).GetKontragents(myOrgId);
+            if (inn == ConfigSet.Configs.Config.GetInstance().ConsignorInn)
+            {
+                var organization = ((WebClients.DiadocEdoClient)_webClient).GetMyOrganizationByInnKpp(inn);
+                return organization.FnsParticipantId;
+            }
+            else
+            {
+                var myOrgId = parameters[0] as string;
+                var counteragents = ((WebClients.DiadocEdoClient)_webClient).GetKontragents(myOrgId);
 
-            var fnsParticipantId = (from c in counteragents
-                    where c?.Organization?.Inn == inn
-                    select c.Organization.FnsParticipantId).FirstOrDefault();
+                var fnsParticipantId = (from c in counteragents
+                                        where c?.Organization?.Inn == inn
+                                        select c.Organization.FnsParticipantId).FirstOrDefault();
 
-            return fnsParticipantId;
+                return fnsParticipantId;
+            }
         }
     }
 }

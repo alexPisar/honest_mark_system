@@ -198,8 +198,7 @@ namespace HonestMarkSystem.Implementations
             return from doc in _abt.DocJournals
                    where doc.DocGoods != null && doc.IdDocType == docType
                    join docGood in _abt.DocGoods on doc.Id equals docGood.IdDoc
-                   join label in _abt.DocGoodsDetailsLabels on doc.Id equals label.IdDocSale
-                   where label != null
+                   where (from label in _abt.DocGoodsDetailsLabels where label.IdDocReturn == doc.Id select label).Any()
                    select doc;
         }
 
@@ -396,6 +395,11 @@ namespace HonestMarkSystem.Implementations
             return from r in _abt.DocEdoReturnPurchasings
                    where r.IdDocJournal == idDocJournal
                    select r;
+        }
+
+        public Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(decimal idDocReturn)
+        {
+            return null;
         }
 
         public decimal ExportDocument(object documentObject)
