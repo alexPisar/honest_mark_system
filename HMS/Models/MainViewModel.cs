@@ -2367,8 +2367,9 @@ namespace HonestMarkSystem.Models
         {
             if (SelectedMyOrganization == null)
             {
-                System.Windows.MessageBox.Show(
-                    "Не выбрана организация для отображения документов.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>();
+                SelectedItem = null;
+                UpdateProperties();
                 return;
             }
 
