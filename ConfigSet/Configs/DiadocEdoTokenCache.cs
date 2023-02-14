@@ -8,13 +8,16 @@ namespace ConfigSet.Configs
 {
     public class DiadocEdoTokenCache : Configuration<DiadocEdoTokenCache>
     {
-        public DiadocEdoTokenCache(string AuthToken, string Creator, string PartyId)
+        public DiadocEdoTokenCache(string AuthToken, string Creator, string PartyId, DateTime? edoLastDocDateTime = null)
         {
             this.PartyId = PartyId;
             Token = AuthToken;
             TokenCreator = Creator;
             TokenCreationDate = DateTime.Now;
             TokenExpirationDate = DateTime.Now.AddHours(12);
+
+            if (edoLastDocDateTime != null)
+                EdoLastDocDateTime = edoLastDocDateTime.Value;
         }
 
         public DiadocEdoTokenCache() { }
@@ -24,5 +27,6 @@ namespace ConfigSet.Configs
         public string ActualBoxId { get; set; }
         public DateTime TokenCreationDate { get; set; }
         public DateTime TokenExpirationDate { get; set; }
+        public DateTime EdoLastDocDateTime { get; set; }
     }
 }

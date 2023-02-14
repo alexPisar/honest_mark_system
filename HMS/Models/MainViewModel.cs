@@ -21,15 +21,16 @@ namespace HonestMarkSystem.Models
         private const string _applicationName = "Вирэй Приходная";
         private string currentVersion => System.Reflection.Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
 
-        private IEdoSystem _edoSystem;
+        
         private Interfaces.IEdoDataBaseAdapter<AbtDbContext> _dataBaseAdapter;
-        private UtilitesLibrary.Service.CryptoUtil _cryptoUtil;
-        private WebSystems.Systems.HonestMarkSystem _honestMarkSystem;
 
         public string EdoProgramVersion => $"{_applicationName} {currentVersion}";
 
         public List<DocEdoPurchasingDetail> Details => SelectedItem?.Details;
         public DocEdoPurchasingDetail SelectedDetail { get; set; }
+
+        public List<ConsignorOrganization> MyOrganizations { get; set; }
+        public ConsignorOrganization SelectedMyOrganization { get; set; }
 
         public DateTime DateTo { get; set; } = DateTime.Now.AddDays(1);
         public DateTime DateFrom { get; set; } = DateTime.Now.AddMonths(-6);
@@ -49,15 +50,13 @@ namespace HonestMarkSystem.Models
         public RelayCommand RevokeDocumentCommand => new RelayCommand((o) => { RevokeDocument(); });
         public RelayCommand SaveDocumentFileCommand => new RelayCommand((o) => { SaveDocumentFile(); });
 
-        public MainViewModel(IEdoSystem edoSystem,
-            WebSystems.Systems.HonestMarkSystem honestMarkSystem, 
-            Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter, 
-            UtilitesLibrary.Service.CryptoUtil cryptoUtil)
+        public MainViewModel(Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter, List<ConsignorOrganization> myOrganizations)
         {
-            _edoSystem = edoSystem;
-            _honestMarkSystem = honestMarkSystem;
-            _cryptoUtil = cryptoUtil;
             _dataBaseAdapter = dataBaseAdapter;
+            MyOrganizations = myOrganizations;
+
+            SelectedMyOrganization = null;
+            SelectedItem = null;
 
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>();
         }
@@ -68,185 +67,205 @@ namespace HonestMarkSystem.Models
         {
             _dataBaseAdapter.Dispose();
             _dataBaseAdapter.InitializeContext();
-            object[] parameters = null;
 
-            List<IEdoSystemDocument<string>> documents = new List<IEdoSystemDocument<string>>();
-            try
+            foreach (var myOrganization in MyOrganizations)
             {
-                documents = GetNewDocuments(out parameters);
-            }
-            catch(System.Net.WebException webEx)
-            {
-                string errorMessage = _log.GetRecursiveInnerException(webEx);
-                _log.Log(errorMessage);
-
-                var errorsWindow = new ErrorsWindow("Произошла ошибка получения документов на удалённом сервере.", new List<string>(new string[] { errorMessage }));
-                errorsWindow.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                string errorMessage = _log.GetRecursiveInnerException(ex);
-                _log.Log(errorMessage);
-
-                var errorsWindow = new ErrorsWindow("Произошла ошибка получения документов.", new List<string>(new string[] { errorMessage }));
-                errorsWindow.ShowDialog();
-            }
-
-            if (documents.Count > 0)
-            {
-                using (var newDocsTransaction = _dataBaseAdapter.BeginTransaction())
+                if (!(myOrganization.EdoSystem?.Authorization() ?? false))
                 {
-                    try
-                    {
-                        foreach (var doc in documents)
-                        {
-                            if (!_dataBaseAdapter.DocumentCanBeAddedByUser(doc))
-                                continue;
-
-                            byte[] docContentBytes;
-
-                            if(!SaveNewDocument(doc, out docContentBytes))
-                                continue;
-
-                            var docFromDb = (DocEdoPurchasing)_dataBaseAdapter.GetDocumentFromDb(doc);
-
-                            if (docFromDb == null)
-                            {
-                                _edoSystem.SendReceivingConfirmationEventHandler?.Invoke(this, new WebSystems.EventArgs.SendReceivingConfirmationEventArgs { Document = doc});
-                                _dataBaseAdapter.AddDocumentToDataBase(doc, docContentBytes, DocumentInOutType.Inbox);
-                            }
-                        }
-                        _dataBaseAdapter.Commit(newDocsTransaction);
-                        SaveParameters(parameters);
-                    }
-                    catch(Exception ex)
-                    {
-                        newDocsTransaction.Rollback();
-                        string errorMessage = _log.GetRecursiveInnerException(ex);
-                        _log.Log(errorMessage);
-
-                        var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { errorMessage }));
-                        errorsWindow.ShowDialog();
-                    }
-                }
-            }
-
-            var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>();
-            ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>(docs);
-            SelectedItem = null;
-
-            try
-            {
-                var errorsList = new List<string>();
-                var processingDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.Sent).ToList() ?? new List<DocEdoPurchasing>();
-
-                using (var transaction = _dataBaseAdapter.BeginTransaction())
-                {
-                    int i = 1;
-                    foreach (var processingDocument in processingDocuments)
-                    {
-                        try
-                        {
-                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"ProcessingDocumentPoint_{i}");
-                            if (_honestMarkSystem != null)
-                            {
-                                var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
-
-                                if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
-                                {
-                                    processingDocument.DocStatus = (int)DocEdoStatus.Processed;
-                                    LoadStatus(processingDocument);
-
-                                    if (processingDocument.IdDocJournal != null)
-                                        _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(processingDocument.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
-
-                                    _dataBaseAdapter.Commit();
-                                }
-                                else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
-                                {
-                                    processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
-
-                                    var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
-
-                                    var errors = failedOperations.SelectMany(f => f.Errors);
-
-                                    var errorsListStr = new List<string>();
-                                    foreach (var error in errors)
-                                    {
-                                        if (!string.IsNullOrEmpty(error.Text))
-                                            errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
-                                        else if (!string.IsNullOrEmpty(error?.Error?.Detail))
-                                            errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
-                                        else
-                                            errorsListStr.Add($"Произошла ошибка с кодом:{error.Code}\n");
-                                    }
-                                    processingDocument.ErrorMessage = string.Join("\n\n", errorsListStr);
-                                    LoadStatus(processingDocument);
-                                    _dataBaseAdapter.Commit();
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback($"ProcessingDocumentPoint_{i}");
-                            _dataBaseAdapter.ReloadEntry(processingDocument);
-                            string errorMessage = _log.GetRecursiveInnerException(ex);
-                            _log.Log(errorMessage);
-
-                            //var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
-                            //errorsWindow.ShowDialog();
-                        }
-
-                        i++;
-                    }
-
-                    if (processingDocuments.Exists(p => p.DocStatus != (int)DocEdoStatus.Sent))
-                        transaction.Commit();
+                    myOrganization.EdoSystem = null;
+                    continue;
                 }
 
-                var newDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.New || d.DocStatus == (int)DocEdoStatus.RevokeRequested).ToList() ?? new List<DocEdoPurchasing>();
-
-                using (var transaction = _dataBaseAdapter.BeginTransaction())
+                if (!(myOrganization.HonestMarkSystem?.Authorization() ?? false))
                 {
-                    foreach (var newDocument in newDocuments)
-                    {
-                        try
-                        {
-                            if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
-                                newDocument.DocStatus = (int)_edoSystem.GetCurrentStatus(newDocument.DocStatus, newDocument.IdDocEdo, newDocument.ParentEntityId);
-
-                            _dataBaseAdapter.Commit();
-                        }
-                        catch (Exception ex)
-                        {
-                            _dataBaseAdapter.ReloadEntry(newDocument);
-                            string errorMessage = _log.GetRecursiveInnerException(ex);
-                            _log.Log(errorMessage);
-
-                            errorsList.Add(errorMessage);
-                        }
-                    }
-
-                    transaction.Commit();
+                    myOrganization.HonestMarkSystem = null;
                 }
 
-                if(errorsList.Count > 0)
+                object[] parameters = null;
+
+                List<IEdoSystemDocument<string>> documents = new List<IEdoSystemDocument<string>>();
+                try
                 {
-                    var errorsWindow = new ErrorsWindow("Произошли ошибки.", errorsList);
+                    documents = GetNewDocuments(myOrganization, out parameters);
+                }
+                catch (System.Net.WebException webEx)
+                {
+                    string errorMessage = _log.GetRecursiveInnerException(webEx);
+                    _log.Log(errorMessage);
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка получения документов на удалённом сервере.", new List<string>(new string[] { errorMessage }));
                     errorsWindow.ShowDialog();
                 }
-                
+                catch (Exception ex)
+                {
+                    string errorMessage = _log.GetRecursiveInnerException(ex);
+                    _log.Log(errorMessage);
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка получения документов.", new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
+                }
+
+                if (documents.Count > 0)
+                {
+                    using (var newDocsTransaction = _dataBaseAdapter.BeginTransaction())
+                    {
+                        try
+                        {
+                            foreach (var doc in documents)
+                            {
+                                if (!_dataBaseAdapter.DocumentCanBeAddedByUser(doc))
+                                    continue;
+
+                                byte[] docContentBytes;
+
+                                if (!SaveNewDocument(myOrganization, doc, out docContentBytes))
+                                    continue;
+
+                                var docFromDb = (DocEdoPurchasing)_dataBaseAdapter.GetDocumentFromDb(doc);
+
+                                if (docFromDb == null)
+                                {
+                                    myOrganization.EdoSystem.SendReceivingConfirmationEventHandler?.Invoke(this, new WebSystems.EventArgs.SendReceivingConfirmationEventArgs { Document = doc });
+                                    _dataBaseAdapter.AddDocumentToDataBase(myOrganization, doc, docContentBytes, DocumentInOutType.Inbox);
+                                }
+                            }
+                            _dataBaseAdapter.Commit(newDocsTransaction);
+                            SaveParameters(myOrganization, parameters);
+                        }
+                        catch (Exception ex)
+                        {
+                            newDocsTransaction.Rollback();
+                            string errorMessage = _log.GetRecursiveInnerException(ex);
+                            _log.Log(errorMessage);
+
+                            var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { errorMessage }));
+                            errorsWindow.ShowDialog();
+                        }
+                    }
+                }
+
+                var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>();
+
+                try
+                {
+                    var errorsList = new List<string>();
+                    var processingDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.Sent).ToList() ?? new List<DocEdoPurchasing>();
+
+                    if (myOrganization.HonestMarkSystem != null)
+                    {
+                        var honestMarkSystem = myOrganization.HonestMarkSystem;
+
+                        using (var transaction = _dataBaseAdapter.BeginTransaction())
+                        {
+                            int i = 1;
+                            foreach (var processingDocument in processingDocuments)
+                            {
+                                try
+                                {
+                                    ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"ProcessingDocumentPoint_{i}");
+                                    if (honestMarkSystem != null)
+                                    {
+                                        var docProcessingInfo = honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
+
+                                        if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
+                                        {
+                                            processingDocument.DocStatus = (int)DocEdoStatus.Processed;
+                                            LoadStatus(processingDocument);
+
+                                            if (processingDocument.IdDocJournal != null)
+                                                _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(processingDocument.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
+
+                                            _dataBaseAdapter.Commit();
+                                        }
+                                        else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
+                                        {
+                                            processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
+
+                                            var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
+
+                                            var errors = failedOperations.SelectMany(f => f.Errors);
+
+                                            var errorsListStr = new List<string>();
+                                            foreach (var error in errors)
+                                            {
+                                                if (!string.IsNullOrEmpty(error.Text))
+                                                    errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
+                                                else if (!string.IsNullOrEmpty(error?.Error?.Detail))
+                                                    errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
+                                                else
+                                                    errorsListStr.Add($"Произошла ошибка с кодом:{error.Code}\n");
+                                            }
+                                            processingDocument.ErrorMessage = string.Join("\n\n", errorsListStr);
+                                            LoadStatus(processingDocument);
+                                            _dataBaseAdapter.Commit();
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback($"ProcessingDocumentPoint_{i}");
+                                    _dataBaseAdapter.ReloadEntry(processingDocument);
+                                    string errorMessage = _log.GetRecursiveInnerException(ex);
+                                    _log.Log(errorMessage);
+
+                                    //var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
+                                    //errorsWindow.ShowDialog();
+                                }
+
+                                i++;
+                            }
+
+                            if (processingDocuments.Exists(p => p.DocStatus != (int)DocEdoStatus.Sent))
+                                transaction.Commit();
+                        }
+                    }
+
+                    var newDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.New || d.DocStatus == (int)DocEdoStatus.RevokeRequested).ToList() ?? new List<DocEdoPurchasing>();
+
+                    using (var transaction = _dataBaseAdapter.BeginTransaction())
+                    {
+                        foreach (var newDocument in newDocuments)
+                        {
+                            try
+                            {
+                                if (myOrganization.EdoSystem.GetType() == typeof(DiadocEdoSystem))
+                                    newDocument.DocStatus = (int)myOrganization.EdoSystem.GetCurrentStatus(newDocument.DocStatus, newDocument.IdDocEdo, newDocument.ParentEntityId);
+
+                                _dataBaseAdapter.Commit();
+                            }
+                            catch (Exception ex)
+                            {
+                                _dataBaseAdapter.ReloadEntry(newDocument);
+                                string errorMessage = _log.GetRecursiveInnerException(ex);
+                                _log.Log(errorMessage);
+
+                                errorsList.Add(errorMessage);
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+
+                    if (errorsList.Count > 0)
+                    {
+                        var errorsWindow = new ErrorsWindow("Произошли ошибки.", errorsList);
+                        errorsWindow.ShowDialog();
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    string errorMessage = _log.GetRecursiveInnerException(ex);
+                    _log.Log(errorMessage);
+
+                    var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов документов.", new List<string>(new string[] { errorMessage }));
+                    errorsWindow.ShowDialog();
+                }
             }
-            catch (Exception ex)
-            {
-                string errorMessage = _log.GetRecursiveInnerException(ex);
-                _log.Log(errorMessage);
 
-                var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов документов.", new List<string>(new string[] { errorMessage }));
-                errorsWindow.ShowDialog();
-            }
-
-
+            ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>();
+            SelectedItem = null;
+            SelectedMyOrganization = null;
             UpdateProperties();
         }
 
@@ -329,6 +348,14 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана своя организация для сопоставления.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
             var docs = _dataBaseAdapter.GetJournalDocuments(SelectedItem);
 
             var docPurchasingWindow = new PurchasingDocumentsWindow();
@@ -366,7 +393,7 @@ namespace HonestMarkSystem.Models
                             decimal? oldIdDoc = SelectedItem?.IdDocJournal;
                             SelectedItem.IdDocJournal = docPurchasingModel.SelectedItem.Id;
 
-                            if (_honestMarkSystem != null && docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
+                            if (honestMarkSystem != null && docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
                             {
                                 loadContext.SetLoadingText("Сохранение кодов");
                                 var sellerXmlDocument = new XmlDocument();
@@ -425,6 +452,13 @@ namespace HonestMarkSystem.Models
 
         private async void SignAndSend()
         {
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана своя организация для подписи документов.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (SelectedItem == null)
             {
                 System.Windows.MessageBox.Show(
@@ -474,6 +508,13 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if (SelectedMyOrganization.EdoSystem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Регистрация в веб сервисе не была успешной.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (SelectedItem.IdDocJournal == null)
             {
                 System.Windows.MessageBox.Show(
@@ -510,7 +551,11 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if (_edoSystem.HasZipContent && !File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip"))
+            var edoSystem = SelectedMyOrganization.EdoSystem;
+            var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
+            var cryptoUtil = SelectedMyOrganization.CryptoUtil;
+
+            if (edoSystem.HasZipContent && !File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip"))
             {
                 System.Windows.MessageBox.Show(
                     "Не найден zip файл документооборота.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
@@ -533,7 +578,7 @@ namespace HonestMarkSystem.Models
 
             if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
             {
-                if (_edoSystem.HasZipContent)
+                if (edoSystem.HasZipContent)
                 {
                     try
                     {
@@ -560,13 +605,13 @@ namespace HonestMarkSystem.Models
                 }
             }
 
-            var signWindow = new BuyerSignWindow(_cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
-            signWindow.SetDefaultParameters(_edoSystem.GetCertSubject(), SelectedItem);
+            var signWindow = new BuyerSignWindow(cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+            signWindow.SetDefaultParameters(edoSystem.GetCertSubject(), SelectedItem);
             signWindow.Report.EdoProgramVersion = this.EdoProgramVersion;
 
             string signedFilePath;
 
-            if (_edoSystem.HasZipContent)
+            if (edoSystem.HasZipContent)
             {
                 try
                 {
@@ -640,7 +685,7 @@ namespace HonestMarkSystem.Models
 
                             if (markedCodesArray.Count() > 0)
                             {
-                                if (_honestMarkSystem != null && !MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
+                                if (honestMarkSystem != null && !MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
                                     throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
 
                                 if (_dataBaseAdapter.IsExistsNotReceivedCodes(SelectedItem.IdDocJournal.Value, Convert.ToInt32(docJournal.IdDocType)))
@@ -651,7 +696,7 @@ namespace HonestMarkSystem.Models
                             }
                             var xml = reportForSend.GetXmlContent();
                             var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
-                            var signature = _cryptoUtil.Sign(fileBytes, true);
+                            var signature = cryptoUtil.Sign(fileBytes, true);
 
                             File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{reportForSend.FileName}.xml", fileBytes);
                             File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{reportForSend.FileName}.xml.sig", signature);
@@ -659,7 +704,7 @@ namespace HonestMarkSystem.Models
                             var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
 
                             loadContext.SetLoadingText("Подписание и отправка");
-                            if (_edoSystem.GetType() == typeof(EdoLiteSystem))
+                            if (edoSystem.GetType() == typeof(EdoLiteSystem))
                             {
                                 string localPath = directory.Name;
                                 while (directory.Parent != null)
@@ -673,9 +718,9 @@ namespace HonestMarkSystem.Models
                                 }
 
                                 string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{reportForSend.FileName}.xml";
-                                _edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, content);
+                                edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, content);
                             }
-                            else if(_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                            else if(edoSystem.GetType() == typeof(DiadocEdoSystem))
                             {
                                 string typeNameId = string.Empty, function = string.Empty;
 
@@ -701,7 +746,7 @@ namespace HonestMarkSystem.Models
                                     return;
                                 }
 
-                                _edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedItem.ParentEntityId, SelectedItem.IdDocType);
+                                edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedItem.ParentEntityId, SelectedItem.IdDocType);
                             }
 
                             SelectedItem.SignatureFileName = reportForSend.FileName;
@@ -753,6 +798,13 @@ namespace HonestMarkSystem.Models
 
         private async void ExportToTrader()
         {
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана своя организация для экспорта документов.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (SelectedItem == null)
             {
                 System.Windows.MessageBox.Show(
@@ -774,17 +826,19 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if(_honestMarkSystem == null)
+            var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
+            if (honestMarkSystem == null)
             {
                 if(System.Windows.MessageBox.Show(
                     "Авторизация в Честном знаке не была успешной. \nНевозможно экспортировать коды маркировки.\nВы точно хотите экспортировать документ?", "Ошибка авторизации", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question) != System.Windows.MessageBoxResult.Yes)
                     return;
             }
 
+            var edoSystem = SelectedMyOrganization.EdoSystem;
             string errorMessage = null;
             if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
             {
-                if (_edoSystem.HasZipContent)
+                if (edoSystem?.HasZipContent ?? false)
                 {
                     try
                     {
@@ -828,7 +882,7 @@ namespace HonestMarkSystem.Models
                         loadContext.SetLoadingText("Сохранение документа");
                         var docJournalId = _dataBaseAdapter.ExportDocument(SelectedItem);
 
-                        if (_honestMarkSystem != null)
+                        if (honestMarkSystem != null)
                         {
                             loadContext.SetLoadingText("Сохранение кодов маркировки");
                             SaveMarkedCodesToDataBase(docSellerContent, docJournalId);
@@ -857,9 +911,25 @@ namespace HonestMarkSystem.Models
 
         private void ReturnMarkedCodes()
         {
-            var returnModel = new ReturnModel(_honestMarkSystem, _dataBaseAdapter);
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана своя организация для возврата кодов маркировки.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedMyOrganization.EdoSystem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Регистрация в веб сервисе не была успешной.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
+            var returnModel = new ReturnModel(honestMarkSystem, _dataBaseAdapter);
             var returnWindow = new ReturnWindow();
             returnWindow.DataContext = returnModel;
+            var edoSystem = SelectedMyOrganization.EdoSystem;
 
             returnModel.OnReturnSelectedCodesProcess = (object s) =>
             {
@@ -870,7 +940,7 @@ namespace HonestMarkSystem.Models
                 {
                     var docJournal = returnModel.SelectedItem.Item;
 
-                    var labelsByConsignors = _dataBaseAdapter.GetMarkedCodesByConsignors(docJournal.Id);
+                    var labelsByConsignors = _dataBaseAdapter.GetMarkedCodesByConsignors(SelectedMyOrganization, docJournal.Id);
 
                     int consignorsCount = 0;
                     foreach (var labelsByConsignor in labelsByConsignors)
@@ -916,7 +986,7 @@ namespace HonestMarkSystem.Models
                         }
 
                         var markedCodes = productList?.SelectMany(p => p.MarkedCodes) ?? new List<string>();
-                        var orgInn = ConfigSet.Configs.Config.GetInstance().ConsignorInn;
+                        var orgInn = SelectedMyOrganization.OrgInn;
 
                         if (markedCodes.Count() == 0)
                         {
@@ -926,7 +996,7 @@ namespace HonestMarkSystem.Models
                         }
                         else
                         {
-                            if (_honestMarkSystem != null && !MarkedCodesOwnerCheck(markedCodes, orgInn))
+                            if (honestMarkSystem != null && !MarkedCodesOwnerCheck(markedCodes, orgInn))
                             {
                                 loadActionContext.ErrorMessage = "В списке кодов маркировки есть не принадлежащие организации.";
                                 loadActionContext.TitleErrorText = "Произошла ошибка проверки кодов.";
@@ -962,20 +1032,20 @@ namespace HonestMarkSystem.Models
 
                         object[] parameters = null;
 
-                        if (_edoSystem as DiadocEdoSystem != null)
+                        if (edoSystem as DiadocEdoSystem != null)
                         {
-                            var diadocEdoSystem = _edoSystem as DiadocEdoSystem;
+                            var diadocEdoSystem = edoSystem as DiadocEdoSystem;
                             var orgId = diadocEdoSystem.GetMyOrgId(orgInn);
 
                             parameters = new[] { orgId };
                         }
-                        else if (_edoSystem as EdoLiteSystem != null)
-                            parameters = new[] { _honestMarkSystem };
+                        else if (edoSystem as EdoLiteSystem != null)
+                            parameters = new[] { honestMarkSystem };
 
-                        var senderEdoId = _edoSystem.GetOrganizationEdoIdByInn(orgInn, parameters);
-                        var receiverEdoId = _edoSystem.GetOrganizationEdoIdByInn(receiverInn, parameters);
+                        var senderEdoId = edoSystem.GetOrganizationEdoIdByInn(orgInn, SelectedMyOrganization.OrgInn, parameters);
+                        var receiverEdoId = edoSystem.GetOrganizationEdoIdByInn(receiverInn, SelectedMyOrganization.OrgInn, parameters);
 
-                        var orgName = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
+                        var orgName = SelectedMyOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
 
                         loadContext.SetLoadingText("Формирование УПД");
                         var sellerReport = new Reporter.Reports.UniversalTransferSellerDocument();
@@ -985,12 +1055,12 @@ namespace HonestMarkSystem.Models
                         sellerReport.EdoProgramVersion = EdoProgramVersion;
                         sellerReport.FileName = $"ON_NSCHFDOPPRMARK_{receiverEdoId}_{senderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
 
-                        sellerReport.EdoId = _edoSystem.EdoId;
+                        sellerReport.EdoId = edoSystem.EdoId;
                         sellerReport.SenderEdoId = senderEdoId;
                         sellerReport.ReceiverEdoId = receiverEdoId;
 
-                        sellerReport.EdoProviderOrgName = _edoSystem.EdoOrgName;
-                        sellerReport.ProviderInn = _edoSystem.EdoOrgInn;
+                        sellerReport.EdoProviderOrgName = edoSystem.EdoOrgName;
+                        sellerReport.ProviderInn = edoSystem.EdoOrgInn;
 
                         sellerReport.CreateDate = DateTime.Now;
                         sellerReport.FinSubjectCreator = $"{orgName}, ИНН: {orgInn}";
@@ -1069,8 +1139,8 @@ namespace HonestMarkSystem.Models
                             var sellerJuridicalEntity = new Reporter.Entities.JuridicalEntity();
                             sellerJuridicalEntity.Inn = orgInn;
 
-                            sellerJuridicalEntity.Surname = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "SN");
-                            var firstMiddleName = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "G");
+                            sellerJuridicalEntity.Surname = SelectedMyOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "SN");
+                            var firstMiddleName = SelectedMyOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "G");
                             sellerJuridicalEntity.Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
                             sellerJuridicalEntity.Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
 
@@ -1108,10 +1178,10 @@ namespace HonestMarkSystem.Models
                             sellerReport.JuridicalInn = sellerOrganizationExchangeParticipant?.JuridicalInn;
                             sellerReport.SignerOrgName = sellerOrganizationExchangeParticipant?.OrgName;
 
-                            sellerReport.SignerPosition = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "T");
+                            sellerReport.SignerPosition = SelectedMyOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "T");
 
-                            sellerReport.SignerSurname = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "SN");
-                            var firstMiddleName = _cryptoUtil.ParseCertAttribute(_edoSystem.GetCertSubject(), "G");
+                            sellerReport.SignerSurname = SelectedMyOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "SN");
+                            var firstMiddleName = SelectedMyOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "G");
                             sellerReport.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
                             sellerReport.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
                         }
@@ -1129,18 +1199,18 @@ namespace HonestMarkSystem.Models
                         var sellerXmlContent = sellerReport.GetXmlContent();
 
                         var sellerFileBytes = Encoding.GetEncoding(1251).GetBytes(sellerXmlContent);
-                        var sellerSignature = _cryptoUtil.Sign(sellerFileBytes, true);
+                        var sellerSignature = SelectedMyOrganization.CryptoUtil.Sign(sellerFileBytes, true);
 
                         string localPath = string.Empty;
 
                         loadContext.SetLoadingText("Отправка УПД");
-                        if (_edoSystem as DiadocEdoSystem != null)
+                        if (edoSystem as DiadocEdoSystem != null)
                         {
                             var orgId = parameters[0] as string;
 
                             parameters = new object[] { orgId, receiverInn, "ДОП", null, null };
                         }
-                        else if(_edoSystem as EdoLiteSystem != null)
+                        else if(edoSystem as EdoLiteSystem != null)
                         {
                             File.WriteAllBytes($"{edoFilesPath}//{sellerReport.FileName}.xml", sellerFileBytes);
 
@@ -1163,9 +1233,9 @@ namespace HonestMarkSystem.Models
                             parameters = new object[] { content };
                         }
 
-                        object sendSellerReportResult = _edoSystem.SendUniversalTransferDocument(sellerFileBytes, sellerSignature, parameters);
+                        object sendSellerReportResult = edoSystem.SendUniversalTransferDocument(sellerFileBytes, sellerSignature, parameters);
 
-                        if (_edoSystem as DiadocEdoSystem != null)
+                        if (edoSystem as DiadocEdoSystem != null)
                         {
                             var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
 
@@ -1175,7 +1245,7 @@ namespace HonestMarkSystem.Models
                             File.WriteAllBytes($"{edoFilesPath}//{sellerMessage.MessageId}//{sellerReport.FileName}.xml", sellerFileBytes);
                             File.WriteAllBytes($"{edoFilesPath}//{sellerMessage.MessageId}//{sellerReport.FileName}.xml.sig", sellerSignature);
                         }
-                        else if (_edoSystem as EdoLiteSystem != null)
+                        else if (edoSystem as EdoLiteSystem != null)
                         {
                             if (File.Exists($"{edoFilesPath}//{sellerReport.FileName}.xml"))
                                 File.Delete($"{edoFilesPath}//{sellerReport.FileName}.xml");
@@ -1199,7 +1269,7 @@ namespace HonestMarkSystem.Models
                         buyerReport.SellerFileId = sellerReport.FileName;
                         buyerReport.EdoProviderOrgName = sellerReport.EdoProviderOrgName;
                         buyerReport.ProviderInn = sellerReport.ProviderInn;
-                        buyerReport.EdoId = _edoSystem.EdoId;
+                        buyerReport.EdoId = edoSystem.EdoId;
                         buyerReport.SenderEdoId = receiverEdoId;
                         buyerReport.ReceiverEdoId = senderEdoId;
                         buyerReport.CreateSellerFileDate = sellerReport.CreateDate;
@@ -1236,7 +1306,7 @@ namespace HonestMarkSystem.Models
                         var buyerFileBytes = Encoding.GetEncoding(1251).GetBytes(buyerXmlContent);
                         var buyerSignature = cryptoUtil.Sign(buyerFileBytes, true);
 
-                        if (_edoSystem as DiadocEdoSystem != null)
+                        if (edoSystem as DiadocEdoSystem != null)
                         {
                             var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
 
@@ -1246,7 +1316,7 @@ namespace HonestMarkSystem.Models
                             File.WriteAllBytes($"{edoFilesPath}//{sellerMessage.MessageId}//{buyerReport.FileName}.xml", buyerFileBytes);
                             File.WriteAllBytes($"{edoFilesPath}//{sellerMessage.MessageId}//{buyerReport.FileName}.xml.sig", buyerSignature);
                         }
-                        else if (_edoSystem as EdoLiteSystem != null)
+                        else if (edoSystem as EdoLiteSystem != null)
                         {
                             var docId = sendSellerReportResult as string;
 
@@ -1258,14 +1328,14 @@ namespace HonestMarkSystem.Models
                         }
 
                         loadContext.SetLoadingText("Отправка УПД покупателя");
-                        if (_edoSystem as DiadocEdoSystem != null)
+                        if (edoSystem as DiadocEdoSystem != null)
                         {
                             var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
                             var entity = sellerMessage.Entities.FirstOrDefault(t => t.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.UniversalTransferDocument);
 
-                            _edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision, sellerMessage.ToBoxId, receiverCert);
+                            edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision, sellerMessage.ToBoxId, receiverCert);
                         }
-                        else if (_edoSystem as EdoLiteSystem != null)
+                        else if (edoSystem as EdoLiteSystem != null)
                         {
                             var docId = sendSellerReportResult as string;
 
@@ -1285,21 +1355,21 @@ namespace HonestMarkSystem.Models
                             }
 
                             string content = $"{localPath}/{edoFilesPath}/{docId}/{buyerReport.FileName}.xml";
-                            _edoSystem.SendDocument(docId, buyerFileBytes, buyerSignature, content);
+                            edoSystem.SendDocument(docId, buyerFileBytes, buyerSignature, content);
                         }
 
                         using (var transaction = _dataBaseAdapter.BeginTransaction())
                         {
                             try
                             {
-                                if (_edoSystem as DiadocEdoSystem != null)
+                                if (edoSystem as DiadocEdoSystem != null)
                                 {
                                     var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
                                     var entity = sellerMessage.Entities.FirstOrDefault(t => t.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.UniversalTransferDocument);
                                     _dataBaseAdapter.AddDocEdoReturnPurchasing(docJournal.Id, sellerMessage.MessageId, entity.EntityId, sellerReport.FileName, buyerReport.FileName,
                                         orgInn, sellerOrgName, receiverInn, receiverOrgName, DateTime.Now);
                                 }
-                                else if (_edoSystem as EdoLiteSystem != null)
+                                else if (edoSystem as EdoLiteSystem != null)
                                 {
                                     var docId = sendSellerReportResult as string;
                                     _dataBaseAdapter.AddDocEdoReturnPurchasing(docJournal.Id, docId, null, sellerReport.FileName, buyerReport.FileName,
@@ -1342,7 +1412,14 @@ namespace HonestMarkSystem.Models
 
         private void WithdrawalCodes()
         {
-            if(_honestMarkSystem == null)
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана организация для вывода кодов из оборота.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedMyOrganization.HonestMarkSystem == null)
             {
                 System.Windows.MessageBox.Show(
                     "Невозможно оформить вывод из оборота.\nНе пройдена авторизация в Честном знаке.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
@@ -1352,12 +1429,19 @@ namespace HonestMarkSystem.Models
             var markedCodes = _dataBaseAdapter.GetAllMarkedCodes().Cast<DocGoodsDetailsLabels>().ToList();
 
             var withdrawalWindow = new ChangeMarkedCodesWindow();
-            withdrawalWindow.DataContext = new ChangeMarkedCodesModel(markedCodes, _honestMarkSystem);
+            withdrawalWindow.DataContext = new ChangeMarkedCodesModel(markedCodes, SelectedMyOrganization);
             withdrawalWindow.ShowDialog();
         }
 
         private async void RejectDocument()
         {
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана организация для отклонения документов.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (SelectedItem == null)
             {
                 System.Windows.MessageBox.Show(
@@ -1379,6 +1463,13 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if (SelectedMyOrganization.EdoSystem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Регистрация в веб сервисе не была успешной.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             var rejectWindow = new RejectWindow();
             if (rejectWindow.ShowDialog() == true)
             {
@@ -1392,6 +1483,8 @@ namespace HonestMarkSystem.Models
 
                 var loadContext = loadWindow.GetLoadContext();
                 var report = rejectWindow.Report;
+                var edoSystem = SelectedMyOrganization.EdoSystem;
+                var cryptoUtil = SelectedMyOrganization.CryptoUtil;
 
                 loadWindow.Show();
                 await Task.Run(() =>
@@ -1428,10 +1521,10 @@ namespace HonestMarkSystem.Models
                             report.SenderJuridicalKpp = SelectedItem.SenderKpp;
                             report.OrgSenderName = SelectedItem.SenderName;
 
-                            var subject = _edoSystem.GetCertSubject();
-                            var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
-                            report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
-                            report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+                            var subject = edoSystem.GetCertSubject();
+                            var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
+                            report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
+                            report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
                             report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
                             report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
 
@@ -1451,7 +1544,7 @@ namespace HonestMarkSystem.Models
 
                             string signedFilePath;
 
-                            if (_edoSystem.HasZipContent)
+                            if (edoSystem.HasZipContent)
                             {
                                 using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
                                 {
@@ -1484,15 +1577,15 @@ namespace HonestMarkSystem.Models
                             loadContext.SetLoadingText("Сохранение документов");
                             var xmlContent = report.GetXmlContent();
                             var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
-                            var signature = _cryptoUtil.Sign(contentBytes, true);
+                            var signature = cryptoUtil.Sign(contentBytes, true);
 
                             File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml", contentBytes);
                             File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml.sig", signature);
 
                             loadContext.SetLoadingText("Отправка");
 
-                            if(_edoSystem.GetType() == typeof(DiadocEdoSystem))
-                                _edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                            if(edoSystem.GetType() == typeof(DiadocEdoSystem))
+                                edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
 
                             SelectedItem.DocStatus = (int)DocEdoStatus.Rejected;
 
@@ -1528,6 +1621,13 @@ namespace HonestMarkSystem.Models
 
         private async void RevokeDocument()
         {
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана организация для аннулирования документов.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             if (SelectedItem == null)
             {
                 System.Windows.MessageBox.Show(
@@ -1542,6 +1642,15 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if (SelectedMyOrganization.EdoSystem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Регистрация в веб сервисе не была успешной.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var edoSystem = SelectedMyOrganization.EdoSystem;
+            var cryptoUtil = SelectedMyOrganization.CryptoUtil;
             LoadWindow loadWindow = new LoadWindow("Подождите, идёт загрузка данных");
 
             if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
@@ -1561,11 +1670,11 @@ namespace HonestMarkSystem.Models
                     if (comfirmRevokeWindow.Result == RevokeRequestDialogResult.None)
                         return;
 
-                    if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                    if (edoSystem.GetType() == typeof(DiadocEdoSystem))
                     {
                         loadWindow.Show();
                         byte[] sellerSignature;
-                        var revokeDocumentEntity = (Diadoc.Api.Proto.Events.Entity)_edoSystem.GetRevokeDocument(out fileName, out sellerSignature, SelectedItem.CounteragentEdoBoxId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                        var revokeDocumentEntity = (Diadoc.Api.Proto.Events.Entity)edoSystem.GetRevokeDocument(out fileName, out sellerSignature, SelectedItem.CounteragentEdoBoxId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
                         var revokeDocumentContent = revokeDocumentEntity?.Content?.Data;
 
                         if (revokeDocumentContent == null)
@@ -1573,12 +1682,12 @@ namespace HonestMarkSystem.Models
 
                         if (comfirmRevokeWindow.Result == RevokeRequestDialogResult.Revoke)
                         {
-                            var signature = _cryptoUtil.Sign(revokeDocumentContent, true);
+                            var signature = cryptoUtil.Sign(revokeDocumentContent, true);
 
                             File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}", revokeDocumentContent);
                             File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}.sig", signature);
 
-                            _edoSystem.SendRevokeConfirmation(signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
+                            edoSystem.SendRevokeConfirmation(signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
 
                             using (var transaction = _dataBaseAdapter.BeginTransaction())
                             {
@@ -1640,10 +1749,10 @@ namespace HonestMarkSystem.Models
                                         report.SenderJuridicalKpp = SelectedItem.SenderKpp;
                                         report.OrgSenderName = SelectedItem.SenderName;
 
-                                        var subject = _edoSystem.GetCertSubject();
-                                        var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
-                                        report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
-                                        report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+                                        var subject = edoSystem.GetCertSubject();
+                                        var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
+                                        report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
+                                        report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
                                         report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
                                         report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
 
@@ -1664,14 +1773,14 @@ namespace HonestMarkSystem.Models
                                         loadContext.SetLoadingText("Сохранение документов");
                                         var xmlContent = report.GetXmlContent();
                                         var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
-                                        var signature = _cryptoUtil.Sign(contentBytes, true);
+                                        var signature = cryptoUtil.Sign(contentBytes, true);
 
                                         File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml", contentBytes);
                                         File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml.sig", signature);
 
                                         loadContext.SetLoadingText("Отправка");
 
-                                        _edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
+                                        edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
 
                                         SelectedItem.DocStatus = (int)DocEdoStatus.RejectRevoke;
                                         _dataBaseAdapter.Commit(transaction);
@@ -1773,10 +1882,10 @@ namespace HonestMarkSystem.Models
                                 report.JuridicalReceiverKpp = SelectedItem.SenderKpp;
                                 report.OrgReceiverName = SelectedItem.SenderName;
 
-                                var subject = _edoSystem.GetCertSubject();
-                                var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
-                                report.SignerPosition = _cryptoUtil.ParseCertAttribute(subject, "T");
-                                report.SignerSurname = _cryptoUtil.ParseCertAttribute(subject, "SN");
+                                var subject = edoSystem.GetCertSubject();
+                                var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
+                                report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
+                                report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
                                 report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
                                 report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
 
@@ -1796,7 +1905,7 @@ namespace HonestMarkSystem.Models
 
                                 string signedFilePath;
 
-                                if (_edoSystem.HasZipContent)
+                                if (edoSystem.HasZipContent)
                                 {
                                     using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
                                     {
@@ -1829,15 +1938,15 @@ namespace HonestMarkSystem.Models
                                 loadContext.SetLoadingText("Сохранение документов");
                                 var xmlContent = report.GetXmlContent();
                                 var contentBytes = Encoding.GetEncoding(1251).GetBytes(xmlContent);
-                                var signature = _cryptoUtil.Sign(contentBytes, true);
+                                var signature = cryptoUtil.Sign(contentBytes, true);
 
                                 File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml", contentBytes);
                                 File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{report.FileName}.xml.sig", signature);
 
                                 loadContext.SetLoadingText("Отправка");
 
-                                if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
-                                    _edoSystem.SendRevocationDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                                if (edoSystem.GetType() == typeof(DiadocEdoSystem))
+                                    edoSystem.SendRevocationDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
 
                                 if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
                                     SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;
@@ -1888,12 +1997,27 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана своя организация для сохранения документов.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedMyOrganization.EdoSystem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Регистрация в веб сервисе не была успешной.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
             object[] parameters = null;
             string fileName = null;
+            var edoSystem = SelectedMyOrganization.EdoSystem;
 
             try
             {
-                if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+                if (edoSystem.GetType() == typeof(DiadocEdoSystem))
                 {
                     parameters = new object[] { SelectedItem.IdDocEdo, SelectedItem.ParentEntityId };
 
@@ -1904,7 +2028,7 @@ namespace HonestMarkSystem.Models
                     else
                         fileName = $"УПД № {SelectedItem.Name}";
                 }
-                else if (_edoSystem.GetType() == typeof(EdoLiteSystem))
+                else if (edoSystem.GetType() == typeof(EdoLiteSystem))
                 {
                     parameters = new object[] { SelectedItem.IdDocEdo };
                     fileName = SelectedItem.Name;
@@ -1913,7 +2037,7 @@ namespace HonestMarkSystem.Models
                 if (parameters == null)
                     return;
 
-                var contentBytes = _edoSystem.GetDocumentPrintForm(parameters);
+                var contentBytes = edoSystem.GetDocumentPrintForm(parameters);
 
                 var changePathDialog = new Microsoft.Win32.SaveFileDialog();
                 changePathDialog.Title = "Сохранение файла";
@@ -1950,11 +2074,12 @@ namespace HonestMarkSystem.Models
         private bool MarkedCodesOwnerCheck(IEnumerable<string> markedCodes, string ownerInn)
         {
             var positionInArray = 0;
+            var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
 
             while (positionInArray < markedCodes.Count())
             {
                 int length = markedCodes.Count() - positionInArray > 500 ? 500 : markedCodes.Count() - positionInArray;
-                var markedCodesInfo = _honestMarkSystem.GetMarkedCodesInfo(ProductGroupsEnum.Perfumery, markedCodes.Skip(positionInArray).Take(length).ToArray());
+                var markedCodesInfo = honestMarkSystem.GetMarkedCodesInfo(ProductGroupsEnum.Perfumery, markedCodes.Skip(positionInArray).Take(length).ToArray());
 
                 if (markedCodesInfo.Any(m => m?.CisInfo?.OwnerInn != ownerInn))
                     return false;
@@ -1969,6 +2094,7 @@ namespace HonestMarkSystem.Models
         {
             var reporterDll = new Reporter.ReporterDll();
             var report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
+            var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
             string errorMessage = null;
 
             if (report.Products == null || report.Products.Count == 0)
@@ -1981,11 +2107,11 @@ namespace HonestMarkSystem.Models
             var transportCodes = productsWithTransportCodes?.SelectMany(p => p.TransportPackingIdentificationCode) ?? new List<string>();
 
             if (transportCodes.Count() > 0)
-                _honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
+                honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
 
             foreach (var product in report.Products)
                 if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
-                    _honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
+                    honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
 
             if (markedCodes.Count == 0)
                 return;
@@ -2045,35 +2171,33 @@ namespace HonestMarkSystem.Models
         {
             OnPropertyChanged("ItemsList");
             OnPropertyChanged("SelectedItem");
+            OnPropertyChanged("SelectedMyOrganization");
         }
 
-        public void SaveParameters(params object[] parameters)
+        public void SaveParameters(ConsignorOrganization myOrganization, params object[] parameters)
         {
-            if (_edoSystem.GetType() == typeof(EdoLiteSystem))
-            {
-                ConfigSet.Configs.Config.GetInstance().EdoDocCount = (int)parameters[0];
-                ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime = (DateTime)parameters[1];
-
-                ConfigSet.Configs.Config.GetInstance().Save(ConfigSet.Configs.Config.GetInstance(), ConfigSet.Configs.Config.ConfFileName);
-            }
-            else if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
-            {
-                ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime = (DateTime)parameters[0];
-                ConfigSet.Configs.Config.GetInstance().Save(ConfigSet.Configs.Config.GetInstance(), ConfigSet.Configs.Config.ConfFileName);
-            }
+            var edoSystem = myOrganization.EdoSystem;
+            edoSystem?.SaveParameters(parameters);
         }
 
-        public List<IEdoSystemDocument<string>> GetNewDocuments(out object[] parameters)
+        public List<IEdoSystemDocument<string>> GetNewDocuments(ConsignorOrganization myOrganization, out object[] parameters)
         {
-            if (_edoSystem.GetType() == typeof(EdoLiteSystem))
+            if (myOrganization.EdoSystem == null)
             {
-                var docCount = _edoSystem.GetDocumentsCount();
+                parameters = null;
+                return null;
+            }
+
+            var edoSystem = myOrganization.EdoSystem;
+            if (edoSystem.GetType() == typeof(EdoLiteSystem))
+            {
+                var docCount = edoSystem.GetDocumentsCount();
                 var edoDocCount = ConfigSet.Configs.Config.GetInstance()?.EdoDocCount ?? 0;
 
                 parameters = new object[2] { docCount, DateTime.Now };
                 if (edoDocCount < docCount)
                 {
-                    var documentList = _edoSystem.GetDocuments(DocumentInOutType.Inbox, docCount - edoDocCount,
+                    var documentList = edoSystem.GetDocuments(DocumentInOutType.Inbox, docCount - edoDocCount,
                         ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime);
 
                     return documentList ?? new List<IEdoSystemDocument<string>>();
@@ -2081,11 +2205,11 @@ namespace HonestMarkSystem.Models
                 else
                     return new List<IEdoSystemDocument<string>>();
             }
-            else if(_edoSystem.GetType() == typeof(DiadocEdoSystem))
+            else if(edoSystem.GetType() == typeof(DiadocEdoSystem))
             {
                 parameters = new object[1] { DateTime.Now };
 
-                var newDocuments = _edoSystem.GetDocuments(DocumentInOutType.Inbox, 0, ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime);
+                var newDocuments = edoSystem.GetDocuments(DocumentInOutType.Inbox);
                 return newDocuments;
             }
             else
@@ -2095,7 +2219,7 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        public bool SaveNewDocument(IEdoSystemDocument<string> document, out byte[] fileBytes)
+        public bool SaveNewDocument(ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, out byte[] fileBytes)
         {
             if(!Directory.Exists(edoFilesPath))
                 Directory.CreateDirectory(edoFilesPath);
@@ -2105,22 +2229,23 @@ namespace HonestMarkSystem.Models
 
             byte[] signature = null;
 
-            if(_edoSystem.HasZipContent)
-                fileBytes = _edoSystem.GetDocumentContent(document, DocumentInOutType.Inbox);
+            var edoSystem = myOrganization.EdoSystem;
+            if (edoSystem.HasZipContent)
+                fileBytes = edoSystem.GetDocumentContent(document, DocumentInOutType.Inbox);
             else
-                fileBytes = _edoSystem.GetDocumentContent(document, out signature, DocumentInOutType.Inbox);
+                fileBytes = edoSystem.GetDocumentContent(document, out signature, DocumentInOutType.Inbox);
 
             byte[] zipBytes;
             try
             {
-                zipBytes = _edoSystem.GetZipContent(document.EdoId, DocumentInOutType.Inbox);
+                zipBytes = edoSystem.GetZipContent(document.EdoId, DocumentInOutType.Inbox);
             }
             catch
             {
                 zipBytes = null;
             }
 
-            if (_edoSystem.GetType() == typeof(EdoLiteSystem))
+            if (edoSystem.GetType() == typeof(EdoLiteSystem))
             {
                 if (document.DocType == (int)EdoLiteDocumentType.DpUkdDis || document.DocType == (int)EdoLiteDocumentType.DpUkdDisInfoBuyer
                     || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoice || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoiceDis
@@ -2145,7 +2270,7 @@ namespace HonestMarkSystem.Models
                 else
                     return false;
             }
-            else if (_edoSystem.GetType() == typeof(DiadocEdoSystem))
+            else if (edoSystem.GetType() == typeof(DiadocEdoSystem))
             {
                 var doc = document as DiadocEdoDocument;
 
@@ -2179,22 +2304,19 @@ namespace HonestMarkSystem.Models
                 return false;
         }
 
-        public void SaveOrgData(string orgInn, string orgName)
+        public void SaveOrgData(ConsignorOrganization myOrganization)
         {
-            if(_dataBaseAdapter.GetType() == typeof(EdoLiteToDataBase))
-                ((EdoLiteToDataBase)_dataBaseAdapter).SaveOrgData(orgInn, orgName);
-            else if(_dataBaseAdapter.GetType() == typeof(DiadocEdoToDataBase))
+            if(_dataBaseAdapter.GetType() == typeof(DiadocEdoToDataBase))
             {
-                var edoSystem = _edoSystem as DiadocEdoSystem;
+                var edoSystem = myOrganization.EdoSystem as DiadocEdoSystem;
 
                 if (edoSystem == null)
                     return;
 
-                var counteragentsBoxIdsForOrganization = edoSystem.GetCounteragentsBoxesForOrganization(orgInn);
+                var counteragentsBoxIdsForOrganization = edoSystem.GetCounteragentsBoxesForOrganization(myOrganization.OrgInn);
                 ((DiadocEdoToDataBase)_dataBaseAdapter).SetPermittedBoxIds(counteragentsBoxIdsForOrganization);
 
-                var orgKpp = edoSystem.GetKppForMyOrganization(orgInn);
-                ((DiadocEdoToDataBase)_dataBaseAdapter).SetOrgData(orgName, orgInn, orgKpp);
+                myOrganization.OrgKpp = edoSystem.GetKppForMyOrganization(myOrganization.OrgInn);
             }
         }
 
@@ -2239,6 +2361,36 @@ namespace HonestMarkSystem.Models
                 _log.Log(errorMessage);
                 errorsWindow.ShowDialog();
             }
+        }
+
+        public void ChangeMyOrganization()
+        {
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана организация для отображения документов.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>().Where(d => d.ReceiverInn == SelectedMyOrganization.OrgInn);
+
+            var result = SelectedMyOrganization.EdoSystem?.Authorization() ?? false;
+
+            if (!result)
+                SelectedMyOrganization.EdoSystem = null;
+
+            result = result && (SelectedMyOrganization.HonestMarkSystem?.Authorization() ?? false);
+
+            if (SelectedMyOrganization.EdoSystem != null && !result)
+                SelectedMyOrganization.HonestMarkSystem = null;
+
+            if (result)
+                ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>(docs);
+            else
+                ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>();
+
+            SelectedItem = null;
+            UpdateProperties();
         }
 
         protected override void OnDispose()

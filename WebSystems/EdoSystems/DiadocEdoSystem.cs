@@ -148,9 +148,9 @@ namespace WebSystems.EdoSystems
             List<Diadoc.Api.Proto.Documents.Document> documents = null;
 
             if(inOutType == DocumentInOutType.Inbox)
-                documents = ((WebClients.DiadocEdoClient)_webClient).GetDocuments("Any.InboundNotFinished", fromDate.Value, toDate);
+                documents = ((WebClients.DiadocEdoClient)_webClient).GetDocuments("Any.InboundNotFinished", fromDate, toDate);
             else if(inOutType == DocumentInOutType.Outbox)
-                documents = ((WebClients.DiadocEdoClient)_webClient).GetDocuments("Any.OutboundNotFinished", fromDate.Value, toDate);
+                documents = ((WebClients.DiadocEdoClient)_webClient).GetDocuments("Any.OutboundNotFinished", fromDate, toDate);
 
             return documents?.Select(d => new Models.DiadocEdoDocument() { Document = d })?.ToList<Models.IEdoSystemDocument<string>>();
         }
@@ -275,9 +275,9 @@ namespace WebSystems.EdoSystems
             return organization.Kpp;
         }
 
-        public override string GetOrganizationEdoIdByInn(string inn, params object[] parameters)
+        public override string GetOrganizationEdoIdByInn(string inn, string myOrgInn, params object[] parameters)
         {
-            if (inn == ConfigSet.Configs.Config.GetInstance().ConsignorInn)
+            if (inn == myOrgInn)
             {
                 var organization = ((WebClients.DiadocEdoClient)_webClient).GetMyOrganizationByInnKpp(inn);
                 return organization.FnsParticipantId;
@@ -293,6 +293,11 @@ namespace WebSystems.EdoSystems
 
                 return fnsParticipantId;
             }
+        }
+
+        public override void SaveParameters(params object[] parameters)
+        {
+            ((WebClients.DiadocEdoClient)_webClient).SaveEdoLastDateTime((DateTime)parameters[0]);
         }
     }
 }

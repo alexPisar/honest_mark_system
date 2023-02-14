@@ -9,11 +9,11 @@ namespace HonestMarkSystem.Interfaces
 {
     public interface IEdoDocumentsView
     {
-        List<IEdoSystemDocument<string>> GetNewDocuments(out object[] parameters);
+        List<IEdoSystemDocument<string>> GetNewDocuments(Models.ConsignorOrganization myOrganization, out object[] parameters);
 
-        void SaveParameters(params object[] parameters);
+        void SaveParameters(Models.ConsignorOrganization myOrganization, params object[] parameters);
 
-        bool SaveNewDocument(IEdoSystemDocument<string> document, out byte[] fileBytes);
+        bool SaveNewDocument(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, out byte[] fileBytes);
 
         void UpdateIdGood();
     }

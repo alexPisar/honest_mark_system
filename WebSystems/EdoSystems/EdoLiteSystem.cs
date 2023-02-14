@@ -107,10 +107,15 @@ namespace WebSystems.EdoSystems
             return ((WebClients.EdoLiteClient)_webClient).LoadOutgoingDocument(reference, signatureAsBase64);
         }
 
-        public override string GetOrganizationEdoIdByInn(string inn, params object[] parameters)
+        public override string GetOrganizationEdoIdByInn(string inn, string myOrgInn, params object[] parameters)
         {
             var honestMarkClient = parameters[0] as Systems.HonestMarkSystem;
             return honestMarkClient.GetEdoIdByInn(inn);
+        }
+
+        public override void SaveParameters(params object[] parameters)
+        {
+            ((WebClients.EdoLiteClient)_webClient).SaveParameters(parameters);
         }
     }
 }

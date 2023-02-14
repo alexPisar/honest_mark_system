@@ -11,12 +11,12 @@ namespace HonestMarkSystem.Models
 {
     public class ChangeMarkedCodesModel : ViewModelBase
     {
-        private WebSystems.Systems.HonestMarkSystem _honestMarkSystem;
+        private ConsignorOrganization _myOrganization;
         KeyValuePair<WebSystems.ReasonOfWithdrawalFromTurnover, string> _selectedReason;
 
-        public ChangeMarkedCodesModel(List<DocGoodsDetailsLabels> markedCodes, WebSystems.Systems.HonestMarkSystem honestMarkSystem)
+        public ChangeMarkedCodesModel(List<DocGoodsDetailsLabels> markedCodes, ConsignorOrganization myOrganization)
         {
-            _honestMarkSystem = honestMarkSystem;
+            _myOrganization = myOrganization;
             MarkedCodes = markedCodes;
             SelectedCodes = new List<DocGoodsDetailsLabels>();
 
@@ -60,13 +60,13 @@ namespace HonestMarkSystem.Models
             {
                 var document = new WithdrawalFromTurnoverDocument
                 {
-                    Inn = ConfigSet.Configs.Config.GetInstance().ConsignorInn,
+                    Inn = _myOrganization.OrgInn,
                     ActionDateStr = DateTime.Now.ToString("yyyy-MM-dd"),
                     Action = _selectedReason.Key
                 };
 
                 document.Products = SelectedCodes.Select(s => new WithdrawalFromTurnoverDetail { Cis = s.DmLabel }).ToArray();
-                documentId = _honestMarkSystem.SendDocument(WebSystems.ProductGroupsEnum.Perfumery, WebSystems.DocumentFormatsEnum.Manual, "LK_RECEIPT", document);
+                documentId = _myOrganization.HonestMarkSystem.SendDocument(WebSystems.ProductGroupsEnum.Perfumery, WebSystems.DocumentFormatsEnum.Manual, "LK_RECEIPT", document);
 
                 DocumentInfo docInfo = null;
                 short i = 0;
@@ -77,7 +77,7 @@ namespace HonestMarkSystem.Models
                     try
                     {
                         System.Threading.Thread.Sleep(1000);
-                        docInfo = _honestMarkSystem.GetDocumentInfo(WebSystems.ProductGroupsEnum.Perfumery, documentId);
+                        docInfo = _myOrganization.HonestMarkSystem.GetDocumentInfo(WebSystems.ProductGroupsEnum.Perfumery, documentId);
                         checkStatusException = null;
                     }
                     catch(Exception ex)

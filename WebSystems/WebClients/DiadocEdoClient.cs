@@ -369,8 +369,11 @@ namespace WebSystems.WebClients
             var messagePatch = CallApiSafe(new Func<MessagePatch>(() => _api.PostMessagePatch(_authToken, postMessage)));
         }
 
-        public List<Document> GetDocuments(string filterCategory, DateTime dateFrom, DateTime? dateTo = null)
+        public List<Document> GetDocuments(string filterCategory, DateTime? dateFrom = null, DateTime? dateTo = null)
         {
+            if (dateFrom == null)
+                dateFrom = _cache.EdoLastDocDateTime;
+
             var documentsFilter = new DocumentsFilter
             {
                 BoxId = _actualBoxId,
@@ -411,6 +414,12 @@ namespace WebSystems.WebClients
             return printResult.Content;
         }
 
+        public void SaveEdoLastDateTime(DateTime dateTime)
+        {
+            _cache.EdoLastDocDateTime = dateTime;
+            _cache.Save(_cache, _certificate.Thumbprint);
+        }
+
         /// <summary>
 		/// Получить токен аутентификации
 		/// </summary>
@@ -438,7 +447,7 @@ namespace WebSystems.WebClients
 
                 var certInn = new UtilitesLibrary.Service.CryptoUtil().GetOrgInnFromCertificate(_certificate);
 
-                _cache = new DiadocEdoTokenCache(authToken, $"Certificate, Serial Number {_certificate.SerialNumber}", _cache?.PartyId ?? "");
+                _cache = new DiadocEdoTokenCache(authToken, $"Certificate, Serial Number {_certificate.SerialNumber}", _cache?.PartyId ?? "", _cache.EdoLastDocDateTime);
 
                 var myOrg = GetMyOrganizationByInnKpp(certInn);
 

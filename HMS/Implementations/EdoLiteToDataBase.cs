@@ -14,8 +14,6 @@ namespace HonestMarkSystem.Implementations
     {
         private const string providerName = "EDO LITE";
 
-        private string _orgName;
-        private string _orgInn;
         private string _dataBaseUser;
         private AbtDbContext _abt;
         private List<DocEdoPurchasing> _documents;
@@ -33,7 +31,7 @@ namespace HonestMarkSystem.Implementations
                             select cus.Inn).ToList() ?? new List<string>();
 
             _documents = _abt.DocEdoPurchasings
-                .Where(d => d.EdoProviderName == providerName && d.ReceiverInn == _orgInn)
+                .Where(d => d.EdoProviderName == providerName)
                 .ToList();
         }
 
@@ -44,9 +42,10 @@ namespace HonestMarkSystem.Implementations
             return _permittedSenderInnsForUser.Exists(p => p == (doc?.Sender?.Inn.ToString() ?? ""));
         }
 
-        public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
+        public object AddDocumentToDataBase(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
         {
             var doc = (EdoLiteDocuments)document;
+            string orgInn = myOrganization.OrgInn, orgKpp = myOrganization.OrgKpp, orgName = myOrganization.OrgName;
 
             var reporterDll = new Reporter.ReporterDll();
             var report = reporterDll.ParseDocument<UniversalTransferSellerDocument>(content);
@@ -97,13 +96,13 @@ namespace HonestMarkSystem.Implementations
             {
                 newDocInDb.SenderInn = doc?.Sender?.Inn.ToString();
                 newDocInDb.SenderName = doc?.Sender?.Name;
-                newDocInDb.ReceiverInn = _orgInn;
-                newDocInDb.ReceiverName = _orgName;
+                newDocInDb.ReceiverInn = orgInn;
+                newDocInDb.ReceiverName = orgName;
             }
             else if (inOutType == WebSystems.DocumentInOutType.Outbox)
             {
-                newDocInDb.SenderInn = _orgInn;
-                newDocInDb.SenderName = _orgName;
+                newDocInDb.SenderInn = orgInn;
+                newDocInDb.SenderName = orgName;
                 newDocInDb.ReceiverInn = doc?.Recipient?.Inn.ToString();
                 newDocInDb.ReceiverName = doc?.Recipient?.Name;
             }
@@ -211,12 +210,6 @@ namespace HonestMarkSystem.Implementations
         {
             var docJournal = _abt.DocJournals.FirstOrDefault(d => d.Id == idDocJournal);
             return docJournal;
-        }
-
-        public void SaveOrgData(string orgInn, string orgName)
-        {
-            _orgInn = orgInn;
-            _orgName = orgName;
         }
 
         public void AddMarkedCode(decimal idDocJournal, decimal idGood, string markedCode)
@@ -397,9 +390,20 @@ namespace HonestMarkSystem.Implementations
                    select r;
         }
 
-        public Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(decimal idDocReturn)
+        public Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(Models.ConsignorOrganization myOrganization, decimal idDocReturn)
         {
             return null;
+        }
+
+        public IEnumerable<object> GetMyOrganisations(string userName)
+        {
+            var orgs = from myOrg in _abt.RefUsersByEdoConsignors
+                       where myOrg.UserName == userName
+                       join refCustomer in _abt.RefCustomers
+                       on myOrg.IdCustomer equals (refCustomer.Id)
+                       select refCustomer;
+
+            return orgs;
         }
 
         public decimal ExportDocument(object documentObject)

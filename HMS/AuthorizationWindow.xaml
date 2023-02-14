@@ -11,7 +11,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HonestMarkSystem"
         mc:Ignorable="d"
-        Title="Авторизация" ResizeMode="NoResize" Height="250" Width="700">
+        Title="Авторизация" ResizeMode="NoResize" Height="200" Width="700">
     <dxmvvm:Interaction.Behaviors>
         <dxmvvm:EventToCommand EventName="Loaded" Command="{Binding CertsChangeViewLoaded}">
         </dxmvvm:EventToCommand>
@@ -27,10 +27,6 @@
             <StackPanel Orientation="Horizontal">
                 <Label Content="Логин" Width="150" Margin="5 0" FontSize="16"/>
                 <TextBox Width="500" Margin="5 5" Text="{Binding Path=DataBaseUser,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"></TextBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <Label Content="Инн организации" Width="150" Margin="5 0" FontSize="16"/>
-                <TextBox Width="500" Margin="5 5" Text="{Binding Path=ConsignorInn,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"></TextBox>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Label Content="Пароль" Width="150" Margin="5 0" FontSize="16"/>

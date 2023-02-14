@@ -55,39 +55,62 @@ namespace HonestMarkSystem
                 var certs = new CryptoUtil().GetPersonalCertificates().OrderByDescending(c => c.NotBefore);
                 var cryptoUtil = new CryptoUtil(client);
 
-                var selectedCert = certs?.FirstOrDefault(c =>
-                cryptoUtil.GetOrgInnFromCertificate(c) == ((Config)DataContext).ConsignorInn
-                && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
-
-                if (selectedCert == null)
-                    throw new Exception("Не найден сертификат по ИНН организации.");
-
                 Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter = new Implementations.DiadocEdoToDataBase();
 
-                WebSystems.Systems.HonestMarkSystem markSystem;
-                IEdoSystem edoSystem;
+                ((Config)DataContext).GenerateParametersForPassword();
+                ((Config)DataContext).SetDataBasePassword(accountPassword.Text);
+                ((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
+                dataBaseAdapter.InitializeContext();
 
-                if (AuthentificationByCert(selectedCert, out markSystem, out edoSystem))
+                var refOrgs = dataBaseAdapter.GetMyOrganisations(Config.GetInstance().DataBaseUser).Cast<RefCustomer>();
+
+                var myOrganizations = new List<Models.ConsignorOrganization>();
+                var mainModel = new Models.MainViewModel(dataBaseAdapter, myOrganizations);
+
+                foreach (var refOrg in refOrgs)
                 {
-                    var mainWindow = new MainWindow();
-                    var mainModel = new Models.MainViewModel(edoSystem, markSystem, dataBaseAdapter, new CryptoUtil(selectedCert));
-                    mainModel.Owner = mainWindow;
+                    var selectedCert = certs?.FirstOrDefault(c =>
+                    cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Inn
+                    && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
 
-                    var orgName = cryptoUtil.ParseCertAttribute(selectedCert.Subject, "CN");
-                    var orgInn = ((Config)DataContext).ConsignorInn;
+                    if (selectedCert == null)
+                    {
+                        _log.Log($"Не найден сертификат организации с ИНН {refOrg.Inn}");
+                        continue;
+                    }
 
-                    ((Config)DataContext).GenerateParametersForPassword();
-                    ((Config)DataContext).SetDataBasePassword(accountPassword.Text);
-                    dataBaseAdapter.InitializeContext();
+                    WebSystems.Systems.HonestMarkSystem markSystem;
+                    IEdoSystem edoSystem;
 
-                    mainModel.SaveOrgData(orgInn, orgName);
-                    ((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
+                    if (AuthentificationByCert(selectedCert, out markSystem, out edoSystem))
+                    {
+                        var orgName = cryptoUtil.ParseCertAttribute(selectedCert.Subject, "CN");
 
-                    mainWindow.DataContext = mainModel;
-                    mainWindow.Show();
+                        var organization = new Models.ConsignorOrganization
+                        {
+                            Certificate = selectedCert,
+                            HonestMarkSystem = markSystem,
+                            CryptoUtil = new CryptoUtil(selectedCert),
+                            EdoSystem = edoSystem,
+                            OrgInn = refOrg.Inn,
+                            OrgName = orgName
+                        };
 
-                    Close();
+                        mainModel.SaveOrgData(organization);
+
+                        myOrganizations.Add(organization);
+                    }
                 }
+
+                //((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
+                var mainWindow = new MainWindow();
+                
+                mainModel.Owner = mainWindow;
+
+                mainWindow.DataContext = mainModel;
+                mainWindow.Show();
+
+                Close();
             }
             catch (Exception ex)
             {
@@ -119,7 +142,7 @@ namespace HonestMarkSystem
 
                 try
                 {
-                    if(((Config)DataContext).ConsignorInn != "9652306541")
+                    //if(((Config)DataContext).ConsignorInn != "9652306541")
                         markSystem = new WebSystems.Systems.HonestMarkSystem(certificate);
 
                     if (markSystem != null && !markSystem.Authorization())

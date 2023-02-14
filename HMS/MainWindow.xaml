@@ -19,9 +19,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="3*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="2*" />
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <dxb:StatusBarControl Grid.Row="0" Caption="Главное меню" Height="70">
             <dxb:BarButtonItem ToolTip="Обновить список" Command="{Binding RefreshCommand}">
@@ -157,53 +155,79 @@
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
         </dxb:StatusBarControl>
-        <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList}" 
-                         SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                         SelectedItemChanged="SelectedItemChanged">
-            <dxg:GridColumn FieldName="IdDocEdo" Header="ID" Width="250"/>
-            <dxg:GridColumn FieldName="EdoProviderName" Header="Имя провайдера" Width="120"/>
-            <dxg:GridColumn FieldName="SenderName" Header="Отправитель" Width="150"/>
-            <dxg:GridColumn FieldName="SenderInn" Header="ИНН отправителя" Width="150"/>
-            <dxg:GridColumn FieldName="ReceiverName" Header="Получатель" Width="150"/>
-            <dxg:GridColumn FieldName="ReceiverInn" Header="ИНН получателя" Width="150"/>
-            <dxg:GridColumn FieldName="UserName" Header="Имя пользователя" Width="120"/>
-            <dxg:GridColumn FieldName="Status.Name" Header="Статус документа" Width="150"/>
-            <dxg:GridColumn FieldName="ErrorMessage" Header="Сообщение об ошибке" Width="180"/>
-            <dxg:GridColumn FieldName="Name" Header="Наименование" Width="150"/>
-            <dxg:GridColumn FieldName="IdDocType" Header="Тип документа" Width="100"/>
-            <dxg:GridColumn FieldName="CreateDate" Header="Дата создания" Width="100"/>
-            <dxg:GridColumn FieldName="ReceiveDate" Header="Дата принятия" Width="100"/>
-            <dxg:GridColumn FieldName="TotalVatAmount" Header="Сумма налога" Width="100"/>
-            <dxg:GridColumn FieldName="TotalPrice" Header="Общая стоимость" Width="120"/>
-            <dxg:GridColumn FieldName="IdDocJournal" Header="ID трейдер документа" Width="150"/>
-            <dxg:GridControl.View>
-                <dxg:TableView  FixedLineHeight="50" AllowEditing="False"/>
-            </dxg:GridControl.View>
-        </dxg:GridControl>
-        <GridSplitter Grid.Row="2" 
-                      Height="5" 
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="3*" />
+            </Grid.ColumnDefinitions>
+            <dxg:GridControl Grid.Column="0" 
+                             ItemsSource="{Binding MyOrganizations}"
+                             SelectedItem="{Binding SelectedMyOrganization,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                             SelectedItemChanged="SelectedMyOrganization">
+                <dxg:GridColumn FieldName="OrgName" Header="Организация" Width="200"/>
+                <dxg:GridColumn FieldName="OrgInn" Header="ИНН" Width="80"/>
+            </dxg:GridControl>
+            <GridSplitter Grid.Column="1" 
+                      Width="5" 
                       ShowsPreview="False"
                       VerticalAlignment="Stretch"
                       HorizontalAlignment="Center"/>
-        <dxg:GridControl Grid.Row="3" ItemsSource="{Binding Path=Details, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="3*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="2*" />
+                </Grid.RowDefinitions>
+                <dxg:GridControl Grid.Row="0" ItemsSource="{Binding ItemsList}" 
+                         SelectedItem="{Binding SelectedItem,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                         SelectedItemChanged="SelectedItemChanged">
+                    <dxg:GridColumn FieldName="IdDocEdo" Header="ID" Width="250"/>
+                    <dxg:GridColumn FieldName="EdoProviderName" Header="Имя провайдера" Width="120"/>
+                    <dxg:GridColumn FieldName="SenderName" Header="Отправитель" Width="150"/>
+                    <dxg:GridColumn FieldName="SenderInn" Header="ИНН отправителя" Width="150"/>
+                    <dxg:GridColumn FieldName="ReceiverName" Header="Получатель" Width="150"/>
+                    <dxg:GridColumn FieldName="ReceiverInn" Header="ИНН получателя" Width="150"/>
+                    <dxg:GridColumn FieldName="UserName" Header="Имя пользователя" Width="120"/>
+                    <dxg:GridColumn FieldName="Status.Name" Header="Статус документа" Width="150"/>
+                    <dxg:GridColumn FieldName="ErrorMessage" Header="Сообщение об ошибке" Width="180"/>
+                    <dxg:GridColumn FieldName="Name" Header="Наименование" Width="150"/>
+                    <dxg:GridColumn FieldName="IdDocType" Header="Тип документа" Width="100"/>
+                    <dxg:GridColumn FieldName="CreateDate" Header="Дата создания" Width="100"/>
+                    <dxg:GridColumn FieldName="ReceiveDate" Header="Дата принятия" Width="100"/>
+                    <dxg:GridColumn FieldName="TotalVatAmount" Header="Сумма налога" Width="100"/>
+                    <dxg:GridColumn FieldName="TotalPrice" Header="Общая стоимость" Width="120"/>
+                    <dxg:GridColumn FieldName="IdDocJournal" Header="ID трейдер документа" Width="150"/>
+                    <dxg:GridControl.View>
+                        <dxg:TableView  FixedLineHeight="50" AllowEditing="False"/>
+                    </dxg:GridControl.View>
+                </dxg:GridControl>
+                <GridSplitter Grid.Row="1" 
+                    Height="5" 
+                      ShowsPreview="False"
+                      VerticalAlignment="Center"
+                      HorizontalAlignment="Stretch"/>
+                <dxg:GridControl Grid.Row="2" ItemsSource="{Binding Path=Details, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                          SelectedItem="{Binding Path=SelectedDetail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-            <dxg:GridControl.Columns>
-                <dxg:GridColumn FieldName="DetailNumber" Header="Номер" Width="80" DefaultSortOrder="Ascending" SortIndex="0" />
-                <dxg:GridColumn FieldName="BarCode" Header="Код товара" Width="100"/>
-                <dxg:GridColumn FieldName="IdGood" Header="Id товара" Width="85">
-                    <dxg:GridColumn.EditSettings>
-                        <dxe:ButtonEditSettings HorizontalContentAlignment="Right" DefaultButtonClick="ButtonEditSettings_DefaultButtonClick"/>
-                    </dxg:GridColumn.EditSettings>
-                </dxg:GridColumn>
-                <dxg:GridColumn FieldName="Description" Header="Наименование" Width="450"/>
-                <dxg:GridColumn FieldName="Quantity" Header="Количество" Width="75"/>
-                <dxg:GridColumn FieldName="Price" Header="Цена за единицу" Width="110"/>
-                <dxg:GridColumn FieldName="TaxAmount" Header="Сумма налога" Width="100"/>
-                <dxg:GridColumn FieldName="Subtotal" Header="Сумма всего" Width="110"/>
-            </dxg:GridControl.Columns>
-            <dxg:GridControl.View>
-                <dxg:TableView ShowSearchPanelMode="Always" />
-            </dxg:GridControl.View>
-        </dxg:GridControl>
+                    <dxg:GridControl.Columns>
+                        <dxg:GridColumn FieldName="DetailNumber" Header="Номер" Width="80" DefaultSortOrder="Ascending" SortIndex="0" />
+                        <dxg:GridColumn FieldName="BarCode" Header="Код товара" Width="100"/>
+                        <dxg:GridColumn FieldName="IdGood" Header="Id товара" Width="85">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:ButtonEditSettings HorizontalContentAlignment="Right" DefaultButtonClick="ButtonEditSettings_DefaultButtonClick"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="Description" Header="Наименование" Width="450"/>
+                        <dxg:GridColumn FieldName="Quantity" Header="Количество" Width="75"/>
+                        <dxg:GridColumn FieldName="Price" Header="Цена за единицу" Width="110"/>
+                        <dxg:GridColumn FieldName="TaxAmount" Header="Сумма налога" Width="100"/>
+                        <dxg:GridColumn FieldName="Subtotal" Header="Сумма всего" Width="110"/>
+                    </dxg:GridControl.Columns>
+                    <dxg:GridControl.View>
+                        <dxg:TableView ShowSearchPanelMode="Always" />
+                    </dxg:GridControl.View>
+                </dxg:GridControl>
+            </Grid>
+        </Grid>
     </Grid>
 </dxr:DXRibbonWindow>

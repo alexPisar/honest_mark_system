@@ -14,6 +14,7 @@ namespace WebSystems.WebClients
     {
         private string _token;
         private ServiceManager _webService;
+        private string _cacheName;
 
         private EdoLiteClient() : base()
         {
@@ -40,6 +41,7 @@ namespace WebSystems.WebClients
             if (cache?.Token != null && cache?.TokenExpirationDate > DateTime.Now)
             {
                 _token = cache.Token;
+                _cacheName = certificate.Thumbprint;
                 return true;
             }
 
@@ -69,13 +71,14 @@ namespace WebSystems.WebClients
 
             _token = result.Token;
 
-            cache = new EdoLiteTokenCache()
+            cache = new EdoLiteTokenCache(cache.EdoDocCount, cache.EdoLastDocDateTime)
             {
                 Token = result.Token,
                 TokenCreationDate = DateTime.Now,
                 TokenExpirationDate = DateTime.Now.AddHours(12)
             };
             cache.Save(cache, certificate.Thumbprint);
+            _cacheName = certificate.Thumbprint;
 
             return true;
         }
@@ -249,6 +252,18 @@ namespace WebSystems.WebClients
                     $"Описание: {result}");
 
             return result;
+        }
+
+        public void SaveParameters(params object[] parameters)
+        {
+            var cache = new EdoLiteTokenCache().Load(_cacheName);
+
+            if (cache == null)
+                return;
+
+            cache.EdoDocCount = (int)parameters[0];
+            cache.EdoLastDocDateTime = (DateTime)parameters[1];
+            cache.Save(cache, _cacheName);
         }
     }
 }

@@ -29,7 +29,7 @@ namespace WebSystems
 
         public abstract byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None);
 
-        public abstract string GetOrganizationEdoIdByInn(string inn, params object[] parameters);
+        public abstract string GetOrganizationEdoIdByInn(string inn, string myOrgInn, params object[] parameters);
 
         public IEdoSystem(X509Certificate2 certificate)
         {
@@ -78,5 +78,6 @@ namespace WebSystems
         public abstract object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters);
 
         public abstract object SendUniversalTransferDocument(byte[] content, byte[] signature, params object[] parameters);
+        public abstract void SaveParameters(params object[] parameters);
     }
 }

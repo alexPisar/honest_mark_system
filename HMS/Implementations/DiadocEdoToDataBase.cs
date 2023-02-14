@@ -15,12 +15,14 @@ namespace HonestMarkSystem.Implementations
         private const string providerName = "DIADOC";
 
         private string _dataBaseUser;
-        private string _orgName;
-        private string _orgInn;
-        private string _orgKpp;
         private AbtDbContext _abt = null;
         private List<Diadoc.Api.Proto.Box> _permittedBoxes;
         private List<DocEdoPurchasing> _documents;
+
+        public DiadocEdoToDataBase()
+        {
+            _permittedBoxes = new List<Diadoc.Api.Proto.Box>();
+        }
 
         public void InitializeContext()
         {
@@ -29,7 +31,7 @@ namespace HonestMarkSystem.Implementations
             _dataBaseUser = ConfigSet.Configs.Config.GetInstance().DataBaseUser;
 
             _documents = _abt.DocEdoPurchasings
-                .Where(d => d.EdoProviderName == providerName && d.ReceiverInn == _orgInn)
+                .Where(d => d.EdoProviderName == providerName)
                 .ToList();
 
             var nlsNumericCharacters = _abt.SelectSingleValue("select value from v$nls_parameters where parameter = 'NLS_NUMERIC_CHARACTERS'");
@@ -46,15 +48,17 @@ namespace HonestMarkSystem.Implementations
                                               select cus.Inn)?.ToList() ?? new List<string>();
             //permittedSenderInnsForUser.Add("9652306541");
 
-            _permittedBoxes = (from box in boxesByInn
-                              where permittedSenderInnsForUser.Exists(p => p == box.Value.Inn)
-                              select new Diadoc.Api.Proto.Box
+            var permittedBoxes = (from box in boxesByInn
+                              where permittedSenderInnsForUser.Exists(p => p == box.Value.Inn) && box.Key?.BoxId != null && !_permittedBoxes.Any(p => p.BoxId == box.Key.BoxId)
+                                  select new Diadoc.Api.Proto.Box
                               {
                                   BoxId = box.Key?.BoxId,
                                   Title = box.Key?.Title,
                                   BoxIdGuid = box.Key?.BoxIdGuid,
                                   Organization = box.Value
                               }).ToList();
+
+            _permittedBoxes.AddRange(permittedBoxes);
         }
 
         public bool DocumentCanBeAddedByUser(IEdoSystemDocument<string> document)
@@ -62,13 +66,6 @@ namespace HonestMarkSystem.Implementations
             var doc = document as DiadocEdoDocument;
 
             return _permittedBoxes?.Exists(p => p.BoxId == doc.CounteragentBoxId) ?? false;
-        }
-
-        public void SetOrgData(string orgName, string inn, string kpp)
-        {
-            _orgName = orgName;
-            _orgInn = inn;
-            _orgKpp = kpp;
         }
 
         public object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo)
@@ -184,9 +181,10 @@ namespace HonestMarkSystem.Implementations
             return labels.Select(l => l.DmLabel);
         }
 
-        public object AddDocumentToDataBase(IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
+        public object AddDocumentToDataBase(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
         {
             var doc = document as DiadocEdoDocument;
+            string orgInn = myOrganization.OrgInn, orgKpp = myOrganization.OrgKpp, orgName = myOrganization.OrgName;
 
             if (doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlAcceptanceCertificate && doc.DocumentType != Diadoc.Api.Proto.DocumentType.Invoice &&
                 doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlTorg12 && doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocument &&
@@ -264,15 +262,15 @@ namespace HonestMarkSystem.Implementations
                 newDoc.SenderInn = counteragentInn;
                 newDoc.SenderName = counteragentName;
                 newDoc.SenderKpp = counteragentKpp;
-                newDoc.ReceiverInn = _orgInn;
-                newDoc.ReceiverKpp = _orgKpp;
-                newDoc.ReceiverName = _orgName;
+                newDoc.ReceiverInn = orgInn;
+                newDoc.ReceiverKpp = orgKpp;
+                newDoc.ReceiverName = orgName;
             }
             else if (inOutType == WebSystems.DocumentInOutType.Outbox)
             {
-                newDoc.SenderInn = _orgInn;
-                newDoc.SenderKpp = _orgKpp;
-                newDoc.SenderName = _orgName;
+                newDoc.SenderInn = orgInn;
+                newDoc.SenderKpp = orgKpp;
+                newDoc.SenderName = orgName;
                 newDoc.ReceiverInn = counteragentInn;
                 newDoc.ReceiverName = counteragentName;
                 newDoc.ReceiverKpp = counteragentKpp;
@@ -504,7 +502,7 @@ namespace HonestMarkSystem.Implementations
                    select r;
         }
 
-        public Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(decimal idDocReturn)
+        public Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(Models.ConsignorOrganization myOrganization, decimal idDocReturn)
         {
             var idDocSaleCollection = (from label in _abt.DocGoodsDetailsLabels
                                        where label.IdDocReturn == idDocReturn && label.IdDocSale != null
@@ -513,12 +511,13 @@ namespace HonestMarkSystem.Implementations
             if (idDocSaleCollection.Count() == 0)
                 throw new Exception("Не найдены документы отгрузки.");
 
+            var orgInn = myOrganization.OrgInn;
             var docComissionEdoProcessings = from docComissionEdoProcessing in _abt.DocComissionEdoProcessings
                                              join docEdoProcessing in _abt.DocEdoProcessings
                                              on docComissionEdoProcessing.Id equals (docEdoProcessing.IdComissionDocument)
                                              join docEdoPurchasing in _abt.DocEdoPurchasings
                                              on docEdoProcessing.MessageId equals (docEdoPurchasing.IdDocEdo)
-                                             where docEdoPurchasing.IdDocJournal == docEdoProcessing.IdDoc && docEdoProcessing.ReceiverInn == _orgInn
+                                             where docEdoPurchasing.IdDocJournal == docEdoProcessing.IdDoc && docEdoProcessing.ReceiverInn == orgInn
                                              join idDocSale in idDocSaleCollection on docEdoPurchasing.IdDocJournal equals (idDocSale)
                                              where docComissionEdoProcessing != null && docEdoPurchasing != null
                                              let labels = from label in _abt.DocGoodsDetailsLabels
@@ -550,6 +549,17 @@ namespace HonestMarkSystem.Implementations
                 resultCollection.Add(group.Key, group.SelectMany(v => v.Labels));
 
             return resultCollection;
+        }
+
+        public IEnumerable<object> GetMyOrganisations(string userName)
+        {
+            var orgs = from myOrg in _abt.RefUsersByEdoConsignors
+                       where myOrg.UserName == userName
+                       join refCustomer in _abt.RefCustomers
+                       on myOrg.IdCustomer equals (refCustomer.Id)
+                       select refCustomer;
+
+            return orgs;
         }
 
         public decimal ExportDocument(object documentObject)
