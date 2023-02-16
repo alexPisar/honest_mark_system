@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using System.Collections.Generic;
 using UtilitesLibrary.Service;
 using WebSystems;
 
@@ -13,5 +14,6 @@ namespace HonestMarkSystem.Models
         public string OrgInn { get; set; }
         public string OrgKpp { get; set; }
         public string OrgName { get; set; }
+        public List<string> ShipperOrgInns { get; set; }
     }
 }

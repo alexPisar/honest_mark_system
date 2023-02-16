@@ -62,7 +62,7 @@ namespace HonestMarkSystem
                 ((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
                 dataBaseAdapter.InitializeContext();
 
-                var refOrgs = dataBaseAdapter.GetMyOrganisations(Config.GetInstance().DataBaseUser).Cast<RefCustomer>();
+                var refOrgs = dataBaseAdapter.GetMyOrganisations<RefCustomer, IEnumerable<RefCustomer>>(Config.GetInstance().DataBaseUser);
 
                 var myOrganizations = new List<Models.ConsignorOrganization>();
                 var mainModel = new Models.MainViewModel(dataBaseAdapter, myOrganizations);
@@ -70,12 +70,12 @@ namespace HonestMarkSystem
                 foreach (var refOrg in refOrgs)
                 {
                     var selectedCert = certs?.FirstOrDefault(c =>
-                    cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Inn
+                    cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Key.Inn
                     && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
 
                     if (selectedCert == null)
                     {
-                        _log.Log($"Не найден сертификат организации с ИНН {refOrg.Inn}");
+                        _log.Log($"Не найден сертификат организации с ИНН {refOrg.Key.Inn}");
                         continue;
                     }
 
@@ -84,7 +84,7 @@ namespace HonestMarkSystem
 
                     if (AuthentificationByCert(selectedCert, out markSystem, out edoSystem))
                     {
-                        var orgName = cryptoUtil.ParseCertAttribute(selectedCert.Subject, "CN");
+                        var orgName = refOrg.Key.Name;
 
                         var organization = new Models.ConsignorOrganization
                         {
@@ -92,8 +92,9 @@ namespace HonestMarkSystem
                             HonestMarkSystem = markSystem,
                             CryptoUtil = new CryptoUtil(selectedCert),
                             EdoSystem = edoSystem,
-                            OrgInn = refOrg.Inn,
-                            OrgName = orgName
+                            OrgInn = refOrg.Key.Inn,
+                            OrgName = orgName,
+                            ShipperOrgInns = refOrg.Value?.Where(r => !string.IsNullOrEmpty(r.Inn))?.Select(r => r.Inn)?.ToList() ?? new List<string>()
                         };
 
                         mainModel.SaveOrgData(organization);

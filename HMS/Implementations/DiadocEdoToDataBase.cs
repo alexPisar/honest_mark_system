@@ -61,11 +61,16 @@ namespace HonestMarkSystem.Implementations
             _permittedBoxes.AddRange(permittedBoxes);
         }
 
-        public bool DocumentCanBeAddedByUser(IEdoSystemDocument<string> document)
+        public bool DocumentCanBeAddedByUser(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document)
         {
             var doc = document as DiadocEdoDocument;
 
-            return _permittedBoxes?.Exists(p => p.BoxId == doc.CounteragentBoxId) ?? false;
+            var box = _permittedBoxes?.FirstOrDefault(p => p.BoxId == doc.CounteragentBoxId);
+
+            if (box == null)
+                return false;
+
+            return myOrganization.ShipperOrgInns.Exists(s => s == box.Organization?.Inn);
         }
 
         public object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo)
@@ -551,13 +556,18 @@ namespace HonestMarkSystem.Implementations
             return resultCollection;
         }
 
-        public IEnumerable<object> GetMyOrganisations(string userName)
+        public IEnumerable<KeyValuePair<TKey, TValue>> GetMyOrganisations<TKey, TValue>(string userName)
         {
-            var orgs = from myOrg in _abt.RefUsersByEdoConsignors
+            IEnumerable<KeyValuePair<TKey, TValue>> orgs = (from myOrg in _abt.RefUsersByEdoConsignors
                        where myOrg.UserName == userName
-                       join refCustomer in _abt.RefCustomers
-                       on myOrg.IdCustomer equals (refCustomer.Id)
-                       select refCustomer;
+                       join refCustomerConsignor in _abt.RefCustomers
+                       on myOrg.IdCustomerConsignor equals (refCustomerConsignor.Id)
+                       join refCustomerShipper in _abt.RefCustomers
+                       on myOrg.IdCustomerShipper equals (refCustomerShipper.Id)
+                       select new { RefCustomerConsignor = refCustomerConsignor, RefCustomerShipper = refCustomerShipper })?
+                       .GroupBy(r => r.RefCustomerConsignor)?.ToList()?
+                       .Select(s => new KeyValuePair<RefCustomer, IEnumerable<RefCustomer>>(s.Key, s.Select(l => l.RefCustomerShipper)))?
+                       .Cast<KeyValuePair<TKey, TValue>>() ?? new List<KeyValuePair<TKey, TValue>>();
 
             return orgs;
         }

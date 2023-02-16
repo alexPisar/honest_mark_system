@@ -113,7 +113,7 @@ namespace HonestMarkSystem.Models
                         {
                             foreach (var doc in documents)
                             {
-                                if (!_dataBaseAdapter.DocumentCanBeAddedByUser(doc))
+                                if (!_dataBaseAdapter.DocumentCanBeAddedByUser(myOrganization, doc))
                                     continue;
 
                                 byte[] docContentBytes;
@@ -2373,7 +2373,8 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>().Where(d => d.ReceiverInn == SelectedMyOrganization.OrgInn);
+            var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>()
+                .Where(d => d.ReceiverInn == SelectedMyOrganization.OrgInn && SelectedMyOrganization.ShipperOrgInns.Exists(s => s == d.SenderInn));
 
             var result = SelectedMyOrganization.EdoSystem?.Authorization() ?? false;
 

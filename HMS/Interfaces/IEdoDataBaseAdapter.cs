@@ -19,7 +19,7 @@ namespace HonestMarkSystem.Interfaces
 
         bool ExistsDocumentInDataBase(IEdoSystemDocument<string> document);
 
-        bool DocumentCanBeAddedByUser(IEdoSystemDocument<string> document);
+        bool DocumentCanBeAddedByUser(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document);
 
         object GetDocumentFromDb(IEdoSystemDocument<string> document);
 
@@ -65,7 +65,7 @@ namespace HonestMarkSystem.Interfaces
 
         Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(Models.ConsignorOrganization myOrganization, decimal idDocReturn);
 
-        IEnumerable<object> GetMyOrganisations(string userName);
+        IEnumerable<KeyValuePair<TKey, TValue>> GetMyOrganisations<TKey, TValue>(string userName);
 
         decimal ExportDocument(object documentObject);
 

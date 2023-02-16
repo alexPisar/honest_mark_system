@@ -15,6 +15,8 @@ namespace HonestMarkSystem.Interfaces
 
         bool SaveNewDocument(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, out byte[] fileBytes);
 
+        void ChangeMyOrganization();
+
         void UpdateIdGood();
     }
 }

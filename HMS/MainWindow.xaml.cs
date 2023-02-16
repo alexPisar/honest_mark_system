@@ -34,7 +34,7 @@ namespace HonestMarkSystem
 
         private void SelectedMyOrganization(object sender, DevExpress.Xpf.Grid.SelectedItemChangedEventArgs e)
         {
-            (DataContext as Models.MainViewModel)?.ChangeMyOrganization();
+            ((Interfaces.IEdoDocumentsView)DataContext).ChangeMyOrganization();
         }
 
         private void ButtonEditSettings_DefaultButtonClick(object sender, RoutedEventArgs e)

@@ -35,7 +35,7 @@ namespace HonestMarkSystem.Implementations
                 .ToList();
         }
 
-        public bool DocumentCanBeAddedByUser(IEdoSystemDocument<string> document)
+        public bool DocumentCanBeAddedByUser(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document)
         {
             var doc = (EdoLiteDocuments)document;
 
@@ -395,13 +395,18 @@ namespace HonestMarkSystem.Implementations
             return null;
         }
 
-        public IEnumerable<object> GetMyOrganisations(string userName)
+        public IEnumerable<KeyValuePair<TKey, TValue>> GetMyOrganisations<TKey, TValue>(string userName)
         {
-            var orgs = from myOrg in _abt.RefUsersByEdoConsignors
-                       where myOrg.UserName == userName
-                       join refCustomer in _abt.RefCustomers
-                       on myOrg.IdCustomer equals (refCustomer.Id)
-                       select refCustomer;
+            IEnumerable<KeyValuePair<TKey, TValue>> orgs = (from myOrg in _abt.RefUsersByEdoConsignors
+                                                            where myOrg.UserName == userName
+                                                            join refCustomerConsignor in _abt.RefCustomers
+                                                            on myOrg.IdCustomerConsignor equals (refCustomerConsignor.Id)
+                                                            join refCustomerShipper in _abt.RefCustomers
+                                                            on myOrg.IdCustomerShipper equals (refCustomerShipper.Id)
+                                                            select new { RefCustomerConsignor = refCustomerConsignor, RefCustomerShipper = refCustomerShipper })?
+                       .GroupBy(r => r.RefCustomerConsignor)?.ToList()?
+                       .Select(s => new KeyValuePair<RefCustomer, IEnumerable<RefCustomer>>(s.Key, s.Select(l => l.RefCustomerShipper)))?
+                       .Cast<KeyValuePair<TKey, TValue>>() ?? new List<KeyValuePair<TKey, TValue>>();
 
             return orgs;
         }
