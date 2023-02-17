@@ -447,7 +447,7 @@ namespace WebSystems.WebClients
 
                 var certInn = new UtilitesLibrary.Service.CryptoUtil().GetOrgInnFromCertificate(_certificate);
 
-                _cache = new DiadocEdoTokenCache(authToken, $"Certificate, Serial Number {_certificate.SerialNumber}", _cache?.PartyId ?? "", _cache.EdoLastDocDateTime);
+                _cache = new DiadocEdoTokenCache(authToken, $"Certificate, Serial Number {_certificate.SerialNumber}", _cache?.PartyId ?? "", _cache?.EdoLastDocDateTime);
 
                 var myOrg = GetMyOrganizationByInnKpp(certInn);
 
