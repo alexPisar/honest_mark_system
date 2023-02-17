@@ -144,7 +144,8 @@ namespace HonestMarkSystem.Models
                     }
                 }
 
-                var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>();
+                var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>()
+                    .Where(d => d.ReceiverInn == myOrganization.OrgInn && myOrganization.ShipperOrgInns.Exists(s => s == d.SenderInn));
 
                 try
                 {
