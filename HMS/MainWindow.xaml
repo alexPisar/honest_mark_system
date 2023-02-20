@@ -167,6 +167,10 @@
                              SelectedItemChanged="SelectedMyOrganization">
                 <dxg:GridColumn FieldName="OrgName" Header="Организация" Width="200"/>
                 <dxg:GridColumn FieldName="OrgInn" Header="ИНН" Width="80"/>
+                <dxg:GridControl.View>
+                    <dxg:TableView AllowEditing="False"
+                                   NavigationStyle="Row"/>
+                </dxg:GridControl.View>
             </dxg:GridControl>
             <GridSplitter Grid.Column="1" 
                       Width="5" 
