@@ -946,6 +946,12 @@ namespace HonestMarkSystem.Models
                             var honestMarkSystem = myOrganization.HonestMarkSystem;
                             var edoSystem = myOrganization.EdoSystem;
 
+                            if (!(honestMarkSystem?.Authorization() ?? false))
+                                throw new Exception($"Авторизация организации {orgInn} в Честном знаке не была успешной");
+
+                            if(!(edoSystem?.Authorization() ?? false))
+                                throw new Exception($"Авторизация организации {orgInn} в веб сервисе ЭДО не была успешной.");
+
                             var productList = new List<Reporter.Entities.Product>();
                             loadContext.SetLoadingText("Проверка кодов");
                             int i = 0;

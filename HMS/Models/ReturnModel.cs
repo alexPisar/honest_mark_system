@@ -155,6 +155,11 @@ namespace HonestMarkSystem.Models
                             throw new Exception($"Не найдена организация с ИНН {orgInn}");
 
                         var honestMarkSystem = myOrg.HonestMarkSystem;
+                        if (!(honestMarkSystem?.Authorization() ?? false))
+                        {
+                            _log.Log($"Авторизация организации {orgInn} не была успешной.");
+                            continue;
+                        }
 
                         ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"ReturnProcessingDocument_{i}");
                         if (honestMarkSystem != null)
