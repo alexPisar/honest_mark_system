@@ -13,15 +13,15 @@ namespace HonestMarkSystem.Models
     public class ReturnModel : ListViewModel<DocJournalForLoading>
     {
         private Interfaces.IEdoDataBaseAdapter<AbtDbContext> _dataBaseAdapter;
-        private WebSystems.Systems.HonestMarkSystem _honestMarkSystem;
+        private List<ConsignorOrganization> _myOrganizations;
         private IEnumerable<DocJournalForLoading> _allDocs;
         private bool _isReturnButtonEnabled;
 
         public Action<object> OnReturnSelectedCodesProcess;
 
-        public ReturnModel(WebSystems.Systems.HonestMarkSystem honestMarkSystem, Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter)
+        public ReturnModel(List<ConsignorOrganization> myOrganizations, Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter)
         {
-            _honestMarkSystem = honestMarkSystem;
+            _myOrganizations = myOrganizations;
             _dataBaseAdapter = dataBaseAdapter;
             InitFromBase();
         }
@@ -147,10 +147,19 @@ namespace HonestMarkSystem.Models
                     var processingDocument = docProcessing.DocEdoReturnPurchasing as DocEdoReturnPurchasing;
                     try
                     {
+                        var orgInn = processingDocument.SenderInn;
+
+                        var myOrg = _myOrganizations.FirstOrDefault(o => o.OrgInn == orgInn);
+
+                        if (myOrg == null)
+                            throw new Exception($"Не найдена организация с ИНН {orgInn}");
+
+                        var honestMarkSystem = myOrg.HonestMarkSystem;
+
                         ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"ReturnProcessingDocument_{i}");
-                        if (_honestMarkSystem != null)
+                        if (honestMarkSystem != null)
                         {
-                            var docProcessingInfo = _honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.SellerFileName);
+                            var docProcessingInfo = honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.SellerFileName);
 
                             if (docProcessingInfo.Code == WebSystems.EdoLiteProcessResultStatus.SUCCESS)
                             {

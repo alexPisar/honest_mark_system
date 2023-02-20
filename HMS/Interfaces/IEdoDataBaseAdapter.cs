@@ -63,7 +63,7 @@ namespace HonestMarkSystem.Interfaces
 
         object GetDocEdoReturnPurchasing(decimal idDocJournal);
 
-        Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(Models.ConsignorOrganization myOrganization, decimal idDocReturn);
+        Dictionary<string, List<KeyValuePair<string, IEnumerable<object>>>> GetMarkedCodesByConsignors(decimal idDocReturn);
 
         IEnumerable<KeyValuePair<TKey, TValue>> GetMyOrganisations<TKey, TValue>(string userName);
 

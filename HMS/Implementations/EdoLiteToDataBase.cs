@@ -390,7 +390,7 @@ namespace HonestMarkSystem.Implementations
                    select r;
         }
 
-        public Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(Models.ConsignorOrganization myOrganization, decimal idDocReturn)
+        public Dictionary<string, List<KeyValuePair<string, IEnumerable<object>>>> GetMarkedCodesByConsignors(decimal idDocReturn)
         {
             return null;
         }

@@ -507,7 +507,7 @@ namespace HonestMarkSystem.Implementations
                    select r;
         }
 
-        public Dictionary<string, IEnumerable<object>> GetMarkedCodesByConsignors(Models.ConsignorOrganization myOrganization, decimal idDocReturn)
+        public Dictionary<string, List<KeyValuePair<string, IEnumerable<object>>>> GetMarkedCodesByConsignors(decimal idDocReturn)
         {
             var idDocSaleCollection = (from label in _abt.DocGoodsDetailsLabels
                                        where label.IdDocReturn == idDocReturn && label.IdDocSale != null
@@ -516,13 +516,12 @@ namespace HonestMarkSystem.Implementations
             if (idDocSaleCollection.Count() == 0)
                 throw new Exception("Не найдены документы отгрузки.");
 
-            var orgInn = myOrganization.OrgInn;
             var docComissionEdoProcessings = from docComissionEdoProcessing in _abt.DocComissionEdoProcessings
                                              join docEdoProcessing in _abt.DocEdoProcessings
                                              on docComissionEdoProcessing.Id equals (docEdoProcessing.IdComissionDocument)
                                              join docEdoPurchasing in _abt.DocEdoPurchasings
                                              on docEdoProcessing.MessageId equals (docEdoPurchasing.IdDocEdo)
-                                             where docEdoPurchasing.IdDocJournal == docEdoProcessing.IdDoc && docEdoProcessing.ReceiverInn == orgInn
+                                             where docEdoPurchasing.IdDocJournal == docEdoProcessing.IdDoc
                                              join idDocSale in idDocSaleCollection on docEdoPurchasing.IdDocJournal equals (idDocSale)
                                              where docComissionEdoProcessing != null && docEdoPurchasing != null
                                              let labels = from label in _abt.DocGoodsDetailsLabels
@@ -547,11 +546,20 @@ namespace HonestMarkSystem.Implementations
             .FirstOrDefault(d => d.DocEdoPurchasing.IdDocJournal == i && d.DocEdoPurchasing.DocStatus == (int)WebSystems.DocEdoStatus.Processed) == null))
                 throw new Exception("Не все документы отгрузки были оприходованы.");
 
-            var resultCollection = new Dictionary<string, IEnumerable<object>>();
-            var groups = docComissionEdoProcessings.GroupBy(d => d.DocComissionEdoProcessing.SenderInn);
+            var resultCollection = new Dictionary<string, List<KeyValuePair<string, IEnumerable<object>>>>();
+            var groupsBySender = docComissionEdoProcessings.GroupBy(d => d.DocComissionEdoProcessing.SenderInn);
 
-            foreach(var group in groups)
-                resultCollection.Add(group.Key, group.SelectMany(v => v.Labels));
+            foreach (var groupBySender in groupsBySender)
+            {
+                var groupsByReceiver = groupBySender.GroupBy(d => d.DocEdoPurchasing.ReceiverInn);
+                var list = new List<KeyValuePair<string, IEnumerable<object>>>();
+                foreach (var groupByReceiver in groupsByReceiver)
+                {
+                    list.Add(new KeyValuePair<string, IEnumerable<object>>(groupByReceiver.Key, groupByReceiver.SelectMany(v => v.Labels)));
+                }
+
+                resultCollection.Add(groupBySender.Key, list);
+            }
 
             return resultCollection;
         }
