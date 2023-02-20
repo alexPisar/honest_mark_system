@@ -1414,6 +1414,8 @@ namespace HonestMarkSystem.Models
             };
 
             returnWindow.ShowDialog();
+            SelectedMyOrganization = null;
+            this.ChangeMyOrganization();
         }
 
         private void WithdrawalCodes()
