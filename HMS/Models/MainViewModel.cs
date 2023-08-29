@@ -2087,7 +2087,7 @@ namespace HonestMarkSystem.Models
             while (positionInArray < markedCodes.Count())
             {
                 int length = markedCodes.Count() - positionInArray > 500 ? 500 : markedCodes.Count() - positionInArray;
-                var markedCodesInfo = honestMarkSystem.GetMarkedCodesInfo(ProductGroupsEnum.Perfumery, markedCodes.Skip(positionInArray).Take(length).ToArray());
+                var markedCodesInfo = honestMarkSystem.GetMarkedCodesInfo(ProductGroupsEnum.None, markedCodes.Skip(positionInArray).Take(length).ToArray());
 
                 if (markedCodesInfo.Any(m => m?.CisInfo?.OwnerInn != ownerInn))
                     return false;

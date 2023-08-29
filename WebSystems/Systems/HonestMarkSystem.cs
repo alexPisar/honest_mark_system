@@ -26,7 +26,7 @@ namespace WebSystems.Systems
             List<KeyValuePair<string, string>> resultCodes)
         {
             var markedCodes = HonestMarkClient.GetInstance()
-                .GetAggregatedCodes(ProductGroupsEnum.Perfumery, sourceCodes.ToArray());
+                .GetAggregatedCodes(ProductGroupsEnum.None, sourceCodes.ToArray());
 
             Func<string, KeyValuePair<string, string>> predicate = s =>
             {

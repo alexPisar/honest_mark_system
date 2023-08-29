@@ -99,7 +99,7 @@ namespace HmsTests
 
             try
             {
-                var edoId = edo.GetOrganizationEdoIdByInn("2539108495", parameters);
+                var edoId = edo.GetOrganizationEdoIdByInn("2539108495", "253800573557", parameters);
             }
             catch(System.Net.WebException webEx)
             {

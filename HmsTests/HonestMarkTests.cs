@@ -25,14 +25,23 @@ namespace HmsTests
         public void GetMarkedCodesTest()
         {
             var crypto = new WinApiCryptWrapper();
-            var cert = crypto.GetCertificateWithPrivateKey("055DC379848800792FFF265DA204C8C101D293C8", false);
+            var cert = crypto.GetCertificateWithPrivateKey("049D840F2D5C8A57A49FD91768936556AC41EEB2", false);
             HonestMarkClient.GetInstance().Authorization(cert);
 
-            var inns = new List<WebSystems.Models.MarkCodeInfo>(HonestMarkClient.GetInstance().GetMarkCodesInfo(WebSystems.ProductGroupsEnum.Perfumery,
+            var markedCodeInfos = new List<WebSystems.Models.MarkCodeInfo>(HonestMarkClient.GetInstance().GetMarkCodesInfo(WebSystems.ProductGroupsEnum.None,
                 new string[]
                 {
                     "0104623721623660215dqmEEEwUBsXI",
-                    "0104623721623660215dSUa:P'Xo*Gx"
+                    "0104623721623660215dSUa:P'Xo*Gx",
+                    "0104610044200487215CgCcY!SQ*XpD",
+                    "0104607942315252215546729200318"
+                }));
+
+            var aggregatedCodes = new List<string>(HonestMarkClient.GetInstance().GetAggregatedCodes(WebSystems.ProductGroupsEnum.None,
+                new string[]
+                {
+                    "246100002122956389",
+                    "246100002117691578"
                 }));
         }
     }

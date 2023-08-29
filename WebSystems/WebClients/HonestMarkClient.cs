@@ -132,15 +132,22 @@ namespace WebSystems.WebClients
             if (string.IsNullOrEmpty(_token) || _certificate == null)
                 throw new Exception("Ошибка авторизации. Не определён токен либо сертификат пользователя.");
 
-            var enumUtil = new UtilitesLibrary.Service.EnumUtil();
-            var productGroupStr = enumUtil.GetEnumMemberAttrValue(productGroup);
+            string productGroupStr;
+
+            if (productGroup == ProductGroupsEnum.None)
+                productGroupStr = String.Empty;
+            else
+            {
+                var enumUtil = new UtilitesLibrary.Service.EnumUtil();
+                productGroupStr = $"?pg={enumUtil.GetEnumMemberAttrValue(productGroup)}";
+            }
 
             var authData = new Dictionary<string, string>();
             authData.Add("Authorization", $"Bearer {_token}");
 
             var markCodesAsJson = JsonConvert.SerializeObject(markCodes);
 
-            var markCodesInfos = _webService.PostRequest<Models.MarkCodeInfo[]>($"{Properties.Settings.Default.UrlAddressHonestMark}/cises/info?pg={productGroupStr}",
+            var markCodesInfos = _webService.PostRequest<Models.MarkCodeInfo[]>($"{Properties.Settings.Default.UrlAddressHonestMark}/cises/info{productGroupStr}",
                 markCodesAsJson, null, "application/json", authData);
 
             return markCodesInfos;
@@ -151,15 +158,22 @@ namespace WebSystems.WebClients
             if (string.IsNullOrEmpty(_token) || _certificate == null)
                 throw new Exception("Ошибка авторизации. Не определён токен либо сертификат пользователя.");
 
-            var enumUtil = new UtilitesLibrary.Service.EnumUtil();
-            var productGroupStr = enumUtil.GetEnumMemberAttrValue(productGroup);
+            string productGroupStr;
+
+            if (productGroup == ProductGroupsEnum.None)
+                productGroupStr = String.Empty;
+            else
+            {
+                var enumUtil = new UtilitesLibrary.Service.EnumUtil();
+                productGroupStr = $"?pg={enumUtil.GetEnumMemberAttrValue(productGroup)}";
+            }
 
             var authData = new Dictionary<string, string>();
             authData.Add("Authorization", $"Bearer {_token}");
 
             var markCodesAsJson = JsonConvert.SerializeObject(transportCodes);
 
-            var aggregateMarkedCodes = _webService.PostRequest<Models.Cis>($"{Properties.Settings.Default.UrlAddressHonestMark}/cises/aggregated/list?pg={productGroupStr}",
+            var aggregateMarkedCodes = _webService.PostRequest<Models.Cis>($"{Properties.Settings.Default.UrlAddressHonestMark}/cises/aggregated/list{productGroupStr}",
                 markCodesAsJson, null, "application/json", authData);
 
             IEnumerable<Models.Cis> cises = new List<Models.Cis>(new Models.Cis[] { aggregateMarkedCodes });
