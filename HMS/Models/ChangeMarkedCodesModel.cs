@@ -13,6 +13,7 @@ namespace HonestMarkSystem.Models
     {
         private ConsignorOrganization _myOrganization;
         KeyValuePair<WebSystems.ReasonOfWithdrawalFromTurnover, string> _selectedReason;
+        KeyValuePair<WebSystems.ProductGroupsEnum, string> _selectedProductGroup;
 
         public ChangeMarkedCodesModel(List<DocGoodsDetailsLabels> markedCodes, ConsignorOrganization myOrganization)
         {
@@ -30,6 +31,15 @@ namespace HonestMarkSystem.Models
                 });
 
             SelectedReason = AllReasons.First(a => a.Key == WebSystems.ReasonOfWithdrawalFromTurnover.DamageLoss);
+
+            AllProductGroups = new List<KeyValuePair<WebSystems.ProductGroupsEnum, string>>(
+                new [] 
+                {
+                    new KeyValuePair<WebSystems.ProductGroupsEnum, string>(WebSystems.ProductGroupsEnum.Lp, "Предметы одежды, бельё постельное, столовое, туалетное и кухонное"),
+                    new KeyValuePair<WebSystems.ProductGroupsEnum, string>(WebSystems.ProductGroupsEnum.Perfumery, "Духи и туалетная вода")
+                });
+
+            SelectedProductGroup = default(KeyValuePair<WebSystems.ProductGroupsEnum, string>);
         }
 
         public List<DocGoodsDetailsLabels> MarkedCodes { get; set; }
@@ -45,6 +55,17 @@ namespace HonestMarkSystem.Models
                 _selectedReason = value;
                 OnPropertyChanged("SelectedReason");
                 OnPropertyChanged("IsOtherReason");
+            }
+        }
+
+        public IEnumerable<KeyValuePair<WebSystems.ProductGroupsEnum, string>> AllProductGroups { get; set; }
+        public KeyValuePair<WebSystems.ProductGroupsEnum, string> SelectedProductGroup {
+            get {
+                return _selectedProductGroup;
+            }
+            set {
+                _selectedProductGroup = value;
+                OnPropertyChanged("SelectedProductGroup");
             }
         }
 
@@ -66,7 +87,7 @@ namespace HonestMarkSystem.Models
                 };
 
                 document.Products = SelectedCodes.Select(s => new WithdrawalFromTurnoverDetail { Cis = s.DmLabel }).ToArray();
-                documentId = _myOrganization.HonestMarkSystem.SendDocument(WebSystems.ProductGroupsEnum.Perfumery, WebSystems.DocumentFormatsEnum.Manual, "LK_RECEIPT", document);
+                documentId = _myOrganization.HonestMarkSystem.SendDocument(SelectedProductGroup.Key, WebSystems.DocumentFormatsEnum.Manual, "LK_RECEIPT", document);
 
                 DocumentInfo docInfo = null;
                 short i = 0;
@@ -77,7 +98,7 @@ namespace HonestMarkSystem.Models
                     try
                     {
                         System.Threading.Thread.Sleep(1000);
-                        docInfo = _myOrganization.HonestMarkSystem.GetDocumentInfo(WebSystems.ProductGroupsEnum.Perfumery, documentId);
+                        docInfo = _myOrganization.HonestMarkSystem.GetDocumentInfo(SelectedProductGroup.Key, documentId);
                         checkStatusException = null;
                     }
                     catch(Exception ex)

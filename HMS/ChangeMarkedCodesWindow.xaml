@@ -11,11 +11,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HonestMarkSystem"
         mc:Ignorable="d"
-        Title="Выбрать коды маркировки" Height="450" Width="800">
+        Title="Выбрать коды маркировки" Height="500" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="25" />
+            <RowDefinition Height="30" />
             <RowDefinition Height="80" />
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
@@ -23,15 +24,20 @@
             <dxg:GridColumn FieldName="DmLabel" Header="Код маркировки" Width="*" />
         </dxg:GridControl>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1">
-            <Label>Причина Вывода из оборота</Label>
-            <ComboBox Width="360" Margin="5 0" ItemsSource="{Binding AllReasons}"
-                      SelectedItem="{Binding SelectedReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Value" SelectedValuePath = "Key"/>
+            <Label>Группа товаров</Label>
+            <ComboBox Width="360" Margin="5 0" ItemsSource="{Binding AllProductGroups}"
+                      SelectedItem="{Binding SelectedProductGroup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Value" SelectedValuePath = "Key"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
+            <Label Margin="0 5 0 0">Причина Вывода из оборота</Label>
+            <ComboBox Width="360" Margin="5 5 5 0" ItemsSource="{Binding AllReasons}"
+                      SelectedItem="{Binding SelectedReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Value" SelectedValuePath = "Key"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="3">
             <Label>Другая причина</Label>
             <TextBox Width="600" Margin="5" IsEnabled="{Binding IsOtherReason, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="3">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
             <Button Margin="5 5" Content="Вывод из оборота" Click="WithdrawalButton_Click"></Button>
             <Button Margin="5 5" Content="Очистить список" Click="ClearButton_Click"></Button>
             <Button Margin="5 5" Content="Выбрать из списка кодов" Click="ChangeButton_Click"></Button>

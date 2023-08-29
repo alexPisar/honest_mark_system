@@ -32,6 +32,12 @@ namespace HonestMarkSystem
                 return;
             }
 
+            if (((Models.ChangeMarkedCodesModel)DataContext).SelectedProductGroup.Key == default(KeyValuePair<WebSystems.ProductGroupsEnum, string>).Key)
+            {
+                MessageBox.Show("Не выбрана товарная группа.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             Exception exception = null;
             var context = (Models.ChangeMarkedCodesModel)DataContext;
 
