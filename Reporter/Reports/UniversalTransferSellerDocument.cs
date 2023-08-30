@@ -337,12 +337,26 @@ namespace Reporter.Reports
                         Number = Convert.ToInt32(good.НомСтр)
                     };
 
+                    if (good?.ИнфПолФХЖ2 != null && (good?.ИнфПолФХЖ2?.Count() ?? 0) > 0)
+                    {
+                        var barCodeField = good.ИнфПолФХЖ2.FirstOrDefault(i => i.Идентиф == "Штрихкод");
+
+                        if(barCodeField == null)
+                            barCodeField = good.ИнфПолФХЖ2.FirstOrDefault(i => i.Идентиф == "штрихкод");
+
+                        if (barCodeField != null)
+                            product.BarCode = barCodeField.Значен;
+                    }
+
                     if (!string.IsNullOrEmpty(good?.ДопСведТов?.КодТов))
                     {
-                        if (good.ДопСведТов.КодТов.StartsWith("0") && good.ДопСведТов.КодТов.Length == 14)
-                            product.BarCode = good.ДопСведТов.КодТов.TrimStart('0');
-                        else
-                            product.BarCode = good.ДопСведТов.КодТов;
+                        if (string.IsNullOrEmpty(product.BarCode))
+                        {
+                            if (good.ДопСведТов.КодТов.StartsWith("0") && good.ДопСведТов.КодТов.Length == 14)
+                                product.BarCode = good.ДопСведТов.КодТов.TrimStart('0');
+                            else
+                                product.BarCode = good.ДопСведТов.КодТов;
+                        }
                     }
 
                     product.MarkedCodes = new List<string>();
