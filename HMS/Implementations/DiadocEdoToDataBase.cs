@@ -580,6 +580,11 @@ namespace HonestMarkSystem.Implementations
             return orgs;
         }
 
+        public List<object> GetHonestMarkProductGroups()
+        {
+            return _abt.RefHonestMarkProductGroups.ToList<object>();
+        }
+
         public decimal ExportDocument(object documentObject)
         {
             var document = (DocEdoPurchasing)documentObject;

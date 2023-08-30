@@ -67,6 +67,8 @@ namespace HonestMarkSystem.Interfaces
 
         IEnumerable<KeyValuePair<TKey, TValue>> GetMyOrganisations<TKey, TValue>(string userName);
 
+        List<object> GetHonestMarkProductGroups();
+
         decimal ExportDocument(object documentObject);
 
         bool IsExistsNotReceivedCodes(decimal idDoc, int docType);

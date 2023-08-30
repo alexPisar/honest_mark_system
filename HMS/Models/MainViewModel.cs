@@ -1438,6 +1438,15 @@ namespace HonestMarkSystem.Models
 
             var withdrawalWindow = new ChangeMarkedCodesWindow();
             withdrawalWindow.DataContext = new ChangeMarkedCodesModel(markedCodes, SelectedMyOrganization);
+            var permittedProductGroups = _dataBaseAdapter.GetHonestMarkProductGroups().Cast<RefHonestMarkProductGroup>();
+            var productGroupEnumValues = typeof(ProductGroupsEnum).GetEnumValues().OfType<ProductGroupsEnum>();
+
+            (withdrawalWindow.DataContext as ChangeMarkedCodesModel).AllProductGroups = permittedProductGroups.Select(p =>
+            {
+                var enumValue = productGroupEnumValues.First(e => (int)e == p.Id);
+                return new KeyValuePair<ProductGroupsEnum, string>(enumValue, p.Description);
+            });
+
             withdrawalWindow.ShowDialog();
         }
 

@@ -129,6 +129,7 @@
     <Compile Include="DataAccess\Entities\RefEdoStatus.cs" />
     <Compile Include="DataAccess\Entities\RefFilial.cs" />
     <Compile Include="DataAccess\Entities\RefGood.cs" />
+    <Compile Include="DataAccess\Entities\RefHonestMarkProductGroup.cs" />
     <Compile Include="DataAccess\Entities\RefItem.cs" />
     <Compile Include="DataAccess\Entities\RefOrderStatus.cs" />
     <Compile Include="DataAccess\Entities\RefShoppingStore.cs" />
@@ -173,6 +174,7 @@
     <Compile Include="DataAccess\Mappings\RefDistrictConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefEdoStatusConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefGoodConfiguration.cs" />
+    <Compile Include="DataAccess\Mappings\RefHonestMarkProductGroupConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefItemConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefOrderStatusConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefPriceTypeConfiguration.cs" />

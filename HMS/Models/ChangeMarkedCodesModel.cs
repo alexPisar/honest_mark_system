@@ -32,14 +32,7 @@ namespace HonestMarkSystem.Models
 
             SelectedReason = AllReasons.First(a => a.Key == WebSystems.ReasonOfWithdrawalFromTurnover.DamageLoss);
 
-            AllProductGroups = new List<KeyValuePair<WebSystems.ProductGroupsEnum, string>>(
-                new [] 
-                {
-                    new KeyValuePair<WebSystems.ProductGroupsEnum, string>(WebSystems.ProductGroupsEnum.Lp, "Предметы одежды, бельё постельное, столовое, туалетное и кухонное"),
-                    new KeyValuePair<WebSystems.ProductGroupsEnum, string>(WebSystems.ProductGroupsEnum.Perfumery, "Духи и туалетная вода")
-                });
-
-            SelectedProductGroup = default(KeyValuePair<WebSystems.ProductGroupsEnum, string>);
+            _selectedProductGroup = default(KeyValuePair<WebSystems.ProductGroupsEnum, string>);
         }
 
         public List<DocGoodsDetailsLabels> MarkedCodes { get; set; }

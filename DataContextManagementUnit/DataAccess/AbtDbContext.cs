@@ -130,6 +130,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
             modelBuilder.Configurations.Add(new Mapping.DocEdoProcessingConfiguration());
             modelBuilder.Configurations.Add(new Mapping.DocComissionEdoProcessingConfiguration());
             modelBuilder.Configurations.Add(new Mapping.RefUserByEdoConsignorConfiguration());
+            modelBuilder.Configurations.Add(new Mapping.RefHonestMarkProductGroupConfiguration());
 
             CustomizeMapping(modelBuilder);
         }
@@ -161,5 +162,6 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual DbSet<DocEdoProcessing> DocEdoProcessings { get; set; }
         public virtual DbSet<DocComissionEdoProcessing> DocComissionEdoProcessings { get; set; }
         public virtual DbSet<RefUserByEdoConsignor> RefUsersByEdoConsignors { get; set; }
+        public virtual DbSet<RefHonestMarkProductGroup> RefHonestMarkProductGroups { get; set; }
     }
 }
