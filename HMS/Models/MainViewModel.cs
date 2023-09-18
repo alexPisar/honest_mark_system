@@ -2121,14 +2121,14 @@ namespace HonestMarkSystem.Models
 
             var productsWithTransportCodes = report?.Products?.Where(p => p.TransportPackingIdentificationCode != null && p.TransportPackingIdentificationCode.Count > 0);
 
-            var transportCodes = productsWithTransportCodes?.SelectMany(p => p.TransportPackingIdentificationCode) ?? new List<string>();
+            var transportCodes = productsWithTransportCodes?.SelectMany(p => p.TransportPackingIdentificationCode)?.Distinct() ?? new List<string>();
 
             if (transportCodes.Count() > 0)
-                honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
+                markedCodes = honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
 
             foreach (var product in report.Products)
                 if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
-                    honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
+                    markedCodes = honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
 
             if (markedCodes.Count == 0)
                 return;

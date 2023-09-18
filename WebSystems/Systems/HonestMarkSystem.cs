@@ -22,7 +22,7 @@ namespace WebSystems.Systems
             return HonestMarkClient.GetInstance().Authorization(_certificate);
         }
 
-        public void GetCodesByThePiece(IEnumerable<string> sourceCodes,
+        public List<KeyValuePair<string, string>> GetCodesByThePiece(IEnumerable<string> sourceCodes,
             List<KeyValuePair<string, string>> resultCodes)
         {
             var markedCodes = HonestMarkClient.GetInstance()
@@ -42,6 +42,11 @@ namespace WebSystems.Systems
             IEnumerable<KeyValuePair<string, string>> codes = markedCodes.Select(s => predicate(s));
 
             resultCodes.AddRange(codes);
+
+            if(sourceCodes.Count() == (codes?.Count() ?? 0))
+                resultCodes = resultCodes.Distinct().ToList();
+
+            return resultCodes;
         }
 
         public Models.MarkCodeInfo[] GetMarkedCodesInfo(ProductGroupsEnum productGroup, string[] markCodes)
