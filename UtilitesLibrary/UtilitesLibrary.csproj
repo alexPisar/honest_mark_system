@@ -66,6 +66,7 @@
     <Compile Include="Controls\LoadControl.xaml.cs">
       <DependentUpon>LoadControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ModelBase\ErrorTextModel.cs" />
     <Compile Include="ModelBase\ListViewModel.cs" />
     <Compile Include="ModelBase\LoadModel.cs" />
     <Compile Include="ModelBase\RelayCommand.cs" />

@@ -2088,20 +2088,34 @@ namespace HonestMarkSystem.Models
             }
         }
 
-        private bool MarkedCodesOwnerCheck(IEnumerable<string> markedCodes, string ownerInn)
+        private bool MarkedCodesOwnerCheck(IEnumerable<string> markedCodes, string ownerInn, ErrorTextModel errorModel = null)
         {
             var positionInArray = 0;
             var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
 
+            var errorCodes = new List<MarkCodeInfo>();
             while (positionInArray < markedCodes.Count())
             {
                 int length = markedCodes.Count() - positionInArray > 500 ? 500 : markedCodes.Count() - positionInArray;
                 var markedCodesInfo = honestMarkSystem.GetMarkedCodesInfo(ProductGroupsEnum.None, markedCodes.Skip(positionInArray).Take(length).ToArray());
 
                 if (markedCodesInfo.Any(m => m?.CisInfo?.OwnerInn != ownerInn))
-                    return false;
+                {
+                    if (errorModel == null)
+                        return false;
+                    else
+                        errorCodes.AddRange(markedCodesInfo.Where(m => m?.CisInfo?.OwnerInn != ownerInn));
+                }
 
                 positionInArray += 500;
+            }
+
+            if (errorCodes.Count > 0)
+            {
+                if(errorModel != null)
+                    errorModel.ErrorMessage += string.Join("\n", errorCodes.Where(s => s.CisInfo != null).Select(s => s.CisInfo.Cis)) + "\n";
+
+                return false;
             }
 
             return true;
@@ -2109,6 +2123,7 @@ namespace HonestMarkSystem.Models
 
         private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null, decimal? oldIdDoc = null)
         {
+            ErrorTextModel errorModel = null;
             var reporterDll = new Reporter.ReporterDll();
             var report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
             var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
@@ -2135,8 +2150,11 @@ namespace HonestMarkSystem.Models
 
             var markedCodesArray = markedCodes.Select(m => m.Key);
 
-            if (!MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn))
-                throw new Exception("В списке кодов маркировки есть не принадлежащие отправителю.");
+            errorModel = new ErrorTextModel("В списке кодов маркировки есть не принадлежащие отправителю:\n");
+            if (!MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn, errorModel))
+                throw new Exception(errorModel.ErrorMessage);
+            else
+                errorModel = null;
 
             var productGroups = from markedCode in markedCodes
                                 group markedCode by markedCode.Value into gr
