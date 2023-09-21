@@ -354,8 +354,6 @@ namespace Reporter.Reports
                         {
                             if (good.ДопСведТов.КодТов.StartsWith("0") && good.ДопСведТов.КодТов.Length == 14)
                                 product.BarCode = good.ДопСведТов.КодТов.TrimStart('0');
-                            else
-                                product.BarCode = good.ДопСведТов.КодТов;
                         }
                     }
 
@@ -370,9 +368,19 @@ namespace Reporter.Reports
                                 product.TransportPackingIdentificationCode.Add(code.ИдентТрансУпак);
 
                             if(code.Items != null)
+                            {
                                 product.MarkedCodes.AddRange(code.Items);
+
+                                string markedCodeExample = code.Items?.FirstOrDefault();
+                                if (string.IsNullOrEmpty(product.BarCode) && !string.IsNullOrEmpty(markedCodeExample))
+                                    if (markedCodeExample.Length == 31)
+                                        product.BarCode = markedCodeExample.Substring(0, 16).TrimStart('0', '1').TrimStart('0');
+                            }
                         }
                     }
+
+                    if(string.IsNullOrEmpty(product.BarCode))
+                        product.BarCode = good?.ДопСведТов?.КодТов;
 
                     Products.Add(product);
                 }
