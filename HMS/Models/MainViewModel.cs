@@ -370,13 +370,6 @@ namespace HonestMarkSystem.Models
             {
                 string errorMessage = null;
 
-                if(docPurchasingModel.SelectedItem.IdDocType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Receipt && Details.Exists(d => d?.IdGood == null))
-                {
-                    System.Windows.MessageBox.Show(
-                    "В списке товаров есть несопоставленные с ID товары.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    return;
-                }
-
                 LoadWindow loadWindow = new LoadWindow("Подождите, идёт сопоставление");
 
                 if (this.Owner != null)
@@ -563,14 +556,7 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if (Details.Exists(d => d?.IdGood == null))
-            {
-                System.Windows.MessageBox.Show(
-                    "В списке товаров есть несопоставленные с ID товары.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                return;
-            }
-
-            if (Details.GroupBy(d => d.IdGood).Any(g => g.Count() > 1))
+            if (Details.Where(d => d.IdGood != null).GroupBy(d => d.IdGood).Any(g => g.Count() > 1))
             {
                 System.Windows.MessageBox.Show(
                     "В списке товаров есть одинаковые ID товаров.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
@@ -2191,6 +2177,9 @@ namespace HonestMarkSystem.Models
 
                 if (detail == null)
                     throw new Exception($"Не найден товар с названием {productGroup.Description}.");
+
+                if (detail.IdGood == null)
+                    throw new Exception($"Товар {productGroup.Description} не сопоставлен.");
 
                 markedCodesByGoods.Add(new KeyValuePair<decimal, List<string>>(detail.IdGood.Value, productGroup.Items));
             }
