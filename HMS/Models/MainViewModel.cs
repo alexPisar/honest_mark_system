@@ -382,9 +382,9 @@ namespace HonestMarkSystem.Models
                 {
                     using (var transaction = _dataBaseAdapter.BeginTransaction())
                     {
+                        decimal? oldIdDoc = SelectedItem?.IdDocJournal;
                         try
                         {
-                            decimal? oldIdDoc = SelectedItem?.IdDocJournal;
                             SelectedItem.IdDocJournal = docPurchasingModel.SelectedItem.Id;
 
                             if (docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
@@ -443,6 +443,7 @@ namespace HonestMarkSystem.Models
                         }
                         catch (Exception ex)
                         {
+                            SelectedItem.IdDocJournal = oldIdDoc;
                             transaction.Rollback();
                             _dataBaseAdapter.ReloadEntry(SelectedItem);
                             errorMessage = _log.GetRecursiveInnerException(ex);
