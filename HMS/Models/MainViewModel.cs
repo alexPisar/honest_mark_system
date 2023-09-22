@@ -387,13 +387,37 @@ namespace HonestMarkSystem.Models
                             decimal? oldIdDoc = SelectedItem?.IdDocJournal;
                             SelectedItem.IdDocJournal = docPurchasingModel.SelectedItem.Id;
 
-                            if (honestMarkSystem != null && docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
+                            if (docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
                             {
-                                loadContext.SetLoadingText("Сохранение кодов");
-                                var sellerXmlDocument = new XmlDocument();
-                                sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
-                                var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
-                                SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc);
+                                loadContext.SetLoadingText("Привязывание кодов");
+
+                                foreach(var detail in Details ?? new List<DocEdoPurchasingDetail>())
+                                {
+                                    if (string.IsNullOrEmpty(detail.BarCode))
+                                        continue;
+
+                                    var refGoodsObj = _dataBaseAdapter?.GetRefGoodsByBarCode(detail.BarCode);
+
+                                    if (refGoodsObj == null || refGoodsObj.Count() == 0)
+                                        continue;
+
+                                    var refGoods = refGoodsObj.Cast<RefGood>();
+
+                                    var selectedDocJournal = docPurchasingModel.SelectedItem;
+                                    var refGood = refGoods.FirstOrDefault(r => selectedDocJournal.Details.Exists(d => d.IdGood == r.Id));
+
+                                    if (refGood != null)
+                                        detail.IdGood = refGood.Id;
+                                }
+
+                                if (honestMarkSystem != null)
+                                {
+                                    loadContext.SetLoadingText("Сохранение кодов");
+                                    var sellerXmlDocument = new XmlDocument();
+                                    sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                                    var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
+                                    SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc);
+                                }
                             }
                             else if(docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
                             {
