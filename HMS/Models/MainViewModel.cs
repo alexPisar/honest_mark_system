@@ -2157,6 +2157,13 @@ namespace HonestMarkSystem.Models
 
             if (markedCodes.Count == 0)
                 return;
+            else
+            {
+                var markedCodesInBase = _dataBaseAdapter.GetMarkedCodesByDocumentId(idDoc) ?? new List<string>();
+
+                if (markedCodesInBase.Count() > markedCodes.Count)
+                    throw new Exception("Число сохранённых кодов в базе по документу больше числа кодов в документе.");
+            }
 
             var markedCodesArray = markedCodes.Select(m => m.Key);
 
