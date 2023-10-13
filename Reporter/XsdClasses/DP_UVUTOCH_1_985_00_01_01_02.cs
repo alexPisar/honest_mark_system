@@ -293,7 +293,7 @@ namespace Reporter.XsdClasses.DpUvutoch
 
         private ФИОТип фИОField;
 
-        private string должностьField;
+        private string должнField;
 
         /// <remarks/>
         public ФИОТип ФИО
@@ -308,13 +308,13 @@ namespace Reporter.XsdClasses.DpUvutoch
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string Должность
+        public string Должн
         {
             get {
-                return this.должностьField;
+                return this.должнField;
             }
             set {
-                this.должностьField = value;
+                this.должнField = value;
             }
         }
     }
@@ -591,30 +591,30 @@ namespace Reporter.XsdClasses.DpUvutoch
     public partial class ФайлДокументСвУведУточСведПолФайл
     {
 
-        private string эЦППолФайлField;
+        private string эППолФайлField;
 
-        private string имяПостФайлаField;
+        private string имяПолФайлаField;
 
         /// <remarks/>
-        public string ЭЦППолФайл
+        public string ЭППолФайл
         {
             get {
-                return this.эЦППолФайлField;
+                return this.эППолФайлField;
             }
             set {
-                this.эЦППолФайлField = value;
+                this.эППолФайлField = value;
             }
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string ИмяПостФайла
+        public string ИмяПолФайла
         {
             get {
-                return this.имяПостФайлаField;
+                return this.имяПолФайлаField;
             }
             set {
-                this.имяПостФайлаField = value;
+                this.имяПолФайлаField = value;
             }
         }
     }
@@ -645,5 +645,9 @@ namespace Reporter.XsdClasses.DpUvutoch
         /// <remarks/>
         [System.Xml.Serialization.XmlEnumAttribute("1.02")]
         Item102,
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlEnumAttribute("1.03")]
+        Item103,
     }
 }

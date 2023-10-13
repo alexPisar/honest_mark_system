@@ -157,7 +157,7 @@ namespace Reporter.Reports
 
             document.ИдФайл = FileName;
             document.ВерсПрог = EdoProgramVersion;
-            document.ВерсФорм = ФайлВерсФорм.Item102;
+            document.ВерсФорм = ФайлВерсФорм.Item103;
 
             document.Документ = new ФайлДокумент();
             document.Документ.УчастЭДО = new УчастЭДОТип();
@@ -200,9 +200,11 @@ namespace Reporter.Reports
 
             document.Документ.СвУведУточ.СведПолФайл = new ФайлДокументСвУведУточСведПолФайл
             {
-                ИмяПостФайла = ReceivedFileName,
-                ЭЦППолФайл = ReceivedFileSignature
+                ЭППолФайл = ReceivedFileSignature
             };
+
+            if (!string.IsNullOrEmpty(ReceivedFileName))
+                document.Документ.СвУведУточ.СведПолФайл.ИмяПолФайла = ReceivedFileName;
 
             document.Документ.ОтпрДок = new УчастЭДОТип();
             document.Документ.ОтпрДок.ИдУчастЭДО = SenderEdoId;
@@ -234,7 +236,7 @@ namespace Reporter.Reports
 
             document.Документ.Подписант = new ПодписантТип
             {
-                Должность = SignerPosition,
+                Должн = SignerPosition,
                 ФИО = new ФИОТип
                 {
                     Фамилия = SignerSurname,
