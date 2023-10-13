@@ -218,7 +218,7 @@
     <Compile Include="Reports\UniversalTransferBuyerDocument.cs" />
     <Compile Include="Reports\UniversalTransferSellerDocument.cs" />
     <Compile Include="XsdClasses\DP_PRANNUL_1_985_00_01_01_02.cs" />
-    <Compile Include="XsdClasses\DP_UVUTOCH_1_985_00_01_01_02.cs" />
+    <Compile Include="XsdClasses\DP_UVUTOCH_1_985_00_01_01_03.cs" />
     <Compile Include="XsdClasses\ON_NKORSCHFDOPPR_1_996_03_05_01_02.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOPPOK_1_997_02_05_01_02.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOPPR_1_997_01_05_01_03.cs" />
