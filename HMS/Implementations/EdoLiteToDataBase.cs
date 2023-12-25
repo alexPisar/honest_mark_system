@@ -325,6 +325,14 @@ namespace HonestMarkSystem.Implementations
             return barCodes.FirstOrDefault();
         }
 
+        public IEnumerable<object> GetRefBarCodesByBarCodes(IEnumerable<string> barCodes)
+        {
+            if (barCodes == null || barCodes.Count() == 0)
+                return new List<RefBarCode>();
+
+            return _abt.RefBarCodes.Where(r => barCodes.Any(b => b == r.BarCode));
+        }
+
         public List<object> GetAllRefGoods()
         {
             return _abt.RefGoods.ToList<object>();

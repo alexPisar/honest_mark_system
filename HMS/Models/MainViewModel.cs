@@ -2174,11 +2174,31 @@ namespace HonestMarkSystem.Models
             else
                 errorModel = null;
 
-            var productGroups = from markedCode in markedCodes
-                                group markedCode by markedCode.Value into gr
-                                join product in report.Products on gr.Key equals product.BarCode
-                                select new { product.Quantity, product.BarCode, product.Description, product.Number,
-                                    Count = gr.Count(), Items=gr.Select(g => g.Key).ToList() };
+            var barCodes = markedCodes.Select(m => m.Value).Distinct();
+            var refBarCodes = _dataBaseAdapter.GetRefBarCodesByBarCodes(barCodes);
+
+            var markedCodesByRefBarCodes = from refBarCode in refBarCodes
+                    join markedCode in markedCodes
+                    on (refBarCode as RefBarCode).BarCode equals markedCode.Value
+                    select new { Item=markedCode.Key, (refBarCode as RefBarCode).BarCode, (refBarCode as RefBarCode).IdGood };
+
+            var productsByRefBarCodes = from product in report.Products
+                                        join refBarCode in refBarCodes
+                                        on product.BarCode equals (refBarCode as RefBarCode).BarCode
+                                        select new { Product=product, (refBarCode as RefBarCode).BarCode, (refBarCode as RefBarCode).IdGood };
+
+            var productGroups = from markedCodeByRefBarCodes in markedCodesByRefBarCodes
+                                group markedCodeByRefBarCodes by markedCodeByRefBarCodes.IdGood into gr
+                                join productByRefBarCodes in productsByRefBarCodes on gr.Key equals productByRefBarCodes.IdGood
+                                select new
+                                {
+                                    productByRefBarCodes.Product.Quantity,
+                                    productByRefBarCodes.Product.BarCode,
+                                    productByRefBarCodes.Product.Description,
+                                    productByRefBarCodes.Product.Number,
+                                    Count = gr.Count(),
+                                    Items = gr.Select(g => g.Item).ToList()
+                                };
 
             var productGroupsNotEquals = productGroups.Where(g => g.Count != g.Quantity).ToList();
 
