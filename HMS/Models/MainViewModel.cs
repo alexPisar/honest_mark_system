@@ -416,7 +416,7 @@ namespace HonestMarkSystem.Models
                                     var sellerXmlDocument = new XmlDocument();
                                     sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
                                     var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
-                                    SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc);
+                                    SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc, Details?.Where(d => d.IdGood != null)?.Select(d => d.IdGood.Value)?.ToList());
                                 }
                             }
                             else if(docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
@@ -897,7 +897,7 @@ namespace HonestMarkSystem.Models
                         if (honestMarkSystem != null)
                         {
                             loadContext.SetLoadingText("Сохранение кодов маркировки");
-                            SaveMarkedCodesToDataBase(docSellerContent, docJournalId);
+                            SaveMarkedCodesToDataBase(docSellerContent, docJournalId, null, Details?.Select(d => d.IdGood.Value)?.ToList());
                         }
 
                         _dataBaseAdapter.Commit(transaction);
@@ -2132,8 +2132,12 @@ namespace HonestMarkSystem.Models
             return true;
         }
 
-        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null, decimal? oldIdDoc = null)
+        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null, decimal? oldIdDoc = null, List<decimal> idGoods = null)
         {
+            if (idGoods != null)
+                if (idGoods.Count == 0)
+                    return;
+
             ErrorTextModel errorModel = null;
             var reporterDll = new Reporter.ReporterDll();
             var report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
@@ -2176,6 +2180,9 @@ namespace HonestMarkSystem.Models
 
             var barCodes = markedCodes.Select(m => m.Value).Distinct();
             var refBarCodes = _dataBaseAdapter.GetRefBarCodesByBarCodes(barCodes);
+
+            if (idGoods != null)
+                refBarCodes = refBarCodes.Where(r => idGoods.Exists(g => g == (r as RefBarCode)?.IdGood));
 
             var markedCodesByRefBarCodes = from refBarCode in refBarCodes
                     join markedCode in markedCodes
