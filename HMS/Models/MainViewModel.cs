@@ -2184,10 +2184,13 @@ namespace HonestMarkSystem.Models
             if (idGoods != null)
                 refBarCodes = refBarCodes.Where(r => idGoods.Exists(g => g == (r as RefBarCode)?.IdGood));
 
-            var markedCodesByRefBarCodes = from refBarCode in refBarCodes
-                    join markedCode in markedCodes
-                    on (refBarCode as RefBarCode).BarCode equals markedCode.Value
-                    select new { Item=markedCode.Key, (refBarCode as RefBarCode).BarCode, (refBarCode as RefBarCode).IdGood };
+            var markedCodesByRefBarCodes = from markedCode in markedCodes
+                                           let refBarCode = refBarCodes.FirstOrDefault(r => (r as RefBarCode)?.BarCode == markedCode.Value)
+                                           select new { Item=markedCode.Key, BarCode = markedCode.Value, (refBarCode as RefBarCode)?.IdGood };
+
+            if (markedCodesByRefBarCodes.Any(m => m.IdGood == null))
+                throw new Exception("Среди штрихкодов маркированных товаров есть несопоставленные с ID товары:\r\n"
+                    +string.Join(", \r\n", markedCodesByRefBarCodes.Where(m => m.IdGood == null).Select(m => m.BarCode).Distinct()));
 
             var productsByRefBarCodes = from product in report.Products
                                         join refBarCode in refBarCodes
