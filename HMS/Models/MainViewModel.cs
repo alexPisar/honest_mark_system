@@ -2186,7 +2186,7 @@ namespace HonestMarkSystem.Models
 
             var markedCodesByRefBarCodes = from markedCode in markedCodes
                                            let refBarCode = refBarCodes.FirstOrDefault(r => (r as RefBarCode)?.BarCode == markedCode.Value)
-                                           select new { Item=markedCode.Key, BarCode = markedCode.Value, (refBarCode as RefBarCode)?.IdGood };
+                                           select new { Item=markedCode.Key, BarCode = markedCode.Value, IdGood = (refBarCode as RefBarCode)?.IdGood };
 
             if (markedCodesByRefBarCodes.Any(m => m.IdGood == null))
                 throw new Exception("Среди штрихкодов маркированных товаров есть несопоставленные с ID товары:\r\n"
