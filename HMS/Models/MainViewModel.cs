@@ -2189,7 +2189,7 @@ namespace HonestMarkSystem.Models
                                            select new { Item=markedCode.Key, BarCode = markedCode.Value, IdGood = (refBarCode as RefBarCode)?.IdGood };
 
             if (markedCodesByRefBarCodes.Any(m => m.IdGood == null))
-                throw new Exception("Среди штрихкодов маркированных товаров есть несопоставленные с ID товары:\r\n"
+                throw new Exception("Среди штрихкодов маркированных товаров есть несопоставленные с ID товары, либо штрихкоды отсутствуют в карточках товаров:\r\n"
                     +string.Join(", \r\n", markedCodesByRefBarCodes.Where(m => m.IdGood == null).Select(m => m.BarCode).Distinct()));
 
             var productsByRefBarCodes = from product in report.Products

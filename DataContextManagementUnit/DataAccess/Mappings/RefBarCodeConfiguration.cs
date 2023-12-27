@@ -23,7 +23,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
         public RefBarCodeConfiguration()
         {
             this
-                .HasKey(p => p.BarCode)
+                .HasKey(p => new { p.IdGood, p.BarCode })
                 .ToTable("REF_BAR_CODES", "ABT");
             // Properties:
             this

@@ -330,7 +330,9 @@ namespace HonestMarkSystem.Implementations
             if (barCodes == null || barCodes.Count() == 0)
                 return new List<RefBarCode>();
 
-            return _abt.RefBarCodes.Where(r => barCodes.Any(b => b == r.BarCode));
+            return (from refBarCode in _abt.RefBarCodes
+                    where barCodes.Any(b => b == refBarCode.BarCode)
+                    select refBarCode);
         }
 
         public List<object> GetAllRefGoods()
