@@ -117,6 +117,7 @@
     <Compile Include="DataAccess\Entities\MapGoodManufacturer.cs" />
     <Compile Include="DataAccess\Entities\MapPriceType.cs" />
     <Compile Include="DataAccess\Entities\RefAgent.cs" />
+    <Compile Include="DataAccess\Entities\RefAuthoritySignDocuments.cs" />
     <Compile Include="DataAccess\Entities\RefBarCode.cs" />
     <Compile Include="DataAccess\Entities\RefChannel.cs" />
     <Compile Include="DataAccess\Entities\RefCity.cs" />
@@ -163,6 +164,7 @@
     <Compile Include="DataAccess\Mappings\MapGoodManufacturerConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\MapPriceTypeConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefAgentConfiguration.cs" />
+    <Compile Include="DataAccess\Mappings\RefAuthoritySignDocumentsConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefChannelConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefCityConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefContractorAgentConfiguration.cs" />

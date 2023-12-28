@@ -54,6 +54,7 @@
     <Compile Include="EventArgs\SendReceivingConfirmationEventArgs.cs" />
     <Compile Include="IEdoSystem.cs" />
     <Compile Include="IWebClient.cs" />
+    <Compile Include="Models\AuthData.cs" />
     <Compile Include="Models\AuthRequest.cs" />
     <Compile Include="Models\AuthResult.cs" />
     <Compile Include="Models\Cis.cs" />

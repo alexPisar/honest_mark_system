@@ -34,9 +34,14 @@ namespace WebSystems.WebClients
             return _instance;
         }
 
-        public bool Authorization(X509Certificate2 certificate)
+        public bool Authorization(X509Certificate2 certificate, string emchdOrgInn = null)
         {
-            var cache = new HonestMarkTokenCache().Load(certificate.Thumbprint);
+            HonestMarkTokenCache cache;
+
+            if(!string.IsNullOrEmpty(emchdOrgInn))
+                cache = new HonestMarkTokenCache().Load($"{emchdOrgInn}_{certificate.Thumbprint}");
+            else
+                cache = new HonestMarkTokenCache().Load(certificate.Thumbprint);
 
             if (cache?.Token != null && cache?.TokenExpirationDate > DateTime.Now)
             {
@@ -45,7 +50,7 @@ namespace WebSystems.WebClients
                 return true;
             }
 
-            var authData = _webService.GetRequest<Models.AuthRequest>($"{Properties.Settings.Default.UrlAddressHonestMark}/auth/key");
+            var authData = _webService.GetRequest<Models.AuthData>($"{Properties.Settings.Default.UrlAddressHonestMark}/auth/key");
 
             var crypto = new WinApiCryptWrapper(certificate);
 
@@ -57,6 +62,9 @@ namespace WebSystems.WebClients
                 Uid = authData.Uid,
                 Data = Convert.ToBase64String(signature)
             };
+
+            if (!string.IsNullOrEmpty(emchdOrgInn))
+                authRequest.Inn = emchdOrgInn;
 
             var authRequestJson = JsonConvert.SerializeObject(authRequest);
 
@@ -77,7 +85,12 @@ namespace WebSystems.WebClients
                 TokenCreationDate = DateTime.Now,
                 TokenExpirationDate = DateTime.Now.AddHours(10)
             };
-            cache.Save(cache, certificate.Thumbprint);
+
+            if(!string.IsNullOrEmpty(emchdOrgInn))
+                cache.Save(cache, $"{emchdOrgInn}_{certificate.Thumbprint}");
+            else
+                cache.Save(cache, certificate.Thumbprint);
+
             _certificate = certificate;
 
             return true;

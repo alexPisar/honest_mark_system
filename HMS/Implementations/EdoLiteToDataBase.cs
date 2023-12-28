@@ -426,6 +426,11 @@ namespace HonestMarkSystem.Implementations
             return _abt.RefHonestMarkProductGroups.ToList<object>();
         }
 
+        public object GetRefAuthoritySignDocumentsByCustomer(decimal idCustomer)
+        {
+            return _abt.RefAuthoritySignDocuments.FirstOrDefault(r => r.IdCustomer == idCustomer && r.EmchdId != null);
+        }
+
         public decimal ExportDocument(object documentObject)
         {
             var document = (DocEdoPurchasing)documentObject;

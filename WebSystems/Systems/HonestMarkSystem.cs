@@ -10,6 +10,7 @@ namespace WebSystems.Systems
 {
     public class HonestMarkSystem
     {
+        private string _emchdOrgInn;
         private X509Certificate2 _certificate;
 
         public HonestMarkSystem(X509Certificate2 certificate)
@@ -17,9 +18,15 @@ namespace WebSystems.Systems
             _certificate = certificate;
         }
 
+        public HonestMarkSystem(X509Certificate2 certificate, string emchdOrgInn)
+        {
+            _emchdOrgInn = emchdOrgInn;
+            _certificate = certificate;
+        }
+
         public bool Authorization()
         {
-            return HonestMarkClient.GetInstance().Authorization(_certificate);
+            return HonestMarkClient.GetInstance().Authorization(_certificate, _emchdOrgInn);
         }
 
         public List<KeyValuePair<string, string>> GetCodesByThePiece(IEnumerable<string> sourceCodes,

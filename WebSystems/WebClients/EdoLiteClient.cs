@@ -45,7 +45,7 @@ namespace WebSystems.WebClients
                 return true;
             }
 
-            var authData = _webService.GetRequest<Models.AuthRequest>($"{Properties.Settings.Default.UrlAddressEdoLite}/api/v1/session");
+            var authData = _webService.GetRequest<Models.AuthData>($"{Properties.Settings.Default.UrlAddressEdoLite}/api/v1/session");
 
             var crypto = new WinApiCryptWrapper(certificate);
 

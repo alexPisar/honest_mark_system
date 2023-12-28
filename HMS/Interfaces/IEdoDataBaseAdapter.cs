@@ -71,6 +71,8 @@ namespace HonestMarkSystem.Interfaces
 
         List<object> GetHonestMarkProductGroups();
 
+        object GetRefAuthoritySignDocumentsByCustomer(decimal idCustomer);
+
         decimal ExportDocument(object documentObject);
 
         bool IsExistsNotReceivedCodes(decimal idDoc, int docType);

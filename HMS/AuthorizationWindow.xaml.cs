@@ -69,9 +69,22 @@ namespace HonestMarkSystem
 
                 foreach (var refOrg in refOrgs)
                 {
-                    var selectedCert = certs?.FirstOrDefault(c =>
-                    cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Key.Inn
-                    && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+                    X509Certificate2 selectedCert = null;
+
+                    var refAuthoritySignDocuments = dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(refOrg.Key.Id)
+                        as RefAuthoritySignDocuments;
+
+                    if(refAuthoritySignDocuments != null)
+                        selectedCert = certs?.FirstOrDefault(c => 
+                        cryptoUtil.ParseCertAttribute(c.Subject, "ИНН").TrimStart('0') == refAuthoritySignDocuments.Inn
+                        && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+
+                    if (selectedCert == null)
+                    {
+                        refAuthoritySignDocuments = null;
+                        selectedCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Key.Inn
+                        && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+                    }
 
                     if (selectedCert == null)
                     {
@@ -82,7 +95,7 @@ namespace HonestMarkSystem
                     WebSystems.Systems.HonestMarkSystem markSystem;
                     IEdoSystem edoSystem;
 
-                    if (AuthentificationByCert(selectedCert, out markSystem, out edoSystem))
+                    if (AuthentificationByCert(selectedCert, refAuthoritySignDocuments != null ? refOrg.Key.Inn : null, out markSystem, out edoSystem))
                     {
                         var orgName = refOrg.Key.Name;
 
@@ -98,6 +111,16 @@ namespace HonestMarkSystem
                         };
 
                         mainModel.SaveOrgData(organization);
+
+                        if(refAuthoritySignDocuments != null)
+                        {
+                            organization.EmchdId = refAuthoritySignDocuments.EmchdId;
+                            organization.EmchdPersonSurname = refAuthoritySignDocuments.Surname;
+                            organization.EmchdPersonName = refAuthoritySignDocuments.Name;
+                            organization.EmchdPersonPatronymicSurname = refAuthoritySignDocuments.PatronymicSurname;
+                            organization.EmchdPersonPosition = refAuthoritySignDocuments.Position;
+                            organization.EmchdPersonInn = refAuthoritySignDocuments.Inn;
+                        }
 
                         myOrganizations.Add(organization);
                     }
@@ -123,7 +146,7 @@ namespace HonestMarkSystem
             }
         }
 
-        private bool AuthentificationByCert(X509Certificate2 certificate, out WebSystems.Systems.HonestMarkSystem markSystem, out IEdoSystem edoSystem)
+        private bool AuthentificationByCert(X509Certificate2 certificate, string emchdOrgInn, out WebSystems.Systems.HonestMarkSystem markSystem, out IEdoSystem edoSystem)
         {
             markSystem = null;
             edoSystem = null;
@@ -144,6 +167,9 @@ namespace HonestMarkSystem
                 try
                 {
                     //if(((Config)DataContext).ConsignorInn != "9652306541")
+                    if(!string.IsNullOrEmpty(emchdOrgInn))
+                        markSystem = new WebSystems.Systems.HonestMarkSystem(certificate, emchdOrgInn);
+                    else
                         markSystem = new WebSystems.Systems.HonestMarkSystem(certificate);
 
                     if (markSystem != null && !markSystem.Authorization())
