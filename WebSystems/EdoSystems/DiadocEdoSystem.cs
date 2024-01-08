@@ -251,15 +251,28 @@ namespace WebSystems.EdoSystems
             ((WebClients.DiadocEdoClient)_webClient).SendPatchSignedDocument(messageId, entityId, signature);
         }
 
-        public override void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters)
+        public override void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, string emchdId, params object[] parameters)
         {
             var messageId = (string)parameters[0];
             var entityId = (string)parameters[1];
 
+            Diadoc.Api.Proto.Events.PowerOfAttorneyToPost powerOfAttorney = null;
+
+            if(!string.IsNullOrEmpty(emchdId))
+                powerOfAttorney = new Diadoc.Api.Proto.Events.PowerOfAttorneyToPost
+                {
+                    UseDefault = false,
+                    FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
+                    {
+                        RegistrationNumber = emchdId,
+                        IssuerInn = this.CurrentOrgInn
+                    }
+                };
+
             if (function == "СЧФ")
-                ((WebClients.DiadocEdoClient)_webClient).SendInvoiceCorrectionDocument(messageId, entityId, fileBytes, signature);
+                ((WebClients.DiadocEdoClient)_webClient).SendInvoiceCorrectionDocument(messageId, entityId, fileBytes, signature, powerOfAttorney);
             else
-                ((WebClients.DiadocEdoClient)_webClient).SendRejectionDocument(messageId, entityId, fileBytes, signature);
+                ((WebClients.DiadocEdoClient)_webClient).SendRejectionDocument(messageId, entityId, fileBytes, signature, powerOfAttorney);
         }
 
         public override void SendRevocationDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters)

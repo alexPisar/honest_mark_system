@@ -301,7 +301,7 @@ namespace WebSystems.WebClients
             var messagePatch = CallApiSafe(new Func<MessagePatch>(() => _api.PostMessagePatch(_authToken, postMessage)));
         }
 
-        public void SendInvoiceCorrectionDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature)
+        public void SendInvoiceCorrectionDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature, PowerOfAttorneyToPost powerOfAttorney = null)
         {
             var invoiceCorrectionAttachment = new CorrectionRequestAttachment()
             {
@@ -312,6 +312,9 @@ namespace WebSystems.WebClients
                     Signature = signature
                 }
             };
+
+            if (powerOfAttorney != null)
+                invoiceCorrectionAttachment.SignedContent.PowerOfAttorney = powerOfAttorney;
 
             var postMessage = new MessagePatchToPost
             {
@@ -324,7 +327,7 @@ namespace WebSystems.WebClients
             var messagePatch = CallApiSafe(new Func<MessagePatch>(() => _api.PostMessagePatch(_authToken, postMessage)));
         }
 
-        public void SendRejectionDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature)
+        public void SendRejectionDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature, PowerOfAttorneyToPost powerOfAttorney = null)
         {
             var signatureRejectionAttachment = new XmlSignatureRejectionAttachment()
             {
@@ -335,6 +338,9 @@ namespace WebSystems.WebClients
                     Signature = signature
                 }
             };
+
+            if (powerOfAttorney != null)
+                signatureRejectionAttachment.SignedContent.PowerOfAttorney = powerOfAttorney;
 
             var postMessage = new MessagePatchToPost
             {

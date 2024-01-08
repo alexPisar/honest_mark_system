@@ -1619,7 +1619,7 @@ namespace HonestMarkSystem.Models
                             loadContext.SetLoadingText("Отправка");
 
                             if(edoSystem.GetType() == typeof(DiadocEdoSystem))
-                                edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                                edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
 
                             SelectedItem.DocStatus = (int)DocEdoStatus.Rejected;
 
@@ -1814,7 +1814,7 @@ namespace HonestMarkSystem.Models
 
                                         loadContext.SetLoadingText("Отправка");
 
-                                        edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
+                                        edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
 
                                         SelectedItem.DocStatus = (int)DocEdoStatus.RejectRevoke;
                                         _dataBaseAdapter.Commit(transaction);
