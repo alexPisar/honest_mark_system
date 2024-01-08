@@ -730,7 +730,7 @@ namespace HonestMarkSystem.Models
                                 }
 
                                 string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{reportForSend.FileName}.xml";
-                                edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, content);
+                                edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedMyOrganization.EmchdId, content);
                             }
                             else if(edoSystem.GetType() == typeof(DiadocEdoSystem))
                             {
@@ -758,7 +758,7 @@ namespace HonestMarkSystem.Models
                                     return;
                                 }
 
-                                edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedItem.ParentEntityId, SelectedItem.IdDocType);
+                                edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.ParentEntityId, SelectedItem.IdDocType);
                             }
 
                             SelectedItem.SignatureFileName = reportForSend.FileName;
@@ -1095,12 +1095,18 @@ namespace HonestMarkSystem.Models
                             sellerReport.CurrencyCode = "643";
 
                             string receiverOrgName = null;
+                            string receiverEmchdId = null;
                             if (receiverInn.Length == 10)
                             {
                                 var receiverCompany = _dataBaseAdapter.GetCustomerByOrgInn(receiverInn) as RefCustomer;
 
                                 if (receiverCompany == null)
                                     throw new Exception("Для получателя не найдена компания в системе.");
+
+                                var refAuthoritySignDocuments = _dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(receiverCompany.Id) as RefAuthoritySignDocuments;
+
+                                if (refAuthoritySignDocuments != null)
+                                    receiverEmchdId = refAuthoritySignDocuments.EmchdId;
 
                                 var buyerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
 
@@ -1134,12 +1140,18 @@ namespace HonestMarkSystem.Models
                             };
 
                             string sellerOrgName = null;
+                            string sellerEmchdId = null;
                             if (orgInn.Length == 10)
                             {
                                 var sellerCompany = _dataBaseAdapter.GetCustomerByOrgInn(orgInn) as RefCustomer;
 
                                 if (sellerCompany == null)
                                     throw new Exception("Для получателя не найдена компания в системе.");
+
+                                var refAuthoritySignDocuments = _dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(sellerCompany.Id) as RefAuthoritySignDocuments;
+
+                                if (refAuthoritySignDocuments != null)
+                                    sellerEmchdId = refAuthoritySignDocuments.EmchdId;
 
                                 var sellerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
 
@@ -1349,7 +1361,7 @@ namespace HonestMarkSystem.Models
                                 var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
                                 var entity = sellerMessage.Entities.FirstOrDefault(t => t.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.UniversalTransferDocument);
 
-                                edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision, sellerMessage.ToBoxId, receiverCert);
+                                edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, receiverEmchdId, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision, sellerMessage.ToBoxId, receiverCert, receiverInn);
                             }
                             else if (edoSystem as EdoLiteSystem != null)
                             {
@@ -1371,7 +1383,7 @@ namespace HonestMarkSystem.Models
                                 }
 
                                 string content = $"{localPath}/{edoFilesPath}/{docId}/{buyerReport.FileName}.xml";
-                                edoSystem.SendDocument(docId, buyerFileBytes, buyerSignature, content);
+                                edoSystem.SendDocument(docId, buyerFileBytes, buyerSignature, receiverEmchdId, content);
                             }
 
                             using (var transaction = _dataBaseAdapter.BeginTransaction())

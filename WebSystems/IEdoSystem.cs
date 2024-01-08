@@ -26,6 +26,7 @@ namespace WebSystems
         public abstract string EdoOrgInn { get; }
 
         public abstract bool HasZipContent { get; }
+        public virtual string CurrentOrgInn { get; set; }
 
         public abstract byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None);
 
@@ -75,7 +76,7 @@ namespace WebSystems
 
         public virtual void SendRevocationDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters) { }
 
-        public abstract object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters);
+        public abstract object SendDocument(string documentId, byte[] content, byte[] signature, string emchdId, params object[] parameters);
 
         public abstract object SendUniversalTransferDocument(byte[] content, byte[] signature, params object[] parameters);
         public abstract void SaveParameters(params object[] parameters);

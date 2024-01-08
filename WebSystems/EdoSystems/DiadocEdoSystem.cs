@@ -57,18 +57,20 @@ namespace WebSystems.EdoSystems
             return ((WebClients.DiadocEdoClient)_webClient).Authenticate(_certificate);
         }
 
-        public override object SendDocument(string documentId, byte[] content, byte[] signature, params object[] parameters)
+        public override object SendDocument(string documentId, byte[] content, byte[] signature, string emchdId, params object[] parameters)
         {
             string entityId = (string)parameters[0];
             int docType = (int)parameters[1];
 
             string boxId = null;
             X509Certificate2 cert = null;
+            string orgInn = this.CurrentOrgInn;
 
             if (parameters.Length > 2)
             {
                 boxId = parameters[2] as string;
                 cert = parameters[3] as X509Certificate2;
+                orgInn = parameters[4] as string;
             }
 
             var recipientAttachment = new Diadoc.Api.Proto.Events.RecipientTitleAttachment
@@ -79,6 +81,17 @@ namespace WebSystems.EdoSystems
                     Content = content
                 }
             };
+
+            if (!string.IsNullOrEmpty(emchdId))
+                recipientAttachment.SignedContent.PowerOfAttorney = new Diadoc.Api.Proto.Events.PowerOfAttorneyToPost
+                {
+                    UseDefault = false,
+                    FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
+                    {
+                        RegistrationNumber = emchdId,
+                        IssuerInn = orgInn
+                    }
+                };
 
             if (signature != null)
                 recipientAttachment.SignedContent.Signature = signature;

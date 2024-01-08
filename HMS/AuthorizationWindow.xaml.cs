@@ -112,7 +112,10 @@ namespace HonestMarkSystem
 
                         mainModel.SaveOrgData(organization);
 
-                        if(refAuthoritySignDocuments != null)
+                        if (organization.EdoSystem != null)
+                            organization.EdoSystem.CurrentOrgInn = organization.OrgInn;
+
+                        if (refAuthoritySignDocuments != null)
                         {
                             organization.EmchdId = refAuthoritySignDocuments.EmchdId;
                             organization.EmchdPersonSurname = refAuthoritySignDocuments.Surname;
