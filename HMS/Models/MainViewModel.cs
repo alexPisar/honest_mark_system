@@ -1140,18 +1140,12 @@ namespace HonestMarkSystem.Models
                             };
 
                             string sellerOrgName = null;
-                            string sellerEmchdId = null;
                             if (orgInn.Length == 10)
                             {
                                 var sellerCompany = _dataBaseAdapter.GetCustomerByOrgInn(orgInn) as RefCustomer;
 
                                 if (sellerCompany == null)
                                     throw new Exception("Для получателя не найдена компания в системе.");
-
-                                var refAuthoritySignDocuments = _dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(sellerCompany.Id) as RefAuthoritySignDocuments;
-
-                                if (refAuthoritySignDocuments != null)
-                                    sellerEmchdId = refAuthoritySignDocuments.EmchdId;
 
                                 var sellerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
 
@@ -1261,7 +1255,7 @@ namespace HonestMarkSystem.Models
                                 parameters = new object[] { content };
                             }
 
-                            object sendSellerReportResult = edoSystem.SendUniversalTransferDocument(sellerFileBytes, sellerSignature, parameters);
+                            object sendSellerReportResult = edoSystem.SendUniversalTransferDocument(sellerFileBytes, sellerSignature, myOrganization.EmchdId, parameters);
 
                             if (edoSystem as DiadocEdoSystem != null)
                             {

@@ -102,7 +102,7 @@ namespace WebSystems.EdoSystems
                 return ((WebClients.DiadocEdoClient)_webClient).SendPatchRecipientXmlDocument(documentId, docType, recipientAttachment, boxId, cert);
         }
 
-        public override object SendUniversalTransferDocument(byte[] content, byte[] signature, params object[] parameters)
+        public override object SendUniversalTransferDocument(byte[] content, byte[] signature, string emchdId, params object[] parameters)
         {
             var myOrgId = parameters[0] as string;
             var recipientInn = parameters[1] as string;
@@ -120,6 +120,17 @@ namespace WebSystems.EdoSystems
                     Content = content
                 }
             };
+
+            if (!string.IsNullOrEmpty(emchdId))
+                documentAttachment.SignedContent.PowerOfAttorney = new Diadoc.Api.Proto.Events.PowerOfAttorneyToPost
+                {
+                    UseDefault = false,
+                    FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
+                    {
+                        RegistrationNumber = emchdId,
+                        IssuerInn = this.CurrentOrgInn
+                    }
+                };
 
             documentAttachment.Comment = comment;
             documentAttachment.CustomDocumentId = customDocumentId;

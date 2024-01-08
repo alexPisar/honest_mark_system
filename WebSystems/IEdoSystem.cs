@@ -78,7 +78,7 @@ namespace WebSystems
 
         public abstract object SendDocument(string documentId, byte[] content, byte[] signature, string emchdId, params object[] parameters);
 
-        public abstract object SendUniversalTransferDocument(byte[] content, byte[] signature, params object[] parameters);
+        public abstract object SendUniversalTransferDocument(byte[] content, byte[] signature, string emchdId, params object[] parameters);
         public abstract void SaveParameters(params object[] parameters);
     }
 }
