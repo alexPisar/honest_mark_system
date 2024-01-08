@@ -243,12 +243,25 @@ namespace WebSystems.EdoSystems
             return entity;
         }
 
-        public override void SendRevokeConfirmation(byte[] signature, params object[] parameters)
+        public override void SendRevokeConfirmation(byte[] signature, string emchdId, params object[] parameters)
         {
             var messageId = (string)parameters[0];
             var entityId = (string)parameters[1];
 
-            ((WebClients.DiadocEdoClient)_webClient).SendPatchSignedDocument(messageId, entityId, signature);
+            Diadoc.Api.Proto.Events.PowerOfAttorneyToPost powerOfAttorney = null;
+
+            if (!string.IsNullOrEmpty(emchdId))
+                powerOfAttorney = new Diadoc.Api.Proto.Events.PowerOfAttorneyToPost
+                {
+                    UseDefault = false,
+                    FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
+                    {
+                        RegistrationNumber = emchdId,
+                        IssuerInn = this.CurrentOrgInn
+                    }
+                };
+
+            ((WebClients.DiadocEdoClient)_webClient).SendPatchSignedDocument(messageId, entityId, signature, powerOfAttorney);
         }
 
         public override void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, string emchdId, params object[] parameters)

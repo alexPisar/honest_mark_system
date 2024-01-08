@@ -160,7 +160,7 @@ namespace WebSystems.WebClients
             }
         }
 
-        public MessagePatch SendPatchSignedDocument(string messageId, string parentEntityId, byte[] signature)
+        public MessagePatch SendPatchSignedDocument(string messageId, string parentEntityId, byte[] signature, PowerOfAttorneyToPost powerOfAttorney = null)
         {
             var messageToPost = new MessagePatchToPost
             {
@@ -168,11 +168,16 @@ namespace WebSystems.WebClients
                 MessageId = messageId
             };
 
-            messageToPost.AddSignature(new DocumentSignature
+            var documentSignature = new DocumentSignature
             {
                 ParentEntityId = parentEntityId,
                 Signature = signature
-            });
+            };
+
+            if (powerOfAttorney != null)
+                documentSignature.PowerOfAttorney = powerOfAttorney;
+
+            messageToPost.AddSignature(documentSignature);
 
             return CallApiSafe(new Func<MessagePatch>(() => { return _api.PostMessagePatch(_authToken, messageToPost); }));
         }

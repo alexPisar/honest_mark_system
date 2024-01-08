@@ -1721,7 +1721,7 @@ namespace HonestMarkSystem.Models
                             File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}", revokeDocumentContent);
                             File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}.sig", signature);
 
-                            edoSystem.SendRevokeConfirmation(signature, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
+                            edoSystem.SendRevokeConfirmation(signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
 
                             using (var transaction = _dataBaseAdapter.BeginTransaction())
                             {

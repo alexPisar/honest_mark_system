@@ -70,7 +70,7 @@ namespace WebSystems
 
         public virtual object GetRevokeDocument(out string fileName, out byte[] signature, params object[] parameters){ fileName = string.Empty; signature = null;  return new byte[] { }; }
 
-        public virtual void SendRevokeConfirmation(byte[] signature, params object[] parameters) { }
+        public virtual void SendRevokeConfirmation(byte[] signature, string emchdId, params object[] parameters) { }
 
         public virtual void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, string emchdId, params object[] parameters) { }
 
