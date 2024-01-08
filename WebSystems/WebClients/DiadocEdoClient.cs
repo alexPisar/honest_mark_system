@@ -358,7 +358,7 @@ namespace WebSystems.WebClients
             var messagePatch = CallApiSafe(new Func<MessagePatch>(() => _api.PostMessagePatch(_authToken, postMessage)));
         }
 
-        public void SendRevocationDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature)
+        public void SendRevocationDocument(string messageId, string entityId, byte[] fileBytes, byte[] signature, PowerOfAttorneyToPost powerOfAttorney = null)
         {
             var signatureAttachment = new RevocationRequestAttachment()
             {
@@ -369,6 +369,9 @@ namespace WebSystems.WebClients
                     Signature = signature
                 }
             };
+
+            if (powerOfAttorney != null)
+                signatureAttachment.SignedContent.PowerOfAttorney = powerOfAttorney;
 
             var postMessage = new MessagePatchToPost
             {

@@ -1980,7 +1980,7 @@ namespace HonestMarkSystem.Models
                                 loadContext.SetLoadingText("Отправка");
 
                                 if (edoSystem.GetType() == typeof(DiadocEdoSystem))
-                                    edoSystem.SendRevocationDocument(sellerReport.Function, contentBytes, signature, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                                    edoSystem.SendRevocationDocument(sellerReport.Function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
 
                                 if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
                                     SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;

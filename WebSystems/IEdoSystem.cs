@@ -74,7 +74,7 @@ namespace WebSystems
 
         public virtual void SendRejectionDocument(string function, byte[] fileBytes, byte[] signature, string emchdId, params object[] parameters) { }
 
-        public virtual void SendRevocationDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters) { }
+        public virtual void SendRevocationDocument(string function, byte[] fileBytes, byte[] signature, string emchdId, params object[] parameters) { }
 
         public abstract object SendDocument(string documentId, byte[] content, byte[] signature, string emchdId, params object[] parameters);
 

@@ -288,12 +288,25 @@ namespace WebSystems.EdoSystems
                 ((WebClients.DiadocEdoClient)_webClient).SendRejectionDocument(messageId, entityId, fileBytes, signature, powerOfAttorney);
         }
 
-        public override void SendRevocationDocument(string function, byte[] fileBytes, byte[] signature, params object[] parameters)
+        public override void SendRevocationDocument(string function, byte[] fileBytes, byte[] signature, string emchdId, params object[] parameters)
         {
             var messageId = (string)parameters[0];
             var entityId = (string)parameters[1];
 
-            ((WebClients.DiadocEdoClient)_webClient).SendRevocationDocument(messageId, entityId, fileBytes, signature);
+            Diadoc.Api.Proto.Events.PowerOfAttorneyToPost powerOfAttorney = null;
+
+            if (!string.IsNullOrEmpty(emchdId))
+                powerOfAttorney = new Diadoc.Api.Proto.Events.PowerOfAttorneyToPost
+                {
+                    UseDefault = false,
+                    FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
+                    {
+                        RegistrationNumber = emchdId,
+                        IssuerInn = this.CurrentOrgInn
+                    }
+                };
+
+            ((WebClients.DiadocEdoClient)_webClient).SendRevocationDocument(messageId, entityId, fileBytes, signature, powerOfAttorney);
         }
 
         public override byte[] GetDocumentPrintForm(params object[] parameters)
