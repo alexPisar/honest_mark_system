@@ -618,7 +618,7 @@ namespace HonestMarkSystem.Models
             }
 
             var signWindow = new BuyerSignWindow(cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
-            signWindow.SetDefaultParameters(edoSystem.GetCertSubject(), SelectedItem);
+            signWindow.SetDefaultParameters(SelectedMyOrganization, edoSystem.GetCertSubject(), SelectedItem);
             signWindow.Report.EdoProgramVersion = this.EdoProgramVersion;
 
             string signedFilePath;

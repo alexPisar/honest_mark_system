@@ -143,26 +143,40 @@ namespace HonestMarkSystem
             return signatureAsBase64;
         }
 
-        public void SetDefaultParameters(string subject, DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing dataBaseObject)
+        public void SetDefaultParameters(Models.ConsignorOrganization organization, string subject, DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing dataBaseObject)
         {
             Report.CreateBuyerFileDate = DateTime.Now;
 
-            var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
-            Report.SignerEntity = new Reporter.Entities.IndividualEntity()
+            if (!string.IsNullOrEmpty(organization.EmchdId))
             {
-                Inn = _cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0'),
-                Surname = _cryptoUtil.ParseCertAttribute(subject, "SN"),
-                Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty,
-                Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty
-            };
+                Report.SignerEntity = new Reporter.Entities.IndividualEntity()
+                {
+                    Inn = organization.EmchdPersonInn,
+                    Surname = organization.EmchdPersonSurname,
+                    Name = organization.EmchdPersonName,
+                    Patronymic = organization.EmchdPersonPatronymicSurname
+                };
+                Report.BasisOfAuthority = "Доверенность";
+            }
+            else
+            {
+                var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
+                Report.SignerEntity = new Reporter.Entities.IndividualEntity()
+                {
+                    Inn = _cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0'),
+                    Surname = _cryptoUtil.ParseCertAttribute(subject, "SN"),
+                    Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty,
+                    Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty
+                };
+                Report.BasisOfAuthority = _cryptoUtil.ParseCertAttribute(subject, "T");
+            }
 
-            var orgInn = _cryptoUtil.GetCertificateAttributeValueByOid("1.2.643.100.4");
-            var orgName = _cryptoUtil.ParseCertAttribute(subject, "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
+            var orgInn = organization.OrgInn;
+            var orgName = organization.OrgName;
 
             if (string.IsNullOrEmpty(orgInn))
                 orgInn = ((Reporter.Entities.IndividualEntity)Report.SignerEntity).Inn;
 
-            Report.BasisOfAuthority = _cryptoUtil.ParseCertAttribute(subject, "T");
             Report.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoMadeOperation;
             Report.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;
             Report.AcceptResult = Reporter.Enums.AcceptResultEnum.GoodsAcceptedWithoutDiscrepancy;
