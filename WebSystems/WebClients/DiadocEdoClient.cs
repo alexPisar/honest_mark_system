@@ -22,6 +22,7 @@ namespace WebSystems.WebClients
         private static readonly object syncRoot = new object();
         private string _authToken => _cache.Token ?? "";
         private string _actualBoxId => _cache.ActualBoxId ?? "";
+        private string _orgCertInn;
 
         /// <summary>
 		/// Истёк ли токен аутентификации
@@ -143,7 +144,7 @@ namespace WebSystems.WebClients
                 var api = new DiadocHttpApi(_config.DiadocApiId, _api.HttpClient, new Diadoc.Api.Cryptography.WinApiCrypt());
                 var token = (string)CallApiSafe(new Func<object>(() => api.Authenticate(certificate.RawData)));
 
-                var cache = new DiadocEdoTokenCache().Load(_certificate.Thumbprint);
+                var cache = new DiadocEdoTokenCache().Load(certificate.Thumbprint);
 
                 if (cache == null || cache?.TokenExpirationDate < DateTime.Now)
                 {
@@ -156,7 +157,7 @@ namespace WebSystems.WebClients
             }
             finally
             {
-                Authenticate(_certificate);
+                Authenticate(_certificate, _orgCertInn);
             }
         }
 
@@ -437,7 +438,7 @@ namespace WebSystems.WebClients
         /// <summary>
 		/// Получить токен аутентификации
 		/// </summary>
-		public bool Authenticate(X509Certificate2 cert = null)
+		public bool Authenticate(X509Certificate2 cert = null, string orgCertInn = null)
         {
             if (cert != null)
                 _certificate = cert;
@@ -448,6 +449,11 @@ namespace WebSystems.WebClients
 
             if (_cache != null && !IsTokenExpired)
             {
+                if (!string.IsNullOrEmpty(orgCertInn))
+                    _orgCertInn = orgCertInn;
+                else
+                    _orgCertInn = new UtilitesLibrary.Service.CryptoUtil().GetOrgInnFromCertificate(_certificate);
+
                 return true;
             }
             if (_cache == null || IsTokenExpired)
@@ -459,15 +465,17 @@ namespace WebSystems.WebClients
                 if (string.IsNullOrEmpty(authToken))
                     return false;
 
-                var certInn = new UtilitesLibrary.Service.CryptoUtil().GetOrgInnFromCertificate(_certificate);
+                if(string.IsNullOrEmpty(orgCertInn))
+                    orgCertInn = new UtilitesLibrary.Service.CryptoUtil().GetOrgInnFromCertificate(_certificate);
 
                 _cache = new DiadocEdoTokenCache(authToken, $"Certificate, Serial Number {_certificate.SerialNumber}", _cache?.PartyId ?? "", _cache?.EdoLastDocDateTime);
 
-                var myOrg = GetMyOrganizationByInnKpp(certInn);
+                var myOrg = GetMyOrganizationByInnKpp(orgCertInn);
 
                 if (myOrg == null)
                     throw new Exception("Не найдена организация, соответствующая самому сертификату подписанта.");
 
+                _orgCertInn = orgCertInn;
                 _cache.ActualBoxId = myOrg.Boxes.First().BoxId;
                 _cache.Save(_cache, _certificate.Thumbprint);
 

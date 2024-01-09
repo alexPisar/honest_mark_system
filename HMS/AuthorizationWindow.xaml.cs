@@ -165,6 +165,10 @@ namespace HonestMarkSystem
                 }
 
                 edoSystem = new DiadocEdoSystem(certificate);
+
+                if (!string.IsNullOrEmpty(emchdOrgInn))
+                    edoSystem.CurrentOrgInn = emchdOrgInn;
+
                 bool result = edoSystem.Authorization();
 
                 try

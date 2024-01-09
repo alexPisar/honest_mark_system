@@ -54,7 +54,7 @@ namespace WebSystems.EdoSystems
             if (_certificate == null)
                 throw new Exception("Не задан сертификат для авторизации");
 
-            return ((WebClients.DiadocEdoClient)_webClient).Authenticate(_certificate);
+            return ((WebClients.DiadocEdoClient)_webClient).Authenticate(_certificate, CurrentOrgInn);
         }
 
         public override object SendDocument(string documentId, byte[] content, byte[] signature, string emchdId, params object[] parameters)
