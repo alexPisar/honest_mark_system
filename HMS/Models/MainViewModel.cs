@@ -1095,7 +1095,7 @@ namespace HonestMarkSystem.Models
                             sellerReport.CurrencyCode = "643";
 
                             string receiverOrgName = null;
-                            string receiverEmchdId = null;
+                            RefAuthoritySignDocuments receiverEmchd = null;
                             if (receiverInn.Length == 10)
                             {
                                 var receiverCompany = _dataBaseAdapter.GetCustomerByOrgInn(receiverInn) as RefCustomer;
@@ -1103,10 +1103,7 @@ namespace HonestMarkSystem.Models
                                 if (receiverCompany == null)
                                     throw new Exception("Для получателя не найдена компания в системе.");
 
-                                var refAuthoritySignDocuments = _dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(receiverCompany.Id) as RefAuthoritySignDocuments;
-
-                                if (refAuthoritySignDocuments != null)
-                                    receiverEmchdId = refAuthoritySignDocuments.EmchdId;
+                                receiverEmchd = _dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(receiverCompany.Id) as RefAuthoritySignDocuments;
 
                                 var buyerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
 
@@ -1200,12 +1197,23 @@ namespace HonestMarkSystem.Models
                                 sellerReport.JuridicalInn = sellerOrganizationExchangeParticipant?.JuridicalInn;
                                 sellerReport.SignerOrgName = sellerOrganizationExchangeParticipant?.OrgName;
 
-                                sellerReport.SignerPosition = myOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "T");
+                                if (string.IsNullOrEmpty(myOrganization.EmchdId))
+                                {
+                                    sellerReport.SignerPosition = myOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "T");
 
-                                sellerReport.SignerSurname = myOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "SN");
-                                var firstMiddleName = myOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "G");
-                                sellerReport.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-                                sellerReport.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+                                    sellerReport.SignerSurname = myOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "SN");
+                                    var firstMiddleName = myOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "G");
+                                    sellerReport.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                                    sellerReport.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+                                }
+                                else
+                                {
+                                    sellerReport.SignerPosition = myOrganization.EmchdPersonPosition;
+                                    sellerReport.SignerSurname = myOrganization.EmchdPersonSurname;
+                                    sellerReport.SignerName = myOrganization.EmchdPersonName;
+                                    sellerReport.SignerPatronymic = myOrganization.EmchdPersonPatronymicSurname;
+                                    sellerReport.BasisOfAuthority = "Доверенность";
+                                }
                             }
                             else if (orgInn.Length == 12)
                             {
@@ -1283,7 +1291,6 @@ namespace HonestMarkSystem.Models
 
                             loadContext.SetLoadingText("Формирование УПД покупателя");
                             var buyerReport = new Reporter.Reports.UniversalTransferBuyerDocument();
-                            buyerReport.BasisOfAuthority = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "T");
                             buyerReport.CreateBuyerFileDate = DateTime.Now;
                             buyerReport.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoMadeOperation;
                             buyerReport.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;
@@ -1305,13 +1312,27 @@ namespace HonestMarkSystem.Models
                             if (receiverInn.Length == 10)
                             {
                                 buyerReport.JuridicalInn = receiverInn;
-                                buyerReport.SignerSurname = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "SN");
 
-                                var firstMiddleName = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "G");
-                                buyerReport.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-                                buyerReport.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+                                if (receiverEmchd == null || string.IsNullOrEmpty(receiverEmchd?.EmchdId))
+                                {
+                                    buyerReport.SignerSurname = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "SN");
 
-                                buyerReport.SignerPosition = buyerReport.BasisOfAuthority;
+                                    var firstMiddleName = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "G");
+                                    buyerReport.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                                    buyerReport.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                                    buyerReport.BasisOfAuthority = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "T");
+                                    buyerReport.SignerPosition = buyerReport.BasisOfAuthority;
+                                }
+                                else
+                                {
+                                    buyerReport.SignerSurname = receiverEmchd.Surname;
+                                    buyerReport.SignerName = receiverEmchd.Name;
+                                    buyerReport.SignerPatronymic = receiverEmchd.PatronymicSurname;
+                                    buyerReport.SignerPosition = receiverEmchd.Position;
+                                    buyerReport.BasisOfAuthority = "Доверенность";
+                                }
+
                                 buyerReport.SignerOrgName = (sellerReport.BuyerEntity as Reporter.Entities.OrganizationExchangeParticipantEntity)?.OrgName;
                                 buyerReport.FinSubjectCreator = $"{buyerReport.SignerOrgName}, ИНН: {receiverInn}";
                             }
@@ -1355,7 +1376,7 @@ namespace HonestMarkSystem.Models
                                 var sellerMessage = sendSellerReportResult as Diadoc.Api.Proto.Events.Message;
                                 var entity = sellerMessage.Entities.FirstOrDefault(t => t.AttachmentType == Diadoc.Api.Proto.Events.AttachmentType.UniversalTransferDocument);
 
-                                edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, receiverEmchdId, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision, sellerMessage.ToBoxId, receiverCert, receiverInn);
+                                edoSystem.SendDocument(sellerMessage.MessageId, buyerFileBytes, buyerSignature, receiverEmchd?.EmchdId, entity.EntityId, (int)Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision, sellerMessage.ToBoxId, receiverCert, receiverInn);
                             }
                             else if (edoSystem as EdoLiteSystem != null)
                             {
@@ -1377,7 +1398,7 @@ namespace HonestMarkSystem.Models
                                 }
 
                                 string content = $"{localPath}/{edoFilesPath}/{docId}/{buyerReport.FileName}.xml";
-                                edoSystem.SendDocument(docId, buyerFileBytes, buyerSignature, receiverEmchdId, content);
+                                edoSystem.SendDocument(docId, buyerFileBytes, buyerSignature, receiverEmchd?.EmchdId, content);
                             }
 
                             using (var transaction = _dataBaseAdapter.BeginTransaction())
