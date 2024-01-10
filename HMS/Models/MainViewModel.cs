@@ -1793,12 +1793,22 @@ namespace HonestMarkSystem.Models
                                         report.SenderJuridicalKpp = SelectedItem.SenderKpp;
                                         report.OrgSenderName = SelectedItem.SenderName;
 
-                                        var subject = edoSystem.GetCertSubject();
-                                        var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
-                                        report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
-                                        report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
-                                        report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-                                        report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+                                        if (string.IsNullOrEmpty(SelectedMyOrganization.EmchdId))
+                                        {
+                                            var subject = edoSystem.GetCertSubject();
+                                            var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
+                                            report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
+                                            report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
+                                            report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                                            report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+                                        }
+                                        else
+                                        {
+                                            report.SignerPosition = SelectedMyOrganization.EmchdPersonPosition;
+                                            report.SignerSurname = SelectedMyOrganization.EmchdPersonSurname;
+                                            report.SignerName = SelectedMyOrganization.EmchdPersonName;
+                                            report.SignerPatronymic = SelectedMyOrganization.EmchdPersonPatronymicSurname;
+                                        }
 
                                         if (string.IsNullOrEmpty(report.SignerPosition))
                                             report.SignerPosition = "Сотрудник с правом подписи";
@@ -1926,12 +1936,22 @@ namespace HonestMarkSystem.Models
                                 report.JuridicalReceiverKpp = SelectedItem.SenderKpp;
                                 report.OrgReceiverName = SelectedItem.SenderName;
 
-                                var subject = edoSystem.GetCertSubject();
-                                var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
-                                report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
-                                report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
-                                report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-                                report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+                                if (string.IsNullOrEmpty(SelectedMyOrganization.EmchdId))
+                                {
+                                    var subject = edoSystem.GetCertSubject();
+                                    var firstMiddleName = cryptoUtil.ParseCertAttribute(subject, "G");
+                                    report.SignerPosition = cryptoUtil.ParseCertAttribute(subject, "T");
+                                    report.SignerSurname = cryptoUtil.ParseCertAttribute(subject, "SN");
+                                    report.SignerName = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                                    report.SignerPatronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+                                }
+                                else
+                                {
+                                    report.SignerPosition = SelectedMyOrganization.EmchdPersonPosition;
+                                    report.SignerSurname = SelectedMyOrganization.EmchdPersonSurname;
+                                    report.SignerName = SelectedMyOrganization.EmchdPersonName;
+                                    report.SignerPatronymic = SelectedMyOrganization.EmchdPersonPatronymicSurname;
+                                }
 
                                 if (string.IsNullOrEmpty(report.SignerPosition))
                                     report.SignerPosition = "Сотрудник с правом подписи";
