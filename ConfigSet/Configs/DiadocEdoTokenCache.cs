@@ -24,7 +24,6 @@ namespace ConfigSet.Configs
         public string PartyId { get; set; }
         public string Token { get; set; }
         public string TokenCreator { get; set; }
-        public string ActualBoxId { get; set; }
         public DateTime TokenCreationDate { get; set; }
         public DateTime TokenExpirationDate { get; set; }
         public DateTime EdoLastDocDateTime { get; set; }

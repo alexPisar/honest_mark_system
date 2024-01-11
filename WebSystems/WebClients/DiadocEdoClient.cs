@@ -21,7 +21,7 @@ namespace WebSystems.WebClients
         private DiadocEdoTokenCache _cache;
         private static readonly object syncRoot = new object();
         private string _authToken => _cache.Token ?? "";
-        private string _actualBoxId => _cache.ActualBoxId ?? "";
+        private string _actualBoxId;
         private string _orgCertInn;
 
         /// <summary>
@@ -149,7 +149,6 @@ namespace WebSystems.WebClients
                 if (cache == null || cache?.TokenExpirationDate < DateTime.Now)
                 {
                     cache = new DiadocEdoTokenCache(token, $"Certificate, Serial Number {certificate.SerialNumber}", "");
-                    cache.ActualBoxId = messageToPost.BoxId;
                     cache.Save(cache, certificate.Thumbprint);
                 }
 
@@ -454,6 +453,13 @@ namespace WebSystems.WebClients
                 else
                     _orgCertInn = new UtilitesLibrary.Service.CryptoUtil().GetOrgInnFromCertificate(_certificate);
 
+                var myOrg = GetMyOrganizationByInnKpp(_orgCertInn);
+
+                if (myOrg == null)
+                    throw new Exception("Не найдена организация, соответствующая самому сертификату подписанта.");
+
+                _actualBoxId = myOrg.Boxes.First().BoxId;
+
                 return true;
             }
             if (_cache == null || IsTokenExpired)
@@ -476,7 +482,7 @@ namespace WebSystems.WebClients
                     throw new Exception("Не найдена организация, соответствующая самому сертификату подписанта.");
 
                 _orgCertInn = orgCertInn;
-                _cache.ActualBoxId = myOrg.Boxes.First().BoxId;
+                _actualBoxId = myOrg.Boxes.First().BoxId;
                 _cache.Save(_cache, _certificate.Thumbprint);
 
                 return true;
