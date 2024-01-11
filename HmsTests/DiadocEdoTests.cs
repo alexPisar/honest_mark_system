@@ -27,9 +27,10 @@ namespace HmsTests
             var crypto = new WinApiCryptWrapper();
             var cert = crypto.GetCertificateWithPrivateKey("0DE1BF746CC43954D0312518732E84621F6432FF", false);
             var edo = DiadocEdoClient.GetInstance();
-            edo.Authenticate(cert);
+            var orgInn = "2504000010";
+            edo.Authenticate(cert, orgInn);
 
-            var events = edo.GetEvents(ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime.Value);
+            var events = edo.GetEvents(ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTimeByInn[orgInn]);
             var docs = events.Where(e => e.Document != null).ToList();
         }
 
@@ -39,9 +40,10 @@ namespace HmsTests
             var crypto = new WinApiCryptWrapper();
             var cert = crypto.GetCertificateWithPrivateKey("0DE1BF746CC43954D0312518732E84621F6432FF", false);
             var edo = DiadocEdoClient.GetInstance();
-            edo.Authenticate(cert);
+            var orgInn = "2504000010";
+            edo.Authenticate(cert, orgInn);
 
-            var docs = edo.GetDocuments("Any.OutboundFinished", ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime.Value);
+            var docs = edo.GetDocuments("Any.OutboundFinished", ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTimeByInn[orgInn]);
             var doc = docs.Last();
 
             var selectedDoc = edo.GetDocument(doc.MessageId, doc.EntityId);

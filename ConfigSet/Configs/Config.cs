@@ -25,10 +25,7 @@ namespace ConfigSet.Configs
         public string CipherDataBasePassword { get; set; }
 
         public string DiadocApiId { get; set; }
-        public DateTime? EdoLastDocDateTime { get; set; }
         public int EdoDocCount { get; set; }
-
-        public string ConsignorInn { get; set; }
 
         public bool ProxyEnabled { get; set; }
         public string ProxyAddress { get; set; }
@@ -43,6 +40,8 @@ namespace ConfigSet.Configs
 
         public int? PositionIndex { get; set; }
         public int? ShiftIndex { get; set; }
+
+        public Dictionary<string, DateTime> EdoLastDocDateTimeByInn { get; set; }
 
         [NonSerialized]
         private string _password = null;

@@ -385,8 +385,8 @@ namespace WebSystems.WebClients
 
         public List<Document> GetDocuments(string filterCategory, DateTime? dateFrom = null, DateTime? dateTo = null)
         {
-            if (dateFrom == null)
-                dateFrom = _cache.EdoLastDocDateTime;
+            if (dateFrom == null && _config.EdoLastDocDateTimeByInn.ContainsKey(_orgCertInn))
+                dateFrom = _config.EdoLastDocDateTimeByInn[_orgCertInn];
 
             var documentsFilter = new DocumentsFilter
             {
@@ -430,8 +430,12 @@ namespace WebSystems.WebClients
 
         public void SaveEdoLastDateTime(DateTime dateTime)
         {
-            _cache.EdoLastDocDateTime = dateTime;
-            _cache.Save(_cache, _certificate.Thumbprint);
+            if (_config.EdoLastDocDateTimeByInn.ContainsKey(_orgCertInn))
+                _config.EdoLastDocDateTimeByInn[_orgCertInn] = dateTime;
+            else
+                _config.EdoLastDocDateTimeByInn.Add(_orgCertInn, dateTime);
+
+            _config.Save(_config, Config.ConfFileName);
         }
 
         /// <summary>
@@ -474,7 +478,7 @@ namespace WebSystems.WebClients
                 if(string.IsNullOrEmpty(orgCertInn))
                     orgCertInn = new UtilitesLibrary.Service.CryptoUtil().GetOrgInnFromCertificate(_certificate);
 
-                _cache = new DiadocEdoTokenCache(authToken, $"Certificate, Serial Number {_certificate.SerialNumber}", _cache?.PartyId ?? "", _cache?.EdoLastDocDateTime);
+                _cache = new DiadocEdoTokenCache(authToken, $"Certificate, Serial Number {_certificate.SerialNumber}", _cache?.PartyId ?? "");
 
                 var myOrg = GetMyOrganizationByInnKpp(orgCertInn);
 

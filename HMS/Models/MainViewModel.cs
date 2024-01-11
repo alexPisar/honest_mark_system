@@ -2341,7 +2341,7 @@ namespace HonestMarkSystem.Models
                 if (edoDocCount < docCount)
                 {
                     var documentList = edoSystem.GetDocuments(DocumentInOutType.Inbox, docCount - edoDocCount,
-                        ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTime);
+                        ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTimeByInn[myOrganization.OrgInn]);
 
                     return documentList ?? new List<IEdoSystemDocument<string>>();
                 }
