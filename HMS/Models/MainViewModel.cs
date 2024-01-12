@@ -1036,16 +1036,6 @@ namespace HonestMarkSystem.Models
                                 client.Proxy = webProxy;
                             }
 
-                            cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(client);
-
-                            var receiverCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == receiverInn
-                            && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
-
-                            if (receiverCert == null)
-                                throw new Exception("Не найден сертификат по ИНН организации.");
-
-                            cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(receiverCert);
-
                             object[] parameters = null;
 
                             if (edoSystem as DiadocEdoSystem != null)
@@ -1065,6 +1055,59 @@ namespace HonestMarkSystem.Models
 
                             loadContext.SetLoadingText("Формирование УПД");
                             var sellerReport = new Reporter.Reports.UniversalTransferSellerDocument();
+
+                            cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(client);
+
+                            string receiverOrgName = null;
+                            RefAuthoritySignDocuments receiverEmchd = null;
+                            System.Security.Cryptography.X509Certificates.X509Certificate2 receiverCert = null;
+                            if (receiverInn.Length == 10)
+                            {
+                                var receiverCompany = _dataBaseAdapter.GetCustomerByOrgInn(receiverInn) as RefCustomer;
+
+                                if (receiverCompany == null)
+                                    throw new Exception("Для получателя не найдена компания в системе.");
+
+                                receiverEmchd = _dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(receiverCompany.Id) as RefAuthoritySignDocuments;
+
+                                if(receiverEmchd != null)
+                                    receiverCert = certs?.FirstOrDefault(c => cryptoUtil.ParseCertAttribute(c.Subject, "ИНН").TrimStart('0') == receiverEmchd.Inn
+                                    && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+                                else
+                                    receiverCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == receiverInn
+                                    && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+
+                                var buyerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
+
+                                buyerOrganizationExchangeParticipant.JuridicalInn = receiverInn;
+                                buyerOrganizationExchangeParticipant.JuridicalKpp = receiverCompany.Kpp;
+                                buyerOrganizationExchangeParticipant.OrgName = receiverCompany.Name;
+
+                                sellerReport.BuyerEntity = buyerOrganizationExchangeParticipant;
+                                receiverOrgName = buyerOrganizationExchangeParticipant.OrgName;
+                            }
+                            else if (receiverInn.Length == 12)
+                            {
+                                receiverCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == receiverInn 
+                                && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+
+                                var buyerJuridicalEntity = new Reporter.Entities.JuridicalEntity();
+                                buyerJuridicalEntity.Inn = receiverInn;
+
+                                buyerJuridicalEntity.Surname = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "SN");
+
+                                var firstMiddleName = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "G");
+                                buyerJuridicalEntity.Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
+                                buyerJuridicalEntity.Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
+
+                                sellerReport.BuyerEntity = buyerJuridicalEntity;
+                                receiverOrgName = $"ИП {buyerJuridicalEntity.Surname} {buyerJuridicalEntity.Name} {buyerJuridicalEntity.Patronymic}";
+                            }
+
+                            if (receiverCert == null)
+                                throw new Exception("Не найден сертификат по ИНН организации.");
+
+                            cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(receiverCert);
 
                             sellerReport.Products = productList;
 
@@ -1093,41 +1136,6 @@ namespace HonestMarkSystem.Models
 
                             sellerReport.DocDate = DateTime.Now.Date;
                             sellerReport.CurrencyCode = "643";
-
-                            string receiverOrgName = null;
-                            RefAuthoritySignDocuments receiverEmchd = null;
-                            if (receiverInn.Length == 10)
-                            {
-                                var receiverCompany = _dataBaseAdapter.GetCustomerByOrgInn(receiverInn) as RefCustomer;
-
-                                if (receiverCompany == null)
-                                    throw new Exception("Для получателя не найдена компания в системе.");
-
-                                receiverEmchd = _dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(receiverCompany.Id) as RefAuthoritySignDocuments;
-
-                                var buyerOrganizationExchangeParticipant = new Reporter.Entities.OrganizationExchangeParticipantEntity();
-
-                                buyerOrganizationExchangeParticipant.JuridicalInn = receiverInn;
-                                buyerOrganizationExchangeParticipant.JuridicalKpp = receiverCompany.Kpp;
-                                buyerOrganizationExchangeParticipant.OrgName = receiverCompany.Name;
-
-                                sellerReport.BuyerEntity = buyerOrganizationExchangeParticipant;
-                                receiverOrgName = buyerOrganizationExchangeParticipant.OrgName;
-                            }
-                            else if (receiverInn.Length == 12)
-                            {
-                                var buyerJuridicalEntity = new Reporter.Entities.JuridicalEntity();
-                                buyerJuridicalEntity.Inn = receiverInn;
-
-                                buyerJuridicalEntity.Surname = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "SN");
-
-                                var firstMiddleName = cryptoUtil.ParseCertAttribute(receiverCert.Subject, "G");
-                                buyerJuridicalEntity.Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty;
-                                buyerJuridicalEntity.Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty;
-
-                                sellerReport.BuyerEntity = buyerJuridicalEntity;
-                                receiverOrgName = $"ИП {buyerJuridicalEntity.Surname} {buyerJuridicalEntity.Name} {buyerJuridicalEntity.Patronymic}";
-                            }
 
                             sellerReport.BuyerAddress = new Reporter.Entities.Address
                             {
