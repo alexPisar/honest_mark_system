@@ -428,7 +428,7 @@ namespace HonestMarkSystem.Implementations
 
         public object GetRefAuthoritySignDocumentsByCustomer(decimal idCustomer)
         {
-            return _abt.RefAuthoritySignDocuments.FirstOrDefault(r => r.IdCustomer == idCustomer && r.EmchdId != null);
+            return _abt.RefAuthoritySignDocuments.FirstOrDefault(r => r.IdCustomer == idCustomer && r.EmchdId != null && r.IsMainDefault);
         }
 
         public decimal ExportDocument(object documentObject)
