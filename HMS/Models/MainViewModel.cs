@@ -2223,7 +2223,12 @@ namespace HonestMarkSystem.Models
 
             foreach (var product in report.Products)
                 if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
-                    markedCodes = honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
+                {
+                    if(product.MarkedCodes.All(m => m?.Length == 31))
+                        markedCodes = honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes, false);
+                    else
+                        markedCodes = honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
+                }
 
             if (markedCodes.Count == 0)
                 return;

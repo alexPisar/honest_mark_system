@@ -30,10 +30,15 @@ namespace WebSystems.Systems
         }
 
         public List<KeyValuePair<string, string>> GetCodesByThePiece(IEnumerable<string> sourceCodes,
-            List<KeyValuePair<string, string>> resultCodes)
+            List<KeyValuePair<string, string>> resultCodes, bool isAggregatedCodes = true)
         {
-            var markedCodes = HonestMarkClient.GetInstance()
-                .GetAggregatedCodes(ProductGroupsEnum.None, sourceCodes.ToArray());
+            string[] markedCodes;
+
+            if (isAggregatedCodes)
+                markedCodes = HonestMarkClient.GetInstance()
+                    .GetAggregatedCodes(ProductGroupsEnum.None, sourceCodes.ToArray());
+            else
+                markedCodes = sourceCodes.ToArray();
 
             Func<string, KeyValuePair<string, string>> predicate = s =>
             {
