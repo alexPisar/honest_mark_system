@@ -38,8 +38,15 @@ namespace HonestMarkSystem
                 return;
             }
 
+            if (docDatePicker?.SelectedDate == null)
+            {
+                MessageBox.Show("Не указана дата первичного документа.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             Exception exception = null;
             var context = (Models.ChangeMarkedCodesModel)DataContext;
+            context.DocumentDate = docDatePicker.SelectedDate;
 
             var loadWindow = new LoadWindow("Подождите, идёт обработка данных");
             loadWindow.Owner = this;

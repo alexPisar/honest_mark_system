@@ -63,6 +63,8 @@ namespace HonestMarkSystem.Models
         }
 
         public string OtherReason { get; set; }
+        public string DocumentNumber { get; set; }
+        public DateTime? DocumentDate { get; set; }
 
         public bool IsOtherReason => SelectedReason.Key == WebSystems.ReasonOfWithdrawalFromTurnover.Other;
 
@@ -72,12 +74,30 @@ namespace HonestMarkSystem.Models
             string documentId = null;
             try
             {
+                if (string.IsNullOrEmpty(DocumentNumber))
+                {
+                    System.Windows.MessageBox.Show("Не указан номер первичного документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return false;
+                }
+
+                if (DocumentDate == null)
+                {
+                    System.Windows.MessageBox.Show("Не указана дата первичного документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return false;
+                }
+
                 var document = new WithdrawalFromTurnoverDocument
                 {
                     Inn = _myOrganization.OrgInn,
                     ActionDateStr = DateTime.Now.ToString("yyyy-MM-dd"),
-                    Action = _selectedReason.Key
+                    Action = _selectedReason.Key,
+                    DocumentType = "OTHER",
+                    DocumentNumber = this.DocumentNumber,
+                    DocumentDateStr = DocumentDate.Value.ToString("yyyy-MM-dd")
                 };
+
+                if (IsOtherReason)
+                    document.WithdrawalTypeOther = OtherReason;
 
                 document.Products = SelectedCodes.Select(s => new WithdrawalFromTurnoverDetail { Cis = s.DmLabel }).ToArray();
                 documentId = _myOrganization.HonestMarkSystem.SendDocument(SelectedProductGroup.Key, WebSystems.DocumentFormatsEnum.Manual, "LK_RECEIPT", document);

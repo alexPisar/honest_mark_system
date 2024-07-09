@@ -506,7 +506,7 @@ namespace WebSystems
         /// Утилизация или уничтожение
         /// </summary>
         [EnumMember(Value = "DESTRUCTION")]
-        [Description("Утилизация или уничтожение")]
+        [Description("Уничтожение")]
         Destruction,
 
         /// <summary>
@@ -542,6 +542,13 @@ namespace WebSystems
         /// </summary>
         [EnumMember(Value = "OTHER")]
         [Description("Другое")]
-        Other
+        Other,
+
+        /// <summary>
+        /// Утилизация
+        /// </summary>
+        [EnumMember(Value = "UTILIZATION")]
+        [Description("Утилизация")]
+        Utilization
     }
 }
