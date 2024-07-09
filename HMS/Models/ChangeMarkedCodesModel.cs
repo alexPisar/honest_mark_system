@@ -63,6 +63,7 @@ namespace HonestMarkSystem.Models
         }
 
         public string OtherReason { get; set; }
+        public string DocumentName { get; set; }
         public string DocumentNumber { get; set; }
         public DateTime? DocumentDate { get; set; }
 
@@ -86,6 +87,12 @@ namespace HonestMarkSystem.Models
                     return false;
                 }
 
+                if (string.IsNullOrEmpty(DocumentName))
+                {
+                    System.Windows.MessageBox.Show("Не указано наименование первичного документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return false;
+                }
+
                 var document = new WithdrawalFromTurnoverDocument
                 {
                     Inn = _myOrganization.OrgInn,
@@ -93,7 +100,8 @@ namespace HonestMarkSystem.Models
                     Action = _selectedReason.Key,
                     DocumentType = "OTHER",
                     DocumentNumber = this.DocumentNumber,
-                    DocumentDateStr = DocumentDate.Value.ToString("yyyy-MM-dd")
+                    DocumentDateStr = DocumentDate.Value.ToString("yyyy-MM-dd"),
+                    PrimaryDocumentCustomName = DocumentName
                 };
 
                 if (IsOtherReason)

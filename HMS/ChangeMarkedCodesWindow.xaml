@@ -11,11 +11,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HonestMarkSystem"
         mc:Ignorable="d"
-        Title="Выбрать коды маркировки" Height="550" Width="800">
+        Title="Выбрать коды маркировки" Height="580" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="25" />
+            <RowDefinition Height="30" />
             <RowDefinition Height="30" />
             <RowDefinition Height="30" />
             <RowDefinition Height="30" />
@@ -36,18 +37,22 @@
                       SelectedItem="{Binding SelectedReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Value" SelectedValuePath = "Key"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="3">
+            <Label>Наименование первичного документа</Label>
+            <TextBox Width="200" Margin="5" Text="{Binding DocumentName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
             <Label>Номер первичного документа</Label>
             <TextBox Width="200" Margin="5" Text="{Binding DocumentNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="5">
             <Label>Дата первичного документа</Label>
             <DatePicker x:Name="docDatePicker" Margin="5 2" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="5">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="6">
             <Label>Другая причина</Label>
             <TextBox Width="600" Margin="5" Text="{Binding OtherReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsOtherReason, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="6">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="7">
             <Button Margin="5 5" Content="Вывод из оборота" Click="WithdrawalButton_Click"></Button>
             <Button Margin="5 5" Content="Очистить список" Click="ClearButton_Click"></Button>
             <Button Margin="5 5" Content="Выбрать из списка кодов" Click="ChangeButton_Click"></Button>
