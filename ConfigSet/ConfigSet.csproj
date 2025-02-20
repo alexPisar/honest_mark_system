@@ -48,6 +48,7 @@
     <Compile Include="Configs\DiadocEdoTokenCache.cs" />
     <Compile Include="Configs\EdoLiteTokenCache.cs" />
     <Compile Include="Configs\HonestMarkTokenCache.cs" />
+    <Compile Include="Configs\OrderManagementStationTokenCache.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="IAuthToken.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

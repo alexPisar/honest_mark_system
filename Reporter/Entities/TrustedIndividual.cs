@@ -14,9 +14,19 @@ namespace Reporter.Entities
         public string ReasonOfTrust { get; set; }
 
         /// <summary>
+        /// Основание, по которому физическому лицу доверено принятие товаров
+        /// </summary>
+        public DocumentDetails ReasonOfTrustDocument { get; set; }
+
+        /// <summary>
         /// Иные сведения, идентифицирующие физическое лицо
         /// </summary>
         public string OtherInfo { get; set; }
+
+        /// <summary>
+        /// ИНН физического лица, в том числе индивидуального предпринимателя, которому доверен прием
+        /// </summary>
+        public string PersonInn { get; set; }
 
         /// <summary>
         /// Фамилия

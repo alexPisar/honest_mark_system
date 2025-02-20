@@ -19,9 +19,13 @@ namespace HmsTests
             var reporter = new ReporterDll();
 
             var xmlDocument = new XmlDocument();
-            xmlDocument.Load("C:\\Users\\systech\\Desktop\\Files\\ON_NSCHFDOPPOKMARK_2BM-5032262632-503201001-201601270943558790381_2LT-11000533130_20210924_1967fe1a-ba18-4977-9c7e-0861ddd44298.xml");
+            xmlDocument.Load("C:\\Users\\systech\\Desktop\\ON_NSCHFDOPPOK_2BM-2539108495-253901001-201407110842566644066_2BM-2538150215-253801001-201.xml");
 
-            var report = reporter.ParseDocument<UniversalTransferBuyerDocument>(xmlDocument.OuterXml);
+            var report = reporter.ParseDocument<UniversalTransferBuyerDocumentUtd970>(xmlDocument.OuterXml);
+
+            var xml = new XmlDocument();
+            xml.LoadXml(report.GetXmlContent());
+            xml.Save($"C:\\Users\\systech\\Desktop\\{report.FileName}.xml");
         }
 
         [TestMethod]

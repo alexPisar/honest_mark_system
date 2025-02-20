@@ -70,5 +70,17 @@ namespace WebSystems.Properties {
                 this["DbWebIpAddress"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://suzgrid.crpt.ru")]
+        public string UrlAddressOrderManagmentStation {
+            get {
+                return ((string)(this["UrlAddressOrderManagmentStation"]));
+            }
+            set {
+                this["UrlAddressOrderManagmentStation"] = value;
+            }
+        }
     }
 }

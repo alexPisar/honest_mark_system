@@ -29,7 +29,7 @@ namespace WebSystems
         }
 
         public string PostRequest(string url, object contentData, CookieCollection cookies = null, string contentType = null,
-            Dictionary<string, string> headers = null, Encoding encoding = null)
+            Dictionary<string, string> headers = null, Encoding encoding = null, string accept = null)
         {
             if (contentType == "multipart/form-data")
             {
@@ -115,6 +115,9 @@ namespace WebSystems
                 else
                     request.ContentType = contentType;
 
+                if (!string.IsNullOrEmpty(accept))
+                    request.Accept = accept;
+
                 if (_webProxy != null)
                     request.Proxy = _webProxy;
 
@@ -161,9 +164,9 @@ namespace WebSystems
         }
 
         public T PostRequest<T>(string url, string contentData, CookieCollection cookies = null, string contentType = null,
-            Dictionary<string, string> headers = null)
+            Dictionary<string, string> headers = null, string accept = null)
         {
-            string resultAsJsonStr = PostRequest(url, contentData, cookies, contentType, headers);
+            string resultAsJsonStr = PostRequest(url, contentData, cookies, contentType, headers, null, accept);
 
             var result = JsonConvert.DeserializeObject<T>(resultAsJsonStr);
 
@@ -210,9 +213,9 @@ namespace WebSystems
             return result;
         }
 
-        public T GetRequest<T>(string url, Dictionary<string, string> headers = null)
+        public T GetRequest<T>(string url, Dictionary<string, string> headers = null, string accept = null)
         {
-            string resultAsJsonStr = GetRequest(url, headers);
+            string resultAsJsonStr = GetRequest(url, headers, null, accept);
 
             var result = JsonConvert.DeserializeObject<T>(resultAsJsonStr);
 

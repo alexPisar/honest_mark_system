@@ -116,7 +116,10 @@ namespace WebSystems
         ///Биологические активные добавки к пище
         /// </summary>
         [EnumMember(Value = "bio")]
-        Bio
+        Bio,
+
+        [EnumMember(Value = "chemistry")]
+        Chemistry = 35
     }
 
     public enum DocumentProcessStatusesEnum

@@ -24,14 +24,29 @@ namespace Reporter.Entities
         public string OrgName { get; set; }
 
         /// <summary>
+        /// ИНН юридического лица, которому доверен прием
+        /// </summary>
+        public string OrgInn { get; set; }
+
+        /// <summary>
         /// Основание, по которому организации доверено принятие товаров (груза) 
         /// </summary>
         public string ReasonOrgTrust { get; set; }
 
         /// <summary>
+        /// Основание, по которому организации доверено принятие товаров
+        /// </summary>
+        public DocumentDetails ReasonOrgTrustDocument { get; set; }
+
+        /// <summary>
         /// Основание полномочий представителя организации на принятие товаров (груза)
         /// </summary>
         public string ReasonTrustPerson { get; set; }
+
+        /// <summary>
+        /// Основание полномочий представителя организации на принятие товаров
+        /// </summary>
+        public DocumentDetails ReasonTrustPersonDocument { get; set; }
 
         /// <summary>
         /// Фамилия
