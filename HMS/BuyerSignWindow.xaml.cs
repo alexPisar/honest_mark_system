@@ -19,14 +19,14 @@ namespace HonestMarkSystem
     /// <summary>
     /// Логика взаимодействия для BuyerSignWindow.xaml
     /// </summary>
-    public partial class BuyerSignWindow : Window
+    public partial class BuyerSignWindow : BaseControls.BaseBuyerSignWindow
     {
         private string _prefixBuyerFileName = "ON_NSCHFDOPPOK";
         private string _prefixSellerFileName = "ON_NSCHFDOPPR";
-        private string _filePath;
-        private byte[] _docSellerContent;
         private CryptoUtil _cryptoUtil;
         private UtilityLog _log = UtilityLog.GetInstance();
+
+        private UniversalTransferBuyerDocument _report => Report as UniversalTransferBuyerDocument;
 
         public BuyerSignWindow(CryptoUtil cryptoUtil, string filePath)
         {
@@ -38,29 +38,21 @@ namespace HonestMarkSystem
             _filePath = filePath;
         }
 
-        public void OnAllPropertyChanged()
+        public override void OnAllPropertyChanged()
         {
             reportControl.OnAllPropertyCnanged();
         }
 
-        public UniversalTransferBuyerDocument Report
+        public override string FileName => _report?.FileName;
+
+        public override bool IsMarked => _report?.FileName?.StartsWith("ON_NSCHFDOPPOKMARK") ?? false;
+
+        public override Reporter.IReport Report
         {
             get {
                 return (UniversalTransferBuyerDocument)reportControl.Report;
             }
         }
-
-        public byte[] DocSellerContent
-        {
-            get {
-                if (_docSellerContent == null)
-                    _docSellerContent = System.IO.File.ReadAllBytes(_filePath);
-
-                return _docSellerContent;
-            }
-        }
-
-        public byte[] SellerSignature { get; set; }
 
         private void CancelButtonClick(object sender, RoutedEventArgs e)
         {
@@ -74,8 +66,8 @@ namespace HonestMarkSystem
 
             if (validationResult)
             {
-                Report.Signature = GetSignatureStringForReport();
-                Report.DateReceive = DateTime.Now;
+                _report.Signature = GetSignatureStringForReport();
+                _report.DateReceive = DateTime.Now;
 
                 if (reportControl.ValidateXml())
                 {
@@ -103,9 +95,9 @@ namespace HonestMarkSystem
 
             try
             {
-                Report.Signature = GetSignatureStringForReport();
-                Report.DateReceive = DateTime.Now;
-                changePathDialog.FileName = Report.FileName;
+                _report.Signature = GetSignatureStringForReport();
+                _report.DateReceive = DateTime.Now;
+                changePathDialog.FileName = _report.FileName;
 
                 if (changePathDialog.ShowDialog() ?? false)
                 {
@@ -137,77 +129,72 @@ namespace HonestMarkSystem
             }
         }
 
-        private string GetSignatureStringForReport()
+        public override void SetDefaultParameters(Models.ConsignorOrganization organization, string subject, DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing dataBaseObject, string edoProgramVersion)
         {
-            var signatureAsBase64 = Convert.ToBase64String(SellerSignature);
-            return signatureAsBase64;
-        }
-
-        public void SetDefaultParameters(Models.ConsignorOrganization organization, string subject, DataContextManagementUnit.DataAccess.Contexts.Abt.DocEdoPurchasing dataBaseObject)
-        {
-            Report.CreateBuyerFileDate = DateTime.Now;
+            _report.CreateBuyerFileDate = DateTime.Now;
 
             if (!string.IsNullOrEmpty(organization.EmchdId))
             {
-                Report.SignerEntity = new Reporter.Entities.IndividualEntity()
+                _report.SignerEntity = new Reporter.Entities.IndividualEntity()
                 {
                     Inn = organization.EmchdPersonInn,
                     Surname = organization.EmchdPersonSurname,
                     Name = organization.EmchdPersonName,
                     Patronymic = organization.EmchdPersonPatronymicSurname
                 };
-                Report.BasisOfAuthority = "Доверенность";
+                _report.BasisOfAuthority = "Доверенность";
             }
             else
             {
                 var firstMiddleName = _cryptoUtil.ParseCertAttribute(subject, "G");
-                Report.SignerEntity = new Reporter.Entities.IndividualEntity()
+                _report.SignerEntity = new Reporter.Entities.IndividualEntity()
                 {
                     Inn = _cryptoUtil.ParseCertAttribute(subject, "ИНН").TrimStart('0'),
                     Surname = _cryptoUtil.ParseCertAttribute(subject, "SN"),
                     Name = firstMiddleName.IndexOf(" ") > 0 ? firstMiddleName.Substring(0, firstMiddleName.IndexOf(" ")) : string.Empty,
                     Patronymic = firstMiddleName.IndexOf(" ") >= 0 && firstMiddleName.Length > firstMiddleName.IndexOf(" ") + 1 ? firstMiddleName.Substring(firstMiddleName.IndexOf(" ") + 1) : string.Empty
                 };
-                Report.BasisOfAuthority = _cryptoUtil.ParseCertAttribute(subject, "T");
+                _report.BasisOfAuthority = _cryptoUtil.ParseCertAttribute(subject, "T");
             }
 
             var orgInn = organization.OrgInn;
             var orgName = organization.OrgName;
 
             if (string.IsNullOrEmpty(orgInn))
-                orgInn = ((Reporter.Entities.IndividualEntity)Report.SignerEntity).Inn;
+                orgInn = ((Reporter.Entities.IndividualEntity)_report.SignerEntity).Inn;
 
-            Report.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoMadeOperation;
-            Report.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;
-            Report.AcceptResult = Reporter.Enums.AcceptResultEnum.GoodsAcceptedWithoutDiscrepancy;
-            Report.FinSubjectCreator = $"{orgName}, ИНН: {orgInn}";
+            _report.ScopeOfAuthority = Reporter.Enums.ScopeOfAuthorityEnum.PersonWhoMadeOperation;
+            _report.SignerStatus = Reporter.Enums.SignerStatusEnum.Individual;
+            _report.AcceptResult = Reporter.Enums.AcceptResultEnum.GoodsAcceptedWithoutDiscrepancy;
+            _report.FinSubjectCreator = $"{orgName}, ИНН: {orgInn}";
 
-            Report.SellerFileId = dataBaseObject.FileName;
-            Report.EdoProviderOrgName = dataBaseObject.SenderEdoOrgName;
-            Report.ProviderInn = dataBaseObject.SenderEdoOrgInn;
-            Report.EdoId = dataBaseObject.SenderEdoOrgId;
-            Report.SenderEdoId = dataBaseObject.ReceiverEdoId;
-            Report.ReceiverEdoId = dataBaseObject.SenderEdoId;
+            _report.SellerFileId = dataBaseObject.FileName;
+            _report.EdoProviderOrgName = dataBaseObject.SenderEdoOrgName;
+            _report.ProviderInn = dataBaseObject.SenderEdoOrgInn;
+            _report.EdoId = dataBaseObject.SenderEdoOrgId;
+            _report.SenderEdoId = dataBaseObject.ReceiverEdoId;
+            _report.ReceiverEdoId = dataBaseObject.SenderEdoId;
 
             if(dataBaseObject.FileName.StartsWith($"{_prefixSellerFileName}MARK"))
-                Report.FileName = $"{_prefixBuyerFileName}MARK_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                _report.FileName = $"{_prefixBuyerFileName}MARK_{_report.ReceiverEdoId}_{_report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
             else if(dataBaseObject.FileName.StartsWith($"{_prefixSellerFileName}PROS"))
-                Report.FileName = $"{_prefixBuyerFileName}PROS_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                _report.FileName = $"{_prefixBuyerFileName}PROS_{_report.ReceiverEdoId}_{_report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
             else
-                Report.FileName = $"{_prefixBuyerFileName}_{Report.ReceiverEdoId}_{Report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                _report.FileName = $"{_prefixBuyerFileName}_{_report.ReceiverEdoId}_{_report.SenderEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
 
             var reporterDll = new Reporter.ReporterDll();
             var sellerReport = reporterDll.ParseDocument<UniversalTransferSellerDocument>(DocSellerContent);
 
-            Report.CreateSellerFileDate = sellerReport.CreateDate;
-            Report.DocName = sellerReport.DocName;
-            Report.Function = sellerReport.Function;
-            Report.SellerInvoiceNumber = sellerReport.DocNumber;
-            Report.SellerInvoiceDate = sellerReport.DocDate;
+            _report.CreateSellerFileDate = sellerReport.CreateDate;
+            _report.DocName = sellerReport.DocName;
+            _report.Function = sellerReport.Function;
+            _report.SellerInvoiceNumber = sellerReport.DocNumber;
+            _report.SellerInvoiceDate = sellerReport.DocDate;
 
             reportControl.SetDefaults();
+            _report.EdoProgramVersion = edoProgramVersion;
 
-            Report.OnAllPropertyChanged();
+            _report.OnAllPropertyChanged();
         }
     }
 }

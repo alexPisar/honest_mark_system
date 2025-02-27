@@ -61,12 +61,15 @@
     <Reference Include="Oracle.ManagedDataAccess.EntityFramework, Version=6.122.19.1, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=MSIL">
       <HintPath>..\packages\Oracle.ManagedDataAccess.EntityFramework.19.13.0\lib\net45\Oracle.ManagedDataAccess.EntityFramework.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FinDbTests.cs" />
@@ -94,6 +97,10 @@
     <ProjectReference Include="..\DataContextManagementUnit\DataContextManagementUnit.csproj">
       <Project>{05620572-ab35-4f90-99e7-5504bb4b7d57}</Project>
       <Name>DataContextManagementUnit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HMS\HonestMarkStoreControl.csproj">
+      <Project>{c06e4f35-e893-45cd-904a-82527f17dfc8}</Project>
+      <Name>HonestMarkStoreControl</Name>
     </ProjectReference>
     <ProjectReference Include="..\Reporter\Reporter.csproj">
       <Project>{e2d943fa-8f50-4de9-80bb-b91b4fad8de2}</Project>

@@ -47,7 +47,20 @@ namespace Reporter.Controls.Base
                     var itemsControl = sourceControl as ItemsControl;
 
                     foreach (var item in itemsControl.Items)
-                        ((ItemsControl)instance).Items.Add(GetClonedControl((UIElement)item));
+                    {
+                        if (item as UIElement != null)
+                            ((ItemsControl)instance).Items.Add(GetClonedControl((UIElement)item));
+                    }
+                }
+                else if(sourceControl as StackPanel != null)
+                {
+                    if(pi.Name == "Children")
+                    {
+                        var stackPanel = sourceControl as StackPanel;
+
+                        foreach (var uiElement in stackPanel.Children)
+                            ((StackPanel)instance).Children.Add(GetClonedControl((UIElement)uiElement));
+                    }
                 }
             }
             return (UIElement)instance;
@@ -90,7 +103,7 @@ namespace Reporter.Controls.Base
 
         public ItemCollection Controls => CurrentTabControl.Items;
 
-        private void OnItemsChanged()
+        public void OnItemsChanged()
         {
             var tabItems = CurrentTabControl.Items.Cast<TabItem>();
 
@@ -113,7 +126,12 @@ namespace Reporter.Controls.Base
             for(int i = 0; i < count; i++)
             {
                 var tabItem = new TabItem();
-                tabItem.Content = GetClonedControl(ContentPage);
+
+                if(MinOccurs == 0 && MaxOccurs == 1 && ContentPage.GetType() == typeof(StackPanel))
+                    tabItem.Content = ContentPage;
+                else
+                    tabItem.Content = GetClonedControl(ContentPage);
+
                 tabItem.Header = TabText;
 
                 object newElementObj;

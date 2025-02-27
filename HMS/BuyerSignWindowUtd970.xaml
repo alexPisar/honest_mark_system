@@ -1,16 +1,16 @@
-﻿<base:BaseBuyerSignWindow x:Class="HonestMarkSystem.BuyerSignWindow"
+﻿<base:BaseBuyerSignWindow x:Class="HonestMarkSystem.BuyerSignWindowUtd970"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:HonestMarkSystem"
-        xmlns:base="clr-namespace:HonestMarkSystem.BaseControls"
         xmlns:rep="clr-namespace:Reporter.Controls;assembly=Reporter"
+        xmlns:base="clr-namespace:HonestMarkSystem.BaseControls"
+        xmlns:local="clr-namespace:HonestMarkSystem"
         mc:Ignorable="d"
-        Title="Подписание и отправка" Height="965" Width="875">
+        Title="BuyerSignWindowUtd970" Height="1035" Width="875">
     <Grid>
         <ScrollViewer>
-            <rep:UniversalTransferBuyerDocumentControl x:Name="reportControl" />
+            <rep:UniversalTransferBuyerDocumentControlUtd970 x:Name="reportControl" />
         </ScrollViewer>
     </Grid>
 </base:BaseBuyerSignWindow>

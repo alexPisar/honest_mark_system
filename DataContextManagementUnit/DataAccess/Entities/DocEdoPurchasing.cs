@@ -71,6 +71,8 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual string ParentEntityId { get; set; }
 
         public virtual string ParentIdDocEdo { get; set; }
+
+        public virtual string DocVersionFormat { get; set; }
         #endregion
 
         #region Navigation Properties

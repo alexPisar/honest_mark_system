@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,8 +7,10 @@ using System.Threading.Tasks;
 
 namespace Reporter.Entities
 {
-    public class SignerInfo
+    public class SignerInfo : Base.IReportEntity<SignerInfo>
     {
+        private object _powerOfAttorney;
+
         /// <summary>
         /// Должность
         /// </summary>
@@ -47,6 +50,21 @@ namespace Reporter.Entities
         /// Отчество
         /// </summary>
         public string Patronymic { get; set; }
+
+        public object PowerOfAttorney
+        {
+            get {
+                return _powerOfAttorney;
+            }
+            set {
+                _powerOfAttorney = value;
+
+                if (value as ElectronicPowerOfAttorney != null)
+                    ElectronicPowerOfAttorney = value as ElectronicPowerOfAttorney;
+                else if (value as PaperPowerOfAttorney != null)
+                    PaperPowerOfAttorney = value as PaperPowerOfAttorney;
+            }
+        }
 
         /// <summary>
         /// Сведения о доверенности в электронной форме в машиночитаемом виде, используемой для подтверждения полномочий представителя

@@ -190,8 +190,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BaseControls\BaseBuyerSignWindow.cs" />
     <Compile Include="BuyerSignWindow.xaml.cs">
       <DependentUpon>BuyerSignWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="BuyerSignWindowUtd970.xaml.cs">
+      <DependentUpon>BuyerSignWindowUtd970.xaml</DependentUpon>
     </Compile>
     <Compile Include="ChangeMarkedCodesWindow.xaml.cs">
       <DependentUpon>ChangeMarkedCodesWindow.xaml</DependentUpon>
@@ -232,6 +236,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="AuthorizationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="BuyerSignWindowUtd970.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -358,6 +366,7 @@
   <ItemGroup>
     <Resource Include="HonestMark.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

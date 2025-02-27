@@ -186,8 +186,14 @@
     <Compile Include="Controls\Base\ReportSwitchTabControl.cs" />
     <Compile Include="Controls\Base\ReportSwitchTabItem.cs" />
     <Compile Include="Controls\Base\ReportTextBox.cs" />
+    <Compile Include="Controls\DocumentDetailsControl.xaml.cs">
+      <DependentUpon>DocumentDetailsControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\UniversalTransferBuyerDocumentControl.xaml.cs">
       <DependentUpon>UniversalTransferBuyerDocumentControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\UniversalTransferBuyerDocumentControlUtd970.xaml.cs">
+      <DependentUpon>UniversalTransferBuyerDocumentControlUtd970.xaml</DependentUpon>
     </Compile>
     <Compile Include="Entities\AnotherPerson.cs" />
     <Compile Include="Entities\Base\IReportEntity.cs" />
@@ -246,7 +252,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\DocumentDetailsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\UniversalTransferBuyerDocumentControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\UniversalTransferBuyerDocumentControlUtd970.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -89,5 +89,12 @@ namespace WebSystems.Models
                 return Document?.DocflowStatus?.PrimaryStatus?.StatusText;
             }
         }
+
+        public string Version
+        {
+            get {
+                return Document?.Version;
+            }
+        }
     }
 }

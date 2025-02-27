@@ -147,6 +147,11 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .HasMaxLength(36);
 
             this
+                .Property(p => p.DocVersionFormat)
+                .HasColumnName("DOC_VERSION_FORMAT")
+                .HasMaxLength(200);
+
+            this
                 .HasOptional(p => p.Status)
                 .WithMany()
                 .HasForeignKey(p => p.DocStatus)

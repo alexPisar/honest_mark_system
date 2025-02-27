@@ -180,7 +180,17 @@ namespace Reporter.Reports
         /// <summary>
         /// Подписант
         /// </summary>
-        public SignerInfo SignerInfo { get; set; }
+        public List<object> SignerInfoListObj { get; set; }
+        public SignerInfo SignerInfo
+        {
+            get {
+                return SignerInfoListObj?.FirstOrDefault() as SignerInfo;
+            }
+
+            set {
+                SignerInfoListObj = new List<object>(new[] { value });
+            }
+        }
         #endregion
         #endregion
         #endregion
@@ -531,14 +541,17 @@ namespace Reporter.Reports
                 if(SignerInfo.SignType == SignTypeEnum.QualifiedElectronicDigitalSignature)
                 {
                     document.Подписант[0].ТипПодпис = ФайлДокументПодписантТипПодпис.Item1;
+                    document.Подписант[0].ТипПодписSpecified = true;
                 }
                 else if (SignerInfo.SignType == SignTypeEnum.SimpleElectronicDigitalSignature)
                 {
                     document.Подписант[0].ТипПодпис = ФайлДокументПодписантТипПодпис.Item2;
+                    document.Подписант[0].ТипПодписSpecified = true;
                 }
                 else if (SignerInfo.SignType == SignTypeEnum.NonQualifiedElectronicDigitalSignature)
                 {
                     document.Подписант[0].ТипПодпис = ФайлДокументПодписантТипПодпис.Item3;
+                    document.Подписант[0].ТипПодписSpecified = true;
                 }
 
                 if(SignerInfo.MethodOfConfirmingAuthorityEnum == MethodOfConfirmingAuthorityEnum.DigitalSignature)

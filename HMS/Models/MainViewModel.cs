@@ -416,7 +416,7 @@ namespace HonestMarkSystem.Models
                                     var sellerXmlDocument = new XmlDocument();
                                     sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
                                     var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
-                                    SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc, Details?.Where(d => d.IdGood != null)?.Select(d => d.IdGood.Value)?.ToList());
+                                    SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc, Details?.Where(d => d.IdGood != null)?.Select(d => d.IdGood.Value)?.ToList(), SelectedItem.DocVersionFormat);
                                 }
                             }
                             else if(docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
@@ -617,10 +617,13 @@ namespace HonestMarkSystem.Models
                 }
             }
 
-            var signWindow = new BuyerSignWindow(cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
-            signWindow.SetDefaultParameters(SelectedMyOrganization, edoSystem.GetCertSubject(), SelectedItem);
-            signWindow.Report.EdoProgramVersion = this.EdoProgramVersion;
+            BaseControls.BaseBuyerSignWindow signWindow;
+            if (SelectedItem.DocVersionFormat == "utd970_05_03_01")
+                signWindow = new BuyerSignWindowUtd970(cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+            else
+                signWindow = new BuyerSignWindow(cryptoUtil, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
 
+            signWindow.SetDefaultParameters(SelectedMyOrganization, edoSystem.GetCertSubject(), SelectedItem, this.EdoProgramVersion);
             string signedFilePath;
 
             if (edoSystem.HasZipContent)
@@ -673,6 +676,8 @@ namespace HonestMarkSystem.Models
                     loadWindow.Owner = this.Owner;
 
                 var reportForSend = signWindow.Report;
+                var fileName = signWindow.FileName;
+                var isMarked = signWindow.IsMarked;
 
                 var sellerXmlDocument = new XmlDocument();
                 sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
@@ -710,8 +715,8 @@ namespace HonestMarkSystem.Models
                             var fileBytes = Encoding.GetEncoding(1251).GetBytes(xml);
                             var signature = cryptoUtil.Sign(fileBytes, true);
 
-                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{reportForSend.FileName}.xml", fileBytes);
-                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{reportForSend.FileName}.xml.sig", signature);
+                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}.xml", fileBytes);
+                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{fileName}.xml.sig", signature);
 
                             var directory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
 
@@ -729,7 +734,7 @@ namespace HonestMarkSystem.Models
                                         localPath = $"{directory.Name}/{localPath}";
                                 }
 
-                                string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{reportForSend.FileName}.xml";
+                                string content = $"{localPath}/{edoFilesPath}/{SelectedItem.IdDocEdo}/{fileName}.xml";
                                 edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedMyOrganization.EmchdId, content);
                             }
                             else if(edoSystem.GetType() == typeof(DiadocEdoSystem))
@@ -761,9 +766,9 @@ namespace HonestMarkSystem.Models
                                 edoSystem.SendDocument(SelectedItem.IdDocEdo, fileBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.ParentEntityId, SelectedItem.IdDocType);
                             }
 
-                            SelectedItem.SignatureFileName = reportForSend.FileName;
+                            SelectedItem.SignatureFileName = fileName;
 
-                            if (reportForSend.FileName.StartsWith("ON_NSCHFDOPPOKMARK"))
+                            if (isMarked)
                                 SelectedItem.DocStatus = (int)DocEdoStatus.Sent;
                             else
                                 SelectedItem.DocStatus = (int)DocEdoStatus.Processed;
@@ -897,7 +902,7 @@ namespace HonestMarkSystem.Models
                         if (honestMarkSystem != null)
                         {
                             loadContext.SetLoadingText("Сохранение кодов маркировки");
-                            SaveMarkedCodesToDataBase(docSellerContent, docJournalId, null, Details?.Select(d => d.IdGood.Value)?.ToList());
+                            SaveMarkedCodesToDataBase(docSellerContent, docJournalId, null, Details?.Select(d => d.IdGood.Value)?.ToList(), SelectedItem.DocVersionFormat);
                         }
 
                         _dataBaseAdapter.Commit(transaction);
@@ -1048,8 +1053,8 @@ namespace HonestMarkSystem.Models
                             else if (edoSystem as EdoLiteSystem != null)
                                 parameters = new[] { honestMarkSystem };
 
-                            var senderEdoId = edoSystem.GetOrganizationEdoIdByInn(orgInn, myOrganization.OrgInn, parameters);
-                            var receiverEdoId = edoSystem.GetOrganizationEdoIdByInn(receiverInn, myOrganization.OrgInn, parameters);
+                            var senderEdoId = edoSystem.GetOrganizationEdoIdByInn(orgInn, orgInn == myOrganization.OrgInn, parameters);
+                            var receiverEdoId = edoSystem.GetOrganizationEdoIdByInn(receiverInn, receiverInn == myOrganization.OrgInn, parameters);
 
                             var orgName = myOrganization.CryptoUtil.ParseCertAttribute(edoSystem.GetCertSubject(), "CN").Replace("\"\"", "\"").Replace("\"\"", "\"").TrimStart('"');
 
@@ -1562,12 +1567,23 @@ namespace HonestMarkSystem.Models
                             var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
 
                             var reporterDll = new Reporter.ReporterDll();
-                            var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+                            string function;
 
-                            report.FileName = $"DP_UVUTOCH_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                            if (SelectedItem.DocVersionFormat == "utd970_05_03_01")
+                            {
+                                var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocumentUtd970>(docSellerContent);
+                                function = sellerReport.Function;
+                            }
+                            else
+                            {
+                                var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+                                function = sellerReport.Function;
+                            }
+
+                            report.FileName = $"DP_UVUTOCH_{SelectedItem.SenderEdoId}_{SelectedItem.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
                             report.EdoProgramVersion = this.EdoProgramVersion;
 
-                            report.CreatorEdoId = sellerReport.ReceiverEdoId;
+                            report.CreatorEdoId = SelectedItem.ReceiverEdoId;
 
                             if (SelectedItem.ReceiverInn.Length == 10)
                             {
@@ -1577,9 +1593,9 @@ namespace HonestMarkSystem.Models
                             }
 
                             report.ReceiveDate = DateTime.Now;
-                            report.ReceivedFileName = sellerReport.FileName;
+                            report.ReceivedFileName = SelectedItem.FileName;
 
-                            report.SenderEdoId = sellerReport.SenderEdoId;
+                            report.SenderEdoId = SelectedItem.SenderEdoId;
                             report.SenderJuridicalInn = SelectedItem.SenderInn;
                             report.SenderJuridicalKpp = SelectedItem.SenderKpp;
                             report.OrgSenderName = SelectedItem.SenderName;
@@ -1658,7 +1674,7 @@ namespace HonestMarkSystem.Models
                             loadContext.SetLoadingText("Отправка");
 
                             if(edoSystem.GetType() == typeof(DiadocEdoSystem))
-                                edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                                edoSystem.SendRejectionDocument(function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
 
                             SelectedItem.DocStatus = (int)DocEdoStatus.Rejected;
 
@@ -1794,12 +1810,23 @@ namespace HonestMarkSystem.Models
                                         var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
 
                                         var reporterDll = new Reporter.ReporterDll();
-                                        var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+                                        string function;
 
-                                        report.FileName = $"DP_UVUTOCH_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                                        if (SelectedItem.DocVersionFormat == "utd970_05_03_01")
+                                        {
+                                            var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocumentUtd970>(docSellerContent);
+                                            function = sellerReport.Function;
+                                        }
+                                        else
+                                        {
+                                            var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+                                            function = sellerReport.Function;
+                                        }
+
+                                        report.FileName = $"DP_UVUTOCH_{SelectedItem.SenderEdoId}_{SelectedItem.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
                                         report.EdoProgramVersion = this.EdoProgramVersion;
 
-                                        report.CreatorEdoId = sellerReport.ReceiverEdoId;
+                                        report.CreatorEdoId = SelectedItem.ReceiverEdoId;
 
                                         if (SelectedItem.ReceiverInn.Length == 10)
                                         {
@@ -1817,7 +1844,7 @@ namespace HonestMarkSystem.Models
                                         report.ReceivedFileName = fileName.Substring(0, fileNameLength);
                                         report.ReceivedFileSignature = Convert.ToBase64String(sellerSignature);
 
-                                        report.SenderEdoId = sellerReport.SenderEdoId;
+                                        report.SenderEdoId = SelectedItem.SenderEdoId;
                                         report.SenderJuridicalInn = SelectedItem.SenderInn;
                                         report.SenderJuridicalKpp = SelectedItem.SenderKpp;
                                         report.OrgSenderName = SelectedItem.SenderName;
@@ -1863,7 +1890,7 @@ namespace HonestMarkSystem.Models
 
                                         loadContext.SetLoadingText("Отправка");
 
-                                        edoSystem.SendRejectionDocument(sellerReport.Function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
+                                        edoSystem.SendRejectionDocument(function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, revokeDocumentEntity.EntityId);
 
                                         SelectedItem.DocStatus = (int)DocEdoStatus.RejectRevoke;
                                         _dataBaseAdapter.Commit(transaction);
@@ -1944,12 +1971,23 @@ namespace HonestMarkSystem.Models
                                 var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
 
                                 var reporterDll = new Reporter.ReporterDll();
-                                var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+                                string function;
 
-                                report.FileName = $"DP_PRANNUL_{sellerReport.SenderEdoId}_{sellerReport.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
+                                if (SelectedItem.DocVersionFormat == "utd970_05_03_01")
+                                {
+                                    var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocumentUtd970>(docSellerContent);
+                                    function = sellerReport.Function;
+                                }
+                                else
+                                {
+                                    var sellerReport = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docSellerContent);
+                                    function = sellerReport.Function;
+                                }
+
+                                report.FileName = $"DP_PRANNUL_{SelectedItem.SenderEdoId}_{SelectedItem.ReceiverEdoId}_{DateTime.Now.ToString("yyyyMMdd")}_{Guid.NewGuid().ToString()}";
                                 report.EdoProgramVersion = this.EdoProgramVersion;
 
-                                report.CreatorEdoId = sellerReport.ReceiverEdoId;
+                                report.CreatorEdoId = SelectedItem.ReceiverEdoId;
 
                                 if (SelectedItem.ReceiverInn.Length == 10)
                                 {
@@ -1960,7 +1998,7 @@ namespace HonestMarkSystem.Models
 
                                 report.ReceivedFileName = SelectedItem.FileName;
 
-                                report.ReceiverEdoId = sellerReport.SenderEdoId;
+                                report.ReceiverEdoId = SelectedItem.SenderEdoId;
                                 report.JuridicalReceiverInn = SelectedItem.SenderInn;
                                 report.JuridicalReceiverKpp = SelectedItem.SenderKpp;
                                 report.OrgReceiverName = SelectedItem.SenderName;
@@ -2039,7 +2077,7 @@ namespace HonestMarkSystem.Models
                                 loadContext.SetLoadingText("Отправка");
 
                                 if (edoSystem.GetType() == typeof(DiadocEdoSystem))
-                                    edoSystem.SendRevocationDocument(sellerReport.Function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
+                                    edoSystem.SendRevocationDocument(function, contentBytes, signature, SelectedMyOrganization.EmchdId, SelectedItem.IdDocEdo, SelectedItem.ParentEntityId);
 
                                 if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
                                     SelectedItem.DocStatus = (int)DocEdoStatus.Revoked;
@@ -2197,7 +2235,7 @@ namespace HonestMarkSystem.Models
             return true;
         }
 
-        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null, decimal? oldIdDoc = null, List<decimal> idGoods = null)
+        private void SaveMarkedCodesToDataBase(byte[] sellerFileContent, decimal? idDoc = null, decimal? oldIdDoc = null, List<decimal> idGoods = null, string fileVersionFormat = null)
         {
             if (idGoods != null)
                 if (idGoods.Count == 0)
@@ -2205,23 +2243,35 @@ namespace HonestMarkSystem.Models
 
             ErrorTextModel errorModel = null;
             var reporterDll = new Reporter.ReporterDll();
-            var report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
+
+            Reporter.IReport report;
+            List<Reporter.Entities.Product> products;
+            if (fileVersionFormat == "utd970_05_03_01")
+            {
+                report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocumentUtd970>(sellerFileContent);
+                products = (report as Reporter.Reports.UniversalTransferSellerDocumentUtd970).Products;
+            }
+            else
+            {
+                report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(sellerFileContent);
+                products = (report as Reporter.Reports.UniversalTransferSellerDocument).Products;
+            }
             var honestMarkSystem = SelectedMyOrganization.HonestMarkSystem;
             string errorMessage = null;
 
-            if (report.Products == null || report.Products.Count == 0)
+            if (products == null || products.Count == 0)
                 return;
 
             var markedCodes = new List<KeyValuePair<string, string>>();
 
-            var productsWithTransportCodes = report?.Products?.Where(p => p.TransportPackingIdentificationCode != null && p.TransportPackingIdentificationCode.Count > 0);
+            var productsWithTransportCodes = products?.Where(p => p.TransportPackingIdentificationCode != null && p.TransportPackingIdentificationCode.Count > 0);
 
             var transportCodes = productsWithTransportCodes?.SelectMany(p => p.TransportPackingIdentificationCode)?.Distinct() ?? new List<string>();
 
             if (transportCodes.Count() > 0)
                 markedCodes = honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
 
-            foreach (var product in report.Products)
+            foreach (var product in products)
                 if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
                 {
                     if(product.MarkedCodes.All(m => m?.Length == 31))
@@ -2262,7 +2312,7 @@ namespace HonestMarkSystem.Models
                 throw new Exception("Среди штрихкодов маркированных товаров есть несопоставленные с ID товары, либо штрихкоды отсутствуют в карточках товаров:\r\n"
                     +string.Join(", \r\n", markedCodesByRefBarCodes.Where(m => m.IdGood == null).Select(m => m.BarCode).Distinct()));
 
-            var productsByRefBarCodes = from product in report.Products
+            var productsByRefBarCodes = from product in products
                                         join refBarCode in refBarCodes
                                         on product.BarCode equals (refBarCode as RefBarCode).BarCode
                                         select new { Product=product, (refBarCode as RefBarCode).BarCode, (refBarCode as RefBarCode).IdGood };
@@ -2473,6 +2523,7 @@ namespace HonestMarkSystem.Models
                 ((DiadocEdoToDataBase)_dataBaseAdapter).SetPermittedBoxIds(counteragentsBoxIdsForOrganization);
 
                 myOrganization.OrgKpp = edoSystem.GetKppForMyOrganization(myOrganization.OrgInn);
+                myOrganization.EdoId = edoSystem.GetOrganizationEdoIdByInn(myOrganization.OrgInn, true);
             }
         }
 

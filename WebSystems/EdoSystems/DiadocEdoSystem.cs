@@ -338,9 +338,9 @@ namespace WebSystems.EdoSystems
             return organization.Kpp;
         }
 
-        public override string GetOrganizationEdoIdByInn(string inn, string myOrgInn, params object[] parameters)
+        public override string GetOrganizationEdoIdByInn(string inn, bool isMyOrgInn, params object[] parameters)
         {
-            if (inn == myOrgInn)
+            if (isMyOrgInn)
             {
                 var organization = ((WebClients.DiadocEdoClient)_webClient).GetMyOrganizationByInnKpp(inn);
                 return organization.FnsParticipantId;

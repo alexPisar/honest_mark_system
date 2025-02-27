@@ -123,6 +123,7 @@ namespace HonestMarkSystem
                             organization.EmchdPersonPatronymicSurname = refAuthoritySignDocuments.PatronymicSurname;
                             organization.EmchdPersonPosition = refAuthoritySignDocuments.Position;
                             organization.EmchdPersonInn = refAuthoritySignDocuments.Inn;
+                            organization.EmchdBeginDate = refAuthoritySignDocuments.EmchdBeginDate;
                         }
 
                         myOrganizations.Add(organization);

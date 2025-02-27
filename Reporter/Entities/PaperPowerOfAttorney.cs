@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Reporter.Entities
 {
-    public class PaperPowerOfAttorney
+    public class PaperPowerOfAttorney : Base.IReportEntity<PaperPowerOfAttorney>
     {
         /// <summary>
         /// Внутренний номер доверенности

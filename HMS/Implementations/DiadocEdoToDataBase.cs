@@ -189,7 +189,7 @@ namespace HonestMarkSystem.Implementations
         public object AddDocumentToDataBase(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
         {
             var doc = document as DiadocEdoDocument;
-            string orgInn = myOrganization.OrgInn, orgKpp = myOrganization.OrgKpp, orgName = myOrganization.OrgName;
+            string orgInn = myOrganization.OrgInn, orgKpp = myOrganization.OrgKpp, orgName = myOrganization.OrgName, orgEdoId = myOrganization.EdoId;
 
             if (doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlAcceptanceCertificate && doc.DocumentType != Diadoc.Api.Proto.DocumentType.Invoice &&
                 doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlTorg12 && doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocument &&
@@ -197,7 +197,12 @@ namespace HonestMarkSystem.Implementations
                 return null;
 
             var reporterDll = new Reporter.ReporterDll();
-            var report = reporterDll.ParseDocument<UniversalTransferSellerDocument>(content);
+
+            Reporter.IReport report = null;
+            if (doc.Version == "utd820_05_01_02_hyphen")
+                report = reporterDll.ParseDocument<UniversalTransferSellerDocument>(content);
+            else if (doc.Version == "utd970_05_03_01")
+                report = reporterDll.ParseDocument<UniversalTransferSellerDocumentUtd970>(content);
 
             string total, vat;
 
@@ -232,121 +237,248 @@ namespace HonestMarkSystem.Implementations
                 vat = null;
             }
 
-            var newDoc = new DocEdoPurchasing
+            DocEdoPurchasing newDoc = null;
+            if (doc.Version == "utd820_05_01_02_hyphen")
             {
-                IdDocEdo = doc.EdoId,
-                EdoProviderName = providerName,
-                Name = doc.Title,
-                IdDocType = (int)doc.DocumentType,
-                CounteragentEdoBoxId = doc.CounteragentBoxId,
-                ParentEntityId = doc.EntityId,
-                ReceiveDate = doc.DeliveryDate,
-                CreateDate = doc.CreatedDate,
-                TotalPrice = total,
-                TotalVatAmount = vat,
-                SenderEdoId = report.SenderEdoId,
-                ReceiverEdoId = report.ReceiverEdoId,
-                SenderEdoOrgName = report.EdoProviderOrgName,
-                SenderEdoOrgInn = report.ProviderInn,
-                SenderEdoOrgId = report.EdoId,
-                FileName = report.FileName,
-                UserName = _dataBaseUser
-            };
-
-            var box = _permittedBoxes?.FirstOrDefault(p => p.BoxId == doc.CounteragentBoxId);
-
-            if (box == null)
-                throw new Exception($"Ящик пользователя {doc.CounteragentBoxId} не найден среди разрешённых.");
-
-            var counteragentName = box.Organization?.FullName;
-            var counteragentInn = box.Organization?.Inn;
-            var counteragentKpp = box.Organization?.Kpp;
-
-            if (inOutType == WebSystems.DocumentInOutType.Inbox)
-            {
-                newDoc.SenderInn = counteragentInn;
-                newDoc.SenderName = counteragentName;
-                newDoc.SenderKpp = counteragentKpp;
-                newDoc.ReceiverInn = orgInn;
-                newDoc.ReceiverKpp = orgKpp;
-                newDoc.ReceiverName = orgName;
-            }
-            else if (inOutType == WebSystems.DocumentInOutType.Outbox)
-            {
-                newDoc.SenderInn = orgInn;
-                newDoc.SenderKpp = orgKpp;
-                newDoc.SenderName = orgName;
-                newDoc.ReceiverInn = counteragentInn;
-                newDoc.ReceiverName = counteragentName;
-                newDoc.ReceiverKpp = counteragentKpp;
-            }
-
-            if (doc.DocStatus == "Success")
-                newDoc.DocStatus = (int)WebSystems.DocEdoStatus.Processed;
-            else if (doc.DocStatus == "Error")
-            {
-                newDoc.DocStatus = (int)WebSystems.DocEdoStatus.ProcessingError;
-                newDoc.ErrorMessage = doc.DocStatusText;
-            }
-            else
-                newDoc.DocStatus = (int)WebSystems.DocEdoStatus.New;
-
-            if(doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
-            {
-                newDoc.Name = $"Исправление {report.DocNumber} № {newDoc.Name}";
-
-                var parent = _documents.FirstOrDefault(d => d.Name == report.DocNumber 
-                && d.SenderEdoId == newDoc.SenderEdoId && d.ReceiverEdoId == newDoc.ReceiverEdoId);
-
-                if(parent != null)
+                newDoc = new DocEdoPurchasing
                 {
-                    newDoc.Parent = parent;
-                    newDoc.ParentIdDocEdo = parent.IdDocEdo;
-                    parent.Children.Add(newDoc);
-                }
-            }
-
-            var docProcessing = (from d in _abt.DocEdoProcessings
-                                 where d.MessageId == newDoc.IdDocEdo && d.EntityId == newDoc.ParentEntityId
-                                 select d)?.FirstOrDefault();
-
-            if (docProcessing != null)
-                newDoc.IdDocJournal = docProcessing.IdDoc;
-
-            foreach(var product in report.Products)
-            {
-                var newDetail = new DocEdoPurchasingDetail
-                {
-                    BarCode = product.BarCode,
-                    Quantity = product.Quantity,
-                    Description = product.Description,
-                    Price = product.Price,
-                    Subtotal = product.Subtotal,
-                    TaxAmount = product.TaxAmount,
-                    IdDocEdoPurchasing = newDoc.IdDocEdo,
-                    EdoDocument = newDoc,
-                    DetailNumber = product.Number
+                    IdDocEdo = doc.EdoId,
+                    EdoProviderName = providerName,
+                    Name = doc.Title,
+                    IdDocType = (int)doc.DocumentType,
+                    CounteragentEdoBoxId = doc.CounteragentBoxId,
+                    ParentEntityId = doc.EntityId,
+                    ReceiveDate = doc.DeliveryDate,
+                    CreateDate = doc.CreatedDate,
+                    TotalPrice = total,
+                    TotalVatAmount = vat,
+                    SenderEdoId = (report as UniversalTransferSellerDocument).SenderEdoId,
+                    ReceiverEdoId = (report as UniversalTransferSellerDocument).ReceiverEdoId,
+                    SenderEdoOrgName = (report as UniversalTransferSellerDocument).EdoProviderOrgName,
+                    SenderEdoOrgInn = (report as UniversalTransferSellerDocument).ProviderInn,
+                    SenderEdoOrgId = (report as UniversalTransferSellerDocument).EdoId,
+                    FileName = (report as UniversalTransferSellerDocument).FileName,
+                    UserName = _dataBaseUser,
+                    DocVersionFormat = "utd820_05_01_02_hyphen"
                 };
 
-                var refGoods = _abt.RefBarCodes?
-                            .Where(b => b.BarCode == newDetail.BarCode && b.IsPrimary == false)?
-                            .Select(b => b.IdGood)?.Distinct()?.ToList() ?? new List<decimal?>();
+                var box = _permittedBoxes?.FirstOrDefault(p => p.BoxId == doc.CounteragentBoxId);
 
-                if (refGoods.Count == 1)
-                    newDetail.IdGood = refGoods.First();
-                else if(newDoc.Parent != null)
+                if (box == null)
+                    throw new Exception($"Ящик пользователя {doc.CounteragentBoxId} не найден среди разрешённых.");
+
+                var counteragentName = box.Organization?.FullName;
+                var counteragentInn = box.Organization?.Inn;
+                var counteragentKpp = box.Organization?.Kpp;
+
+                if (inOutType == WebSystems.DocumentInOutType.Inbox)
                 {
-                    var curDetail = newDoc.Parent.Details.FirstOrDefault(d => d.BarCode == newDetail.BarCode);
-
-                    if (curDetail != null)
-                        newDetail.IdGood = curDetail.IdGood;
+                    newDoc.SenderInn = counteragentInn;
+                    newDoc.SenderName = counteragentName;
+                    newDoc.SenderKpp = counteragentKpp;
+                    newDoc.ReceiverInn = orgInn;
+                    newDoc.ReceiverKpp = orgKpp;
+                    newDoc.ReceiverName = orgName;
+                }
+                else if (inOutType == WebSystems.DocumentInOutType.Outbox)
+                {
+                    newDoc.SenderInn = orgInn;
+                    newDoc.SenderKpp = orgKpp;
+                    newDoc.SenderName = orgName;
+                    newDoc.ReceiverInn = counteragentInn;
+                    newDoc.ReceiverName = counteragentName;
+                    newDoc.ReceiverKpp = counteragentKpp;
                 }
 
-                newDoc.Details.Add(newDetail);
+                if (doc.DocStatus == "Success")
+                    newDoc.DocStatus = (int)WebSystems.DocEdoStatus.Processed;
+                else if (doc.DocStatus == "Error")
+                {
+                    newDoc.DocStatus = (int)WebSystems.DocEdoStatus.ProcessingError;
+                    newDoc.ErrorMessage = doc.DocStatusText;
+                }
+                else
+                    newDoc.DocStatus = (int)WebSystems.DocEdoStatus.New;
+
+                if (doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
+                {
+                    newDoc.Name = $"Исправление {(report as UniversalTransferSellerDocument).DocNumber} № {newDoc.Name}";
+
+                    var parent = _documents.FirstOrDefault(d => d.Name == (report as UniversalTransferSellerDocument).DocNumber
+                    && d.SenderEdoId == newDoc.SenderEdoId && d.ReceiverEdoId == newDoc.ReceiverEdoId);
+
+                    if (parent != null)
+                    {
+                        newDoc.Parent = parent;
+                        newDoc.ParentIdDocEdo = parent.IdDocEdo;
+                        parent.Children.Add(newDoc);
+                    }
+                }
+
+                var docProcessing = (from d in _abt.DocEdoProcessings
+                                     where d.MessageId == newDoc.IdDocEdo && d.EntityId == newDoc.ParentEntityId
+                                     select d)?.FirstOrDefault();
+
+                if (docProcessing != null)
+                    newDoc.IdDocJournal = docProcessing.IdDoc;
+
+                foreach (var product in (report as UniversalTransferSellerDocument).Products)
+                {
+                    var newDetail = new DocEdoPurchasingDetail
+                    {
+                        BarCode = product.BarCode,
+                        Quantity = product.Quantity,
+                        Description = product.Description,
+                        Price = product.Price,
+                        Subtotal = product.Subtotal,
+                        TaxAmount = product.TaxAmount,
+                        IdDocEdoPurchasing = newDoc.IdDocEdo,
+                        EdoDocument = newDoc,
+                        DetailNumber = product.Number
+                    };
+
+                    var refGoods = _abt.RefBarCodes?
+                                .Where(b => b.BarCode == newDetail.BarCode && b.IsPrimary == false)?
+                                .Select(b => b.IdGood)?.Distinct()?.ToList() ?? new List<decimal?>();
+
+                    if (refGoods.Count == 1)
+                        newDetail.IdGood = refGoods.First();
+                    else if (newDoc.Parent != null)
+                    {
+                        var curDetail = newDoc.Parent.Details.FirstOrDefault(d => d.BarCode == newDetail.BarCode);
+
+                        if (curDetail != null)
+                            newDetail.IdGood = curDetail.IdGood;
+                    }
+
+                    newDoc.Details.Add(newDetail);
+                }
+            }
+            else if (doc.Version == "utd970_05_03_01")
+            {
+                newDoc = new DocEdoPurchasing
+                {
+                    IdDocEdo = doc.EdoId,
+                    EdoProviderName = providerName,
+                    Name = doc.Title,
+                    IdDocType = (int)doc.DocumentType,
+                    CounteragentEdoBoxId = doc.CounteragentBoxId,
+                    ParentEntityId = doc.EntityId,
+                    ReceiveDate = doc.DeliveryDate,
+                    CreateDate = doc.CreatedDate,
+                    TotalPrice = total,
+                    TotalVatAmount = vat,
+                    SenderEdoId = (report as UniversalTransferSellerDocumentUtd970).SenderEdoId,
+                    ReceiverEdoId = (report as UniversalTransferSellerDocumentUtd970).ReceiverEdoId,
+                    SenderEdoOrgId = (report as UniversalTransferSellerDocumentUtd970).EdoId,
+                    FileName = (report as UniversalTransferSellerDocumentUtd970).FileName,
+                    UserName = _dataBaseUser,
+                    DocVersionFormat = "utd970_05_03_01"
+                };
+
+                var box = _permittedBoxes?.FirstOrDefault(p => p.BoxId == doc.CounteragentBoxId);
+
+                if (box == null)
+                    throw new Exception($"Ящик пользователя {doc.CounteragentBoxId} не найден среди разрешённых.");
+
+                var counteragentName = box.Organization?.FullName;
+                var counteragentInn = box.Organization?.Inn;
+                var counteragentKpp = box.Organization?.Kpp;
+                var counteragentEdoId = box.Organization?.FnsParticipantId;
+
+                if (inOutType == WebSystems.DocumentInOutType.Inbox)
+                {
+                    newDoc.SenderInn = counteragentInn;
+                    newDoc.SenderName = counteragentName;
+                    newDoc.SenderKpp = counteragentKpp;
+                    newDoc.SenderEdoId = counteragentEdoId;
+                    newDoc.ReceiverInn = orgInn;
+                    newDoc.ReceiverKpp = orgKpp;
+                    newDoc.ReceiverName = orgName;
+                    newDoc.ReceiverEdoId = orgEdoId;
+                }
+                else if (inOutType == WebSystems.DocumentInOutType.Outbox)
+                {
+                    newDoc.SenderInn = orgInn;
+                    newDoc.SenderKpp = orgKpp;
+                    newDoc.SenderName = orgName;
+                    newDoc.SenderEdoId = orgEdoId;
+                    newDoc.ReceiverInn = counteragentInn;
+                    newDoc.ReceiverName = counteragentName;
+                    newDoc.ReceiverKpp = counteragentKpp;
+                    newDoc.ReceiverEdoId = counteragentEdoId;
+                }
+
+                if (doc.DocStatus == "Success")
+                    newDoc.DocStatus = (int)WebSystems.DocEdoStatus.Processed;
+                else if (doc.DocStatus == "Error")
+                {
+                    newDoc.DocStatus = (int)WebSystems.DocEdoStatus.ProcessingError;
+                    newDoc.ErrorMessage = doc.DocStatusText;
+                }
+                else
+                    newDoc.DocStatus = (int)WebSystems.DocEdoStatus.New;
+
+                if (doc.DocumentType == Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
+                {
+                    newDoc.Name = $"Исправление {(report as UniversalTransferSellerDocumentUtd970).DocNumber} № {newDoc.Name}";
+
+                    var parent = _documents.FirstOrDefault(d => d.Name == (report as UniversalTransferSellerDocumentUtd970).DocNumber
+                    && d.SenderInn == newDoc.SenderInn && d.ReceiverInn == newDoc.ReceiverInn);
+
+                    if (parent != null)
+                    {
+                        newDoc.Parent = parent;
+                        newDoc.ParentIdDocEdo = parent.IdDocEdo;
+                        parent.Children.Add(newDoc);
+                    }
+                }
+
+                var docProcessing = (from d in _abt.DocEdoProcessings
+                                     where d.MessageId == newDoc.IdDocEdo && d.EntityId == newDoc.ParentEntityId
+                                     select d)?.FirstOrDefault();
+
+                if (docProcessing != null)
+                    newDoc.IdDocJournal = docProcessing.IdDoc;
+
+                foreach (var product in (report as UniversalTransferSellerDocumentUtd970).Products)
+                {
+                    var newDetail = new DocEdoPurchasingDetail
+                    {
+                        BarCode = product.BarCode,
+                        Quantity = product.Quantity,
+                        Description = product.Description,
+                        Price = product.Price,
+                        Subtotal = product.Subtotal,
+                        TaxAmount = product.TaxAmount,
+                        IdDocEdoPurchasing = newDoc.IdDocEdo,
+                        EdoDocument = newDoc,
+                        DetailNumber = product.Number
+                    };
+
+                    var refGoods = _abt.RefBarCodes?
+                                .Where(b => b.BarCode == newDetail.BarCode && b.IsPrimary == false)?
+                                .Select(b => b.IdGood)?.Distinct()?.ToList() ?? new List<decimal?>();
+
+                    if (refGoods.Count == 1)
+                        newDetail.IdGood = refGoods.First();
+                    else if (newDoc.Parent != null)
+                    {
+                        var curDetail = newDoc.Parent.Details.FirstOrDefault(d => d.BarCode == newDetail.BarCode);
+
+                        if (curDetail != null)
+                            newDetail.IdGood = curDetail.IdGood;
+                    }
+
+                    newDoc.Details.Add(newDetail);
+                }
             }
 
-            _abt.DocEdoPurchasings.Add(newDoc);
-            _documents.Add(newDoc);
+            if (newDoc != null)
+            {
+                _abt.DocEdoPurchasings.Add(newDoc);
+                _documents.Add(newDoc);
+            }
 
             if(!_abt.Entry(newDoc).Reference("Status").IsLoaded)
                 _abt.Entry(newDoc).Reference("Status").Load();

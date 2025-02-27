@@ -350,5 +350,45 @@ namespace HmsTests
             xmlDocument.LoadXml(xmlContent);
             xmlDocument.Save($"C:\\Users\\systech\\Desktop\\{document.FileName}.xml");
         }
+
+        [TestMethod]
+        public void TestWindow()
+        {
+            var crypto = new Cryptography.WinApi.WinApiCryptWrapper();
+            var cert = crypto.GetCertificateWithPrivateKey("439C9C0937713DEEA5334DB7228585A55B11498C", false);
+            var cryptoUtil = new UtilitesLibrary.Service.CryptoUtil(cert);
+
+            HonestMarkSystem.BuyerSignWindowUtd970 window = new HonestMarkSystem.BuyerSignWindowUtd970(cryptoUtil, $"C:\\Users\\systech\\Desktop\\Files\\ON_NSCHFDOPPR\\ON_NSCHFDOPPR_2BM-2723205733-272301001-201906250439131304003_2BM-2504000010-20120528083011.xml");
+
+            var organisation = new HonestMarkSystem.Models.ConsignorOrganization
+            {
+                OrgInn = "2504000010",
+                OrgKpp = "253901001",
+                OrgName = "ООО \"ВИРЭЙ\"",
+                EdoId = "2BM-2504000010-2012052808301120662630000000000",
+                Certificate = cert,
+                EmchdId = "b591a89f-ffe1-439c-9f04-e02444839231",
+                EmchdPersonSurname = "Бельтюкова",
+                EmchdPersonName = "Ирина",
+                EmchdPersonPatronymicSurname = "Васильевна",
+                EmchdPersonInn = "253605132573",
+                EmchdPersonPosition = "Директор по продажам",
+                EmchdBeginDate = DateTime.ParseExact("13.11.2024", "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture)
+            };
+
+            var signedFilePath = "C:\\Users\\systech\\Desktop\\Files\\ON_NSCHFDOPPR\\ON_NSCHFDOPPR_2BM-2723205733-272301001-201906250439131304003_2BM-2504000010-20120528083011_SGN_1.sgn";
+            window.SellerSignature = System.IO.File.ReadAllBytes(signedFilePath);
+
+            //window.SetDefaultParameters(organisation, cert.Subject, null/*SelectedItem*/, "Вирэй Приходная 1.0.0.0");
+            var reporter = new ReporterDll();
+            var xmlDocument = new XmlDocument();
+            xmlDocument.Load("C:\\Users\\systech\\Desktop\\ON_NSCHFDOPPOK_2BM-2504000010-2012052808301120662630000000000_2BM-2723205733-272301001-201.xml");
+            var report = reporter.ParseDocument<UniversalTransferBuyerDocumentUtd970>(xmlDocument.OuterXml);
+            window.SetReport(report);
+            report.CreateBuyerFileDate = DateTime.Now;
+            window.ReportDataChanged();
+            window.OnAllPropertyChanged();
+            window.ShowDialog();
+        }
     }
 }

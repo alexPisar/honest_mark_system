@@ -30,7 +30,7 @@ namespace WebSystems
 
         public abstract byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None);
 
-        public abstract string GetOrganizationEdoIdByInn(string inn, string myOrgInn, params object[] parameters);
+        public abstract string GetOrganizationEdoIdByInn(string inn, bool isMyOrgInn, params object[] parameters);
 
         public IEdoSystem(X509Certificate2 certificate)
         {
