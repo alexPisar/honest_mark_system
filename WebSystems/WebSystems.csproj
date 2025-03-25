@@ -77,12 +77,14 @@
     <Compile Include="Models\MarkCodeInfo.cs" />
     <Compile Include="Models\MarkInfo.cs" />
     <Compile Include="Models\OMS\Block.cs" />
+    <Compile Include="Models\OMS\BufferInfo.cs" />
     <Compile Include="Models\OMS\IdentificationCode.cs" />
     <Compile Include="Models\OMS\MarkedCodes.cs" />
     <Compile Include="Models\OMS\MarkedCodesFromReport.cs" />
     <Compile Include="Models\OMS\OrderBlocks.cs" />
     <Compile Include="Models\OMS\OrderInfo.cs" />
     <Compile Include="Models\OMS\OrdersList.cs" />
+    <Compile Include="Models\OMS\Product.cs" />
     <Compile Include="Models\OMS\ReportForApplicationRequest.cs" />
     <Compile Include="Models\OMS\ReportForApplicationResponse.cs" />
     <Compile Include="Models\ProcessEdoOperation.cs" />

@@ -82,6 +82,11 @@ namespace WebSystems.WebClients
             return FinDbWebRequest<FinDbDocumentComissionInfo>("/get/document/comission/index.php", $"TraderDocId={idDoc}");
         }
 
-
+        public T GetApplicationConfigParameter<T>(string appName, string ParameterName)
+        {
+            var obj = _serviceManager.GetRequest<Newtonsoft.Json.Linq.JObject>($"{_urlAddress}/settings/{appName}/Settings.json", Encoding.GetEncoding(1251));
+            var result = obj[ParameterName].ToObject<T>();
+            return result;
+        }
     }
 }

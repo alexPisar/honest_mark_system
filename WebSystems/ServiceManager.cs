@@ -222,6 +222,15 @@ namespace WebSystems
             return result;
         }
 
+        public T GetRequest<T>(string url, Encoding encoding, Dictionary<string, string> headers = null, string accept = null)
+        {
+            string resultAsJsonStr = GetRequest(url, headers, encoding, accept);
+
+            var result = JsonConvert.DeserializeObject<T>(resultAsJsonStr);
+
+            return result;
+        }
+
         public byte[] DownloadDataFileFromReference(string url)
         {
             System.Net.WebClient client = new System.Net.WebClient();

@@ -66,6 +66,31 @@ namespace WebSystems.WebClients
             return result;
         }
 
+        public Models.OMS.BufferInfo[] GetOrderStatus(string orderId, string gtin = null)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("clientToken", _token);
+
+            string url = $"{Properties.Settings.Default.UrlAddressOrderManagmentStation}/api/v3/order/status?omsId={_omsId}&orderId={orderId}";
+
+            if (!string.IsNullOrEmpty(gtin))
+                url = $"{url}&gtin={gtin}";
+
+            var result = _webService.GetRequest<Models.OMS.BufferInfo[]>(url, headerData, "application/json");
+            return result;
+        }
+
+        public Dictionary<string, Models.OMS.Product> GetProductListFromOrder(string orderId)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("clientToken", _token);
+
+            var result = _webService.GetRequest<Dictionary<string, Models.OMS.Product>>($"{Properties.Settings.Default.UrlAddressOrderManagmentStation}/api/v3/order/product?omsId={_omsId}&orderId={orderId}",
+                headerData, "application/json");
+
+            return result;
+        }
+
         public Models.OMS.MarkedCodes GetMarkedCodes(string orderId, int quantity, string gtin)
         {
             var headerData = new Dictionary<string, string>();

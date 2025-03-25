@@ -11,6 +11,12 @@ namespace WebSystems.Models.OMS
         [JsonProperty(PropertyName = "orderStatus")]
         public string OrderStatus { get; set; }
 
+        [JsonProperty(PropertyName = "createdTimestamp")]
+        public long? CreatedTimestamp { get; set; }
+
+        [JsonProperty(PropertyName = "declineReason")]
+        public string DeclineReason { get; set; }
+
         [JsonProperty(PropertyName = "productGroup")]
         public string ProductGroup { get; set; }
 
