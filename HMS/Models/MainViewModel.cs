@@ -2400,6 +2400,8 @@ namespace HonestMarkSystem.Models
 
                 if (detail.IdGood == null && idGoods != null)
                     throw new Exception($"Товар {productGroup.Description} не сопоставлен.");
+                else if (idGoods == null)
+                    detail.IdGood = productGroup.IdGood;
 
                 decimal idGood = detail.IdGood ?? productGroup.IdGood.Value;
 
