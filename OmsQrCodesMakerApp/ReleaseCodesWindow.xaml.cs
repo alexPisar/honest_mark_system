@@ -84,12 +84,21 @@ namespace OmsQrCodesMakerApp
 
                 var savePathDialog = new Microsoft.Win32.SaveFileDialog();
                 savePathDialog.Title = "Сохранение файла";
-                savePathDialog.Filter = "TXT Files|*.txt";
+                savePathDialog.Filter = "Excel Files|*.xlsx;*.xls";
                 savePathDialog.FileName = $"{markedCodes.BlockId}";
 
                 if (savePathDialog.ShowDialog() == true)
                 {
-                    System.IO.File.WriteAllLines(savePathDialog.FileName, markedCodes.Codes);
+                    using (var fileStream = new System.IO.FileStream(savePathDialog.FileName, System.IO.FileMode.Create))
+                    {
+                        using (var streamWriter = new System.IO.StreamWriter(fileStream))
+                        {
+                            streamWriter.WriteLine("DataMatrix");
+
+                            foreach (var markedCode in markedCodes.Codes)
+                                streamWriter.WriteLine(markedCode);
+                        }
+                    }
                     DialogResult = true;
                 }
                 else

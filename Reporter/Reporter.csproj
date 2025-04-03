@@ -285,6 +285,7 @@
     </None>
     <None Include="XSD\ON_NSCHFDOPPOK_1_997_02_05_03_01.xsd">
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="XSD\ON_NSCHFDOPPR_1_997_01_05_01_03.xsd">
       <SubType>Designer</SubType>

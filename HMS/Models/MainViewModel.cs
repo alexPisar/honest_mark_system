@@ -416,7 +416,13 @@ namespace HonestMarkSystem.Models
                                     var sellerXmlDocument = new XmlDocument();
                                     sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
                                     var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
-                                    SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc, Details?.Where(d => d.IdGood != null)?.Select(d => d.IdGood.Value)?.ToList(), SelectedItem.DocVersionFormat);
+
+                                    var detailsList = Details?.Where(d => d.IdGood != null)?.Select(d => d.IdGood.Value)?.ToList();
+
+                                    if (detailsList.Count == 0)
+                                        detailsList = null;
+
+                                    SaveMarkedCodesToDataBase(docSellerContent, SelectedItem.IdDocJournal, oldIdDoc, detailsList, SelectedItem.DocVersionFormat);
                                 }
                             }
                             else if(docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
@@ -2266,10 +2272,34 @@ namespace HonestMarkSystem.Models
 
             var productsWithTransportCodes = products?.Where(p => p.TransportPackingIdentificationCode != null && p.TransportPackingIdentificationCode.Count > 0);
 
-            var transportCodes = productsWithTransportCodes?.SelectMany(p => p.TransportPackingIdentificationCode)?.Distinct() ?? new List<string>();
+            if (idGoods == null)
+            {
+                productsWithTransportCodes = productsWithTransportCodes.ToList();
+                foreach (var pr in productsWithTransportCodes)
+                {
+                    var productMarkedCodes = new List<KeyValuePair<string, string>>();
+                    var transportCodes = pr?.TransportPackingIdentificationCode?.Distinct() ?? new List<string>();
 
-            if (transportCodes.Count() > 0)
-                markedCodes = honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
+                    if (transportCodes.Count() > 0)
+                        productMarkedCodes = honestMarkSystem.GetCodesByThePiece(transportCodes, productMarkedCodes);
+
+                    if (productMarkedCodes.Count > 0)
+                    {
+                        string barCode = productMarkedCodes.First().Value;
+                        markedCodes.AddRange(productMarkedCodes);
+
+                        if (!string.IsNullOrEmpty(barCode))
+                            pr.BarCode = barCode;
+                    }
+                }
+            }
+            else
+            {
+                var transportCodes = productsWithTransportCodes?.SelectMany(p => p.TransportPackingIdentificationCode)?.Distinct() ?? new List<string>();
+
+                if (transportCodes.Count() > 0)
+                    markedCodes = honestMarkSystem.GetCodesByThePiece(transportCodes, markedCodes);
+            }
 
             foreach (var product in products)
                 if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
@@ -2303,6 +2333,13 @@ namespace HonestMarkSystem.Models
 
             if (idGoods != null)
                 refBarCodes = refBarCodes.Where(r => idGoods.Exists(g => g == (r as RefBarCode)?.IdGood));
+            else
+            {
+                if (barCodes.Any(b => refBarCodes.FirstOrDefault(r => (r as RefBarCode)?.BarCode == b) == null))
+                {
+                    throw new Exception("Не все штрих-коды кодов маркировки есть в карточках товаров.");
+                }
+            }
 
             var markedCodesByRefBarCodes = from markedCode in markedCodes
                                            let refBarCode = refBarCodes.FirstOrDefault(r => (r as RefBarCode)?.BarCode == markedCode.Value)
@@ -2326,6 +2363,7 @@ namespace HonestMarkSystem.Models
                                     productByRefBarCodes.Product.BarCode,
                                     productByRefBarCodes.Product.Description,
                                     productByRefBarCodes.Product.Number,
+                                    productByRefBarCodes.IdGood,
                                     Count = gr.Count(),
                                     Items = gr.Select(g => g.Item).ToList()
                                 };
@@ -2360,10 +2398,12 @@ namespace HonestMarkSystem.Models
                 if (detail == null)
                     throw new Exception($"Не найден товар с названием {productGroup.Description}.");
 
-                if (detail.IdGood == null)
+                if (detail.IdGood == null && idGoods != null)
                     throw new Exception($"Товар {productGroup.Description} не сопоставлен.");
 
-                markedCodesByGoods.Add(new KeyValuePair<decimal, List<string>>(detail.IdGood.Value, productGroup.Items));
+                decimal idGood = detail.IdGood ?? productGroup.IdGood.Value;
+
+                markedCodesByGoods.Add(new KeyValuePair<decimal, List<string>>(idGood, productGroup.Items));
             }
 
             //IEnumerable<string> updatedCodes = null;

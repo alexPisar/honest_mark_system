@@ -119,12 +119,21 @@ namespace OmsQrCodesMakerApp.Models
 
                 var savePathDialog = new Microsoft.Win32.SaveFileDialog();
                 savePathDialog.Title = "Сохранение файла";
-                savePathDialog.Filter = "TXT Files|*.txt";
+                savePathDialog.Filter = "Excel Files|*.xlsx;*.xls";
                 savePathDialog.FileName = $"{_order.OrderId}_{SelectedItem.Gtin}";
 
                 if (savePathDialog.ShowDialog() == true)
                 {
-                    System.IO.File.WriteAllLines(savePathDialog.FileName, markedCodes);
+                    using (var fileStream = new System.IO.FileStream(savePathDialog.FileName, System.IO.FileMode.Create))
+                    {
+                        using (var streamWriter = new System.IO.StreamWriter(fileStream))
+                        {
+                            streamWriter.WriteLine("DataMatrix");
+
+                            foreach (var markedCode in markedCodes)
+                                streamWriter.WriteLine(markedCode);
+                        }
+                    }
 
                     var loadWindow = new LoadWindow();
                     loadWindow.AfterSuccessfullLoading("Файл успешно сохранён.");

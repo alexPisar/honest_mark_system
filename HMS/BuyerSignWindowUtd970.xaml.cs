@@ -230,7 +230,7 @@ namespace HonestMarkSystem
             var sellerReport = reporterDll.ParseDocument<UniversalTransferSellerDocumentUtd970>(DocSellerContent);
 
             _report.CreateSellerFileDate = sellerReport.CreateDate;
-            _report.DocName = "Документ об отгрузке товаров (выполнении работ), передаче имущественных прав (документ об оказании услуг)";
+            _report.DocName = "Универсальный передаточный документ";
             _report.Function = sellerReport.Function;
             _report.SellerInvoiceNumber = sellerReport.DocNumber;
             _report.SellerInvoiceDate = sellerReport.DocDate;
