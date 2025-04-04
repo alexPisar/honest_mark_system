@@ -12,7 +12,7 @@ namespace HonestMarkSystem.Interfaces
     {
         void InitializeContext();
 
-        object AddDocumentToDataBase(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None);
+        object AddDocumentToDataBase(Reporter.IReport report, Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None);
 
         object AddDocEdoReturnPurchasing(decimal idDocJournal, string messageId, string entityId, string sellerFileName, string buyerFileName, 
             string senderInn, string senderName, string receiverInn, string receiverName, DateTime docDate, int docStatus = (int)WebSystems.DocEdoStatus.Sent);

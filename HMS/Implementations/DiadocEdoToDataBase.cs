@@ -186,7 +186,7 @@ namespace HonestMarkSystem.Implementations
             return labels.Select(l => l.DmLabel);
         }
 
-        public object AddDocumentToDataBase(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
+        public object AddDocumentToDataBase(Reporter.IReport report, Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
         {
             var doc = document as DiadocEdoDocument;
             string orgInn = myOrganization.OrgInn, orgKpp = myOrganization.OrgKpp, orgName = myOrganization.OrgName, orgEdoId = myOrganization.EdoId;
@@ -195,14 +195,6 @@ namespace HonestMarkSystem.Implementations
                 doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlTorg12 && doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocument &&
                 doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
                 return null;
-
-            var reporterDll = new Reporter.ReporterDll();
-
-            Reporter.IReport report = null;
-            if (doc.Version == "utd820_05_01_02_hyphen")
-                report = reporterDll.ParseDocument<UniversalTransferSellerDocument>(content);
-            else if (doc.Version == "utd970_05_03_01")
-                report = reporterDll.ParseDocument<UniversalTransferSellerDocumentUtd970>(content);
 
             string total, vat;
 

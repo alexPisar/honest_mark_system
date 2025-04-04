@@ -125,8 +125,57 @@ namespace HonestMarkSystem.Models
 
                                 if (docFromDb == null)
                                 {
+                                    Reporter.IReport report = null;
+                                    var reporterDll = new Reporter.ReporterDll();
+                                    List<Reporter.Entities.Product> products = null;
+
+                                    if (doc as DiadocEdoDocument != null)
+                                    {
+                                        var diadocEdoDocument = doc as DiadocEdoDocument;
+
+                                        if (diadocEdoDocument.Version == "utd820_05_01_02_hyphen")
+                                        {
+                                            report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docContentBytes);
+                                            products = (report as Reporter.Reports.UniversalTransferSellerDocument)?.Products;
+                                        }
+                                        else if (diadocEdoDocument.Version == "utd970_05_03_01")
+                                        {
+                                            report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocumentUtd970>(docContentBytes);
+                                            products = (report as Reporter.Reports.UniversalTransferSellerDocumentUtd970)?.Products;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docContentBytes);
+                                        products = (report as Reporter.Reports.UniversalTransferSellerDocument)?.Products;
+                                    }
+
+                                    if (products != null && myOrganization?.HonestMarkSystem != null)
+                                    {
+                                        products = products.ToList();
+                                        var productsForGetBarCodeFromTransportCodes = products.Where(p => p.TransportPackingIdentificationCode != null &&
+                                        (string.IsNullOrEmpty(p.BarCode) || p.BarCode.Length < 13) && p.TransportPackingIdentificationCode.Count > 0).ToList();
+
+                                        foreach (var product in productsForGetBarCodeFromTransportCodes)
+                                        {
+                                            var transportCodes = product.TransportPackingIdentificationCode?.Distinct() ?? new List<string>();
+                                            var productMarkedCodes = new List<KeyValuePair<string, string>>();
+
+                                            if (transportCodes.Count() > 0)
+                                                productMarkedCodes = myOrganization.HonestMarkSystem.GetCodesByThePiece(transportCodes, productMarkedCodes);
+
+                                            if (productMarkedCodes.Count > 0)
+                                            {
+                                                string barCode = productMarkedCodes.First().Value;
+
+                                                if (!string.IsNullOrEmpty(barCode))
+                                                    product.BarCode = barCode;
+                                            }
+                                        }
+                                    }
+
                                     myOrganization.EdoSystem.SendReceivingConfirmationEventHandler?.Invoke(this, new WebSystems.EventArgs.SendReceivingConfirmationEventArgs { Document = doc });
-                                    _dataBaseAdapter.AddDocumentToDataBase(myOrganization, doc, docContentBytes, DocumentInOutType.Inbox);
+                                    _dataBaseAdapter.AddDocumentToDataBase(report, myOrganization, doc, DocumentInOutType.Inbox);
                                 }
                             }
                             _dataBaseAdapter.Commit(newDocsTransaction);

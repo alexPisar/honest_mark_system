@@ -42,13 +42,10 @@ namespace HonestMarkSystem.Implementations
             return _permittedSenderInnsForUser.Exists(p => p == (doc?.Sender?.Inn.ToString() ?? ""));
         }
 
-        public object AddDocumentToDataBase(Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, byte[] content, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
+        public object AddDocumentToDataBase(Reporter.IReport report, Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
         {
             var doc = (EdoLiteDocuments)document;
             string orgInn = myOrganization.OrgInn, orgKpp = myOrganization.OrgKpp, orgName = myOrganization.OrgName;
-
-            var reporterDll = new Reporter.ReporterDll();
-            var report = reporterDll.ParseDocument<UniversalTransferSellerDocument>(content);
 
             var newDocInDb = new DocEdoPurchasing()
             {
@@ -60,12 +57,12 @@ namespace HonestMarkSystem.Implementations
                 TotalPrice = doc.TotalPrice,
                 TotalVatAmount = doc.TotalVatAmount,
                 IdDocType = doc.DocType,
-                SenderEdoId = report.SenderEdoId,
-                ReceiverEdoId = report.ReceiverEdoId,
-                SenderEdoOrgName = report.EdoProviderOrgName,
-                SenderEdoOrgInn = report.ProviderInn,
-                SenderEdoOrgId = report.EdoId,
-                FileName = report.FileName,
+                SenderEdoId = (report as UniversalTransferSellerDocument).SenderEdoId,
+                ReceiverEdoId = (report as UniversalTransferSellerDocument).ReceiverEdoId,
+                SenderEdoOrgName = (report as UniversalTransferSellerDocument).EdoProviderOrgName,
+                SenderEdoOrgInn = (report as UniversalTransferSellerDocument).ProviderInn,
+                SenderEdoOrgId = (report as UniversalTransferSellerDocument).EdoId,
+                FileName = (report as UniversalTransferSellerDocument).FileName,
                 UserName = _dataBaseUser
             };
 
@@ -107,7 +104,7 @@ namespace HonestMarkSystem.Implementations
                 newDocInDb.ReceiverName = doc?.Recipient?.Name;
             }
 
-            foreach(var product in report.Products)
+            foreach(var product in (report as UniversalTransferSellerDocument).Products)
             {
                 var newDetail = new DocEdoPurchasingDetail
                 {
