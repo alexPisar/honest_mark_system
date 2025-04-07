@@ -61,6 +61,38 @@ namespace WebSystems.Systems
             return resultCodes;
         }
 
+        public async Task<List<KeyValuePair<string, string>>> GetCodesByThePieceAsync(IEnumerable<string> sourceCodes,
+            List<KeyValuePair<string, string>> resultCodes, bool isAggregatedCodes = true)
+        {
+            string[] markedCodes;
+
+            if (isAggregatedCodes)
+                markedCodes = await HonestMarkClient.GetInstance()
+                    .GetAggregatedCodesAsync(ProductGroupsEnum.None, sourceCodes.ToArray());
+            else
+                markedCodes = sourceCodes.ToArray();
+
+            Func<string, KeyValuePair<string, string>> predicate = s =>
+            {
+                if (s.Length == 31)
+                {
+                    var barCode = s.Substring(0, 16).TrimStart('0', '1').TrimStart('0');
+                    return new KeyValuePair<string, string>(s, barCode);
+                }
+                else
+                    return new KeyValuePair<string, string>(s, string.Empty);
+            };
+
+            IEnumerable<KeyValuePair<string, string>> codes = markedCodes.Select(s => predicate(s));
+
+            resultCodes.AddRange(codes);
+
+            if (sourceCodes.Count() == (codes?.Count() ?? 0))
+                resultCodes = resultCodes.Distinct().ToList();
+
+            return resultCodes;
+        }
+
         public Models.MarkCodeInfo[] GetMarkedCodesInfo(ProductGroupsEnum productGroup, string[] markCodes)
         {
             return HonestMarkClient.GetInstance().GetMarkCodesInfo(productGroup, markCodes);

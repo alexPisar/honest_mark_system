@@ -200,6 +200,41 @@ namespace WebSystems.WebClients
             return cises.SelectMany(c => c.Cises.Keys).ToArray();
         }
 
+        public async Task<string[]> GetAggregatedCodesAsync(ProductGroupsEnum productGroup, string[] transportCodes)
+        {
+            if (string.IsNullOrEmpty(_token) || _certificate == null)
+                throw new Exception("Ошибка авторизации. Не определён токен либо сертификат пользователя.");
+
+            string productGroupStr;
+
+            if (productGroup == ProductGroupsEnum.None)
+                productGroupStr = String.Empty;
+            else
+            {
+                var enumUtil = new UtilitesLibrary.Service.EnumUtil();
+                productGroupStr = $"?pg={enumUtil.GetEnumMemberAttrValue(productGroup)}";
+            }
+
+            var authData = new Dictionary<string, string>();
+            authData.Add("Authorization", $"Bearer {_token}");
+
+            var markCodesAsJson = JsonConvert.SerializeObject(transportCodes);
+
+            var task = _webService.PostRequestAsync<Models.Cis>($"{Properties.Settings.Default.UrlAddressHonestMark}/cises/aggregated/list{productGroupStr}",
+                markCodesAsJson, null, "application/json", authData);
+            var aggregateMarkedCodes = await task;
+
+            IEnumerable<Models.Cis> cises = new List<Models.Cis>(new Models.Cis[] { aggregateMarkedCodes });
+            var cis = aggregateMarkedCodes.Cises.FirstOrDefault(c => (c.Value?.Count() ?? 0) == 0);
+
+            while (cises.All(c => c.Cises.All(d => (d.Value?.Count() ?? 0) > 0)))
+            {
+                cises = cises.SelectMany(c => c.Cises.Select(d => d.Value.ToObject<Models.Cis>()));
+            }
+
+            return cises.SelectMany(c => c.Cises.Keys).ToArray();
+        }
+
         public Models.DocumentInfo GetDocumentInfo(ProductGroupsEnum productGroup, string docId)
         {
             var enumUtil = new UtilitesLibrary.Service.EnumUtil();

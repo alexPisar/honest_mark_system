@@ -63,7 +63,7 @@ namespace HonestMarkSystem.Models
 
         public System.Windows.Window Owner { get; set; }
 
-        private void Refresh()
+        private async void Refresh()
         {
             _dataBaseAdapter.Dispose();
             _dataBaseAdapter.InitializeContext();
@@ -152,26 +152,9 @@ namespace HonestMarkSystem.Models
 
                                     if (products != null && myOrganization?.HonestMarkSystem != null)
                                     {
-                                        products = products.ToList();
-                                        var productsForGetBarCodeFromTransportCodes = products.Where(p => p.TransportPackingIdentificationCode != null &&
-                                        (string.IsNullOrEmpty(p.BarCode) || p.BarCode.Length < 13) && p.TransportPackingIdentificationCode.Count > 0).ToList();
-
-                                        foreach (var product in productsForGetBarCodeFromTransportCodes)
-                                        {
-                                            var transportCodes = product.TransportPackingIdentificationCode?.Distinct() ?? new List<string>();
-                                            var productMarkedCodes = new List<KeyValuePair<string, string>>();
-
-                                            if (transportCodes.Count() > 0)
-                                                productMarkedCodes = myOrganization.HonestMarkSystem.GetCodesByThePiece(transportCodes, productMarkedCodes);
-
-                                            if (productMarkedCodes.Count > 0)
-                                            {
-                                                string barCode = productMarkedCodes.First().Value;
-
-                                                if (!string.IsNullOrEmpty(barCode))
-                                                    product.BarCode = barCode;
-                                            }
-                                        }
+                                        if (products.Exists(p => p.TransportPackingIdentificationCode != null &&
+                                        (string.IsNullOrEmpty(p.BarCode) || p.BarCode.Length < 13) && p.TransportPackingIdentificationCode.Count > 0))
+                                            products = await Task.Run<List<Reporter.Entities.Product>>(() => SetBarCodesForProductsFromTransportCode(myOrganization.HonestMarkSystem, products));
                                     }
 
                                     myOrganization.EdoSystem.SendReceivingConfirmationEventHandler?.Invoke(this, new WebSystems.EventArgs.SendReceivingConfirmationEventArgs { Document = doc });
@@ -332,6 +315,56 @@ namespace HonestMarkSystem.Models
                 var errorsWindow = new ErrorsWindow("Произошла ошибка сохранения базы данных.", new List<string>(new string[] { errorMessage }));
                 _log.Log(errorMessage);
                 errorsWindow.ShowDialog();
+            }
+        }
+
+        private async Task<List<Reporter.Entities.Product>> SetBarCodesForProductsFromTransportCode(WebSystems.Systems.HonestMarkSystem honestMarkSystem,
+            List<Reporter.Entities.Product> products)
+        {
+            products = products.ToList();
+            var productsForGetBarCodeFromTransportCodes = products.Where(p => p.TransportPackingIdentificationCode != null &&
+            (string.IsNullOrEmpty(p.BarCode) || p.BarCode.Length < 13) && p.TransportPackingIdentificationCode.Count > 0).ToList();
+
+            if (productsForGetBarCodeFromTransportCodes.Count > 0)
+            {
+                int position = 0, block = 10, count = productsForGetBarCodeFromTransportCodes.Count;
+
+                while (count > position)
+                {
+                    var length = count - position > block ? block : count - position;
+                    var productsFromBlock = productsForGetBarCodeFromTransportCodes.Skip(position).Take(length);
+                    var tasks = new List<Task>();
+
+                    foreach (var pr in productsFromBlock)
+                    {
+                        tasks.Add(SetBarCodeForProductFromTransportCode(honestMarkSystem, pr));
+                    }
+
+                    await Task.WhenAll(tasks);
+                    position += block;
+                }
+            }
+
+            return products;
+        }
+
+        private async Task SetBarCodeForProductFromTransportCode(WebSystems.Systems.HonestMarkSystem honestMarkSystem, Reporter.Entities.Product product)
+        {
+            var transportCodes = product.TransportPackingIdentificationCode?.Distinct() ?? new List<string>();
+            var productMarkedCodes = new List<KeyValuePair<string, string>>();
+
+            if (transportCodes.Count() > 0)
+            {
+                var transportCode = transportCodes.First();
+                productMarkedCodes = await honestMarkSystem.GetCodesByThePieceAsync(new string[] { transportCode }, productMarkedCodes);
+            }
+
+            if (productMarkedCodes.Count > 0)
+            {
+                string barCode = productMarkedCodes.First().Value;
+
+                if (!string.IsNullOrEmpty(barCode))
+                    product.BarCode = barCode;
             }
         }
 

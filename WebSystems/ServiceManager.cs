@@ -28,6 +28,68 @@ namespace WebSystems
             return _statusCode;
         }
 
+        public async Task<T> PostRequestAsync<T>(string url, object contentData, CookieCollection cookies = null, string contentType = null,
+            Dictionary<string, string> headers = null, Encoding encoding = null, string accept = null) where T:class,new()
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+
+            request.Method = "POST";
+
+            if (string.IsNullOrEmpty(contentType))
+                request.ContentType = "application/x-www-form-urlencoded";
+            else
+                request.ContentType = contentType;
+
+            if (!string.IsNullOrEmpty(accept))
+                request.Accept = accept;
+
+            if (_webProxy != null)
+                request.Proxy = _webProxy;
+
+            if (cookies != null)
+            {
+                request.CookieContainer = new CookieContainer();
+                request.CookieContainer.Add(cookies);
+            }
+
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                    request.Headers.Add(header.Key, header.Value);
+            }
+
+            var requestStream = request.GetRequestStream();
+
+            var contentDataBytes = System.Text.Encoding.UTF8.GetBytes(contentData as string);
+
+            await requestStream.WriteAsync(contentDataBytes, 0, contentDataBytes.Length);
+
+            string resultAsJson;
+            using (var webResponse = await request.GetResponseAsync().ConfigureAwait(false))
+            {
+                if (encoding != null)
+                {
+                    using (var sr = new System.IO.StreamReader(webResponse.GetResponseStream(), encoding))
+                    {
+                        resultAsJson = sr.ReadToEnd();
+                    }
+                }
+                else
+                {
+                    using (var sr = new System.IO.StreamReader(webResponse.GetResponseStream()))
+                    {
+                        resultAsJson = sr.ReadToEnd();
+                    }
+                }
+
+                _statusCode = ((int?)((HttpWebResponse)webResponse)?.StatusCode)?.ToString();
+            }
+
+            var result = JsonConvert.DeserializeObject<T>(resultAsJson);
+
+            return result;
+        }
+
         public string PostRequest(string url, object contentData, CookieCollection cookies = null, string contentType = null,
             Dictionary<string, string> headers = null, Encoding encoding = null, string accept = null)
         {
