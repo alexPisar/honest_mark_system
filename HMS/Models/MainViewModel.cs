@@ -63,7 +63,7 @@ namespace HonestMarkSystem.Models
 
         public System.Windows.Window Owner { get; set; }
 
-        private async void Refresh()
+        private void Refresh()
         {
             _dataBaseAdapter.Dispose();
             _dataBaseAdapter.InitializeContext();
@@ -154,7 +154,7 @@ namespace HonestMarkSystem.Models
                                     {
                                         if (products.Exists(p => p.TransportPackingIdentificationCode != null &&
                                         (string.IsNullOrEmpty(p.BarCode) || p.BarCode.Length < 13) && p.TransportPackingIdentificationCode.Count > 0))
-                                            products = await Task.Run<List<Reporter.Entities.Product>>(() => SetBarCodesForProductsFromTransportCode(myOrganization.HonestMarkSystem, products));
+                                            products = Task.Run<List<Reporter.Entities.Product>>(() => SetBarCodesForProductsFromTransportCode(myOrganization.HonestMarkSystem, products)).Result;
                                     }
 
                                     myOrganization.EdoSystem.SendReceivingConfirmationEventHandler?.Invoke(this, new WebSystems.EventArgs.SendReceivingConfirmationEventArgs { Document = doc });
