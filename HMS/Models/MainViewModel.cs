@@ -2384,6 +2384,19 @@ namespace HonestMarkSystem.Models
             }
 
             foreach (var product in products)
+            {
+                if (product.TransportPackingIdentificationCode != null && product.TransportPackingIdentificationCode.Count > 0
+                    && (string.IsNullOrEmpty(product.BarCode) || product.BarCode.Length < 13))
+                {
+                    var detail = Details?.FirstOrDefault(d => d.DetailNumber == product.Number);
+
+                    if (detail == null)
+                        throw new Exception($"Не найден товар с названием {product.Description}.");
+
+                    if (!string.IsNullOrEmpty(detail?.BarCode))
+                        product.BarCode = detail.BarCode;
+                }
+
                 if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
                 {
                     if(product.MarkedCodes.All(m => m?.Length == 31))
@@ -2391,6 +2404,7 @@ namespace HonestMarkSystem.Models
                     else
                         markedCodes = honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);
                 }
+            }
 
             if (markedCodes.Count == 0)
                 return;
