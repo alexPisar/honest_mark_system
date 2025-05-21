@@ -22,6 +22,51 @@ namespace HmsTests
         }
 
         [TestMethod]
+        public void CheckUcdTest()
+        {
+            decimal idDoc = 1150583700;
+            string[] deletedMarkedCodes = new string[] { "0104607066904233215uRbXcjp:Qsd=", "0104607066904233215jQB:fu=FRpHP", "0104607066904233215eEbNJX>%eS4s",
+                "0104607066904233215e1jnGBRl8soL", "0104607066904233215eK3,>_ngMRDg", "0104607066904233215esE(DW-Kwhqe" };
+
+            var xmlDocument = new System.Xml.XmlDocument();
+            xmlDocument.Load("C:\\Users\\systech\\Desktop\\ON_NKORSCHFDOPPRMARK_2BM-2539108495-253901001-201407110842566644066_2BM-5035022477-2012052808202463102630000000000_20250516_589283ad-e8f8-406c-8797-2978bb8772cb.xml");
+
+            var report = UtilitesLibrary.Service.Xml.DeserializeEntity<Reporter.XsdClasses.OnNkorschfdoppr.Файл>(xmlDocument.OuterXml);
+
+            foreach (var product in report.Документ.ТаблКСчФ.СведТов)
+            {
+                var markedCodesBefore = product.НомСредИдентТовДо[0].Items;
+                var markedCodesAfter = product.НомСредИдентТовПосле[0].Items;
+                var barCode = markedCodesBefore[0].Substring(0, 16).TrimStart('0', '1').TrimStart('0');
+
+                string[] markedCodesByGood = null;
+                using (var abt = new DataContextManagementUnit.DataAccess.Contexts.Abt.AbtDbContext())
+                {
+                    var idGood = abt.RefBarCodes.FirstOrDefault(r => r.BarCode == barCode && r.IsPrimary == false)?.IdGood;
+
+                    if (idGood == null)
+                    {
+                        idGood = abt.DocEdoPurchasings.FirstOrDefault(d => d.IdDocJournal == idDoc)?
+                            .Details?.FirstOrDefault(det => det.BarCode == barCode)?.IdGood;
+                    }
+
+                    if (idGood == null)
+                        return;
+
+                    markedCodesByGood = abt.DocGoodsDetailsLabels.Where(r => r.IdGood == idGood && r.IdDoc == idDoc).Select(m => m.DmLabel).ToArray();
+
+                    if (markedCodesByGood == null)
+                        return;
+                }
+
+                var result = markedCodesBefore.Length == markedCodesByGood.Length && markedCodesByGood.All(g => markedCodesBefore.Any(m => m == g));
+
+                var deletedMarkedCodesByProduct = markedCodesBefore.Where(b => !markedCodesAfter.Any(a => a == b)).ToArray();
+                result = result && deletedMarkedCodesByProduct.All(p => deletedMarkedCodes.Any(d => d == p));
+            }
+        }
+
+        [TestMethod]
         public void GetMarkedCodesTest()
         {
             var crypto = new WinApiCryptWrapper();
