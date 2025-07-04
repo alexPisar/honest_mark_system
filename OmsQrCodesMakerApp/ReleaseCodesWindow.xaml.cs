@@ -84,7 +84,7 @@ namespace OmsQrCodesMakerApp
 
                 var savePathDialog = new Microsoft.Win32.SaveFileDialog();
                 savePathDialog.Title = "Сохранение файла";
-                savePathDialog.Filter = "Excel Files|*.xlsx;*.xls";
+                savePathDialog.Filter = "CSV File|*.csv";
                 savePathDialog.FileName = $"{markedCodes.BlockId}";
 
                 if (savePathDialog.ShowDialog() == true)
