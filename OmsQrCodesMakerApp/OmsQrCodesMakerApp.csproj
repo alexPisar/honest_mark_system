@@ -185,10 +185,14 @@
     <Compile Include="ReleaseCodesWindow.xaml.cs">
       <DependentUpon>ReleaseCodesWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="SavePrintDataMatrixWindow.xaml.cs">
+      <DependentUpon>SavePrintDataMatrixWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\OmsOrder.cs" />
     <Compile Include="ViewModels\OmsOrganization.cs" />
     <Compile Include="ViewModels\OmsProduct.cs" />
     <Compile Include="ViewModels\PowerOfAttorney.cs" />
+    <Compile Include="XsdClasses\OrdersScheme.cs" />
     <Page Include="AuthWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -221,6 +225,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ReleaseCodesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SavePrintDataMatrixWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

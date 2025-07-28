@@ -37,14 +37,19 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.7.13\lib\net45\NLog.dll</HintPath>
     </Reference>
+    <Reference Include="Ookii.Dialogs.Wpf, Version=4.0.0.0, Culture=neutral, PublicKeyToken=66aa232afad40158, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ookii.Dialogs.Wpf.4.0.0\lib\net45\Ookii.Dialogs.Wpf.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Xaml" />
@@ -58,6 +63,12 @@
     <Reference Include="WpfAnimatedGif, Version=2.0.0.0, Culture=neutral, PublicKeyToken=9e7cd3b544a090dc, processorArchitecture=MSIL">
       <HintPath>..\packages\WpfAnimatedGif.2.0.2\lib\net40\WpfAnimatedGif.dll</HintPath>
     </Reference>
+    <Reference Include="zxing, Version=0.16.10.0, Culture=neutral, PublicKeyToken=4e88037ac681fe60, processorArchitecture=MSIL">
+      <HintPath>..\packages\ZXing.Net.0.16.10\lib\net461\zxing.dll</HintPath>
+    </Reference>
+    <Reference Include="zxing.presentation, Version=0.16.10.0, Culture=neutral, PublicKeyToken=4e88037ac681fe60, processorArchitecture=MSIL">
+      <HintPath>..\packages\ZXing.Net.0.16.10\lib\net461\zxing.presentation.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\ErrorsControl.xaml.cs">
@@ -66,6 +77,8 @@
     <Compile Include="Controls\LoadControl.xaml.cs">
       <DependentUpon>LoadControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces\IDataMatrixGenerator.cs" />
+    <Compile Include="Interfaces\IOpenDialogsWpf.cs" />
     <Compile Include="ModelBase\ErrorTextModel.cs" />
     <Compile Include="ModelBase\ListViewModel.cs" />
     <Compile Include="ModelBase\LoadModel.cs" />
@@ -78,6 +91,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Service\CryptoUtil.cs" />
+    <Compile Include="Service\OokiiDialogsWpf.cs" />
+    <Compile Include="Service\ZXingDataMatrixGenerator.cs" />
     <Compile Include="Service\DateTimeUtil.cs" />
     <Compile Include="Service\EnumUtil.cs" />
     <Compile Include="Service\UtilityLog.cs" />

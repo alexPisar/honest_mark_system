@@ -15,6 +15,7 @@ namespace OmsQrCodesMakerApp.Models
         public override RelayCommand RefreshCommand => new RelayCommand((o) => { Refresh(); });
         public RelayCommand ReleaseCodesCommand => new RelayCommand((o) => { ReleaseCodes(); });
         public RelayCommand RetryGetCodesCommand => new RelayCommand((o) => { RetryGetCodes(); });
+        public RelayCommand RetryGetPrintCodesCommand => new RelayCommand((o) => { RetryGetPrintCodes(); });
 
         public OrderSingleModel(ViewModels.OmsOrder order, WebSystems.WebClients.OrderManagementStationClient omsClient)
         {
@@ -137,6 +138,88 @@ namespace OmsQrCodesMakerApp.Models
 
                     var loadWindow = new LoadWindow();
                     loadWindow.AfterSuccessfullLoading("Файл успешно сохранён.");
+                    loadWindow.Show();
+                }
+            }
+            catch (System.Net.WebException webEx)
+            {
+                string errorMessage = _log.GetRecursiveInnerException(webEx);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка на удалённом сервере.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = _log.GetRecursiveInnerException(ex);
+                _log.Log(errorMessage);
+
+                var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+        }
+
+        public void RetryGetPrintCodes()
+        {
+            if (SelectedItem == null)
+            {
+                DevExpress.Xpf.Core.DXMessageBox.Show("Не выбран товар!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem.OrderStatus.TotalPassed == 0)
+            {
+                DevExpress.Xpf.Core.DXMessageBox.Show("Коды не были ранее получены!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                var orderBlocks = _omsClient.GetBlockIdsFromOrder(_order.OrderId, SelectedItem.Gtin);
+                List<string> markedCodes = new List<string>();
+
+                if (orderBlocks?.Blocks != null)
+                    foreach (var block in orderBlocks.Blocks)
+                    {
+                        var markedCodesObj = _omsClient.GetMarkedCodesRetry(block.BlockId);
+
+                        if (markedCodesObj?.Codes != null && markedCodesObj.Codes.Length > 0)
+                            markedCodes.AddRange(markedCodesObj.Codes);
+                    }
+
+                if (markedCodes.Count == 0)
+                {
+                    DevExpress.Xpf.Core.DXMessageBox.Show("Не удалось получить ранее сохранённые коды!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+
+                UtilitesLibrary.Interfaces.IOpenDialogsWpf openPathDialog = new UtilitesLibrary.Service.OokiiDialogsWpf();
+                UtilitesLibrary.Interfaces.IDataMatrixGenerator dataMatrixGenerator = new UtilitesLibrary.Service.ZXingDataMatrixGenerator();
+                var pathFolder = openPathDialog.ChangePathDialog("Выберите папку для сохранения файлов");
+
+                if (string.IsNullOrEmpty(pathFolder))
+                    return;
+
+                var savePrintDataMatrixWindow = new SavePrintDataMatrixWindow(SelectedItem.Gtin);
+
+                if (savePrintDataMatrixWindow.ShowDialog() == true)
+                {
+                    int indx = savePrintDataMatrixWindow.Index.Value;
+                    foreach (var markedCode in markedCodes)
+                    {
+                        var img = dataMatrixGenerator.GenerateDataMatrix(markedCode, 300, 300);
+
+                        string indxStr = indx.ToString();
+
+                        if (indxStr.Length < 5)
+                            indxStr = indxStr.PadLeft(5, '0');
+
+                        img.Save($"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.eps");
+                        indx++;
+                    }
+
+                    var loadWindow = new LoadWindow();
+                    loadWindow.AfterSuccessfullLoading("Коды успешно сохранёны.");
                     loadWindow.Show();
                 }
             }
