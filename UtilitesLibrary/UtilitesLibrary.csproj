@@ -40,6 +40,12 @@
     <Reference Include="Ookii.Dialogs.Wpf, Version=4.0.0.0, Culture=neutral, PublicKeyToken=66aa232afad40158, processorArchitecture=MSIL">
       <HintPath>..\packages\Ookii.Dialogs.Wpf.4.0.0\lib\net45\Ookii.Dialogs.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="PdfSharp, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp.1.50.5147\lib\net20\PdfSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp.Charting, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp.1.50.5147\lib\net20\PdfSharp.Charting.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -79,9 +85,12 @@
     </Compile>
     <Compile Include="Interfaces\IDataMatrixGenerator.cs" />
     <Compile Include="Interfaces\IOpenDialogsWpf.cs" />
+    <Compile Include="Interfaces\IPdfFileWorker.cs" />
     <Compile Include="ModelBase\ErrorTextModel.cs" />
+    <Compile Include="ModelBase\IPdfContent.cs" />
     <Compile Include="ModelBase\ListViewModel.cs" />
     <Compile Include="ModelBase\LoadModel.cs" />
+    <Compile Include="ModelBase\PdfPage.cs" />
     <Compile Include="ModelBase\RelayCommand.cs" />
     <Compile Include="ModelBase\ViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -91,6 +100,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Service\CryptoUtil.cs" />
+    <Compile Include="Service\PdfContentTypes\Enums\PdfSizeType.cs" />
+    <Compile Include="Service\PdfContentTypes\PdfImage.cs" />
+    <Compile Include="Service\PdfContentTypes\PdfText.cs" />
+    <Compile Include="Service\PDFsharpWorker.cs" />
     <Compile Include="Service\OokiiDialogsWpf.cs" />
     <Compile Include="Service\ZXingDataMatrixGenerator.cs" />
     <Compile Include="Service\DateTimeUtil.cs" />

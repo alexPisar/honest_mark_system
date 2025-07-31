@@ -205,6 +205,7 @@ namespace OmsQrCodesMakerApp.Models
                 if (savePrintDataMatrixWindow.ShowDialog() == true)
                 {
                     int indx = savePrintDataMatrixWindow.Index.Value;
+                    var pdfPages = new List<PdfPage>();
                     foreach (var markedCode in markedCodes)
                     {
                         var img = dataMatrixGenerator.GenerateDataMatrix(markedCode, 300, 300);
@@ -216,7 +217,70 @@ namespace OmsQrCodesMakerApp.Models
 
                         img.Save($"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.eps");
                         indx++;
+
+                        var markedCodeText = markedCode.Substring(0, markedCode.IndexOf((char)29));
+
+                        var imageStream = new System.IO.FileStream($"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.eps", System.IO.FileMode.Open);
+
+                        var pdfPage = new PdfPage()
+                        {
+                            SizeType = UtilitesLibrary.Service.PdfContentTypes.Enums.PdfSizeType.Millimeter,
+                            Height = 25,
+                            Width = 43,
+                            Contents = new List<IPdfContent>(new IPdfContent[] {
+                                new UtilitesLibrary.Service.PdfContentTypes.PdfImage
+                                {
+                                    SizeType = UtilitesLibrary.Service.PdfContentTypes.Enums.PdfSizeType.Millimeter,
+                                    LowerLeftX = 1,
+                                    LowerLeftY = 2,
+                                    UpperRightX = 22,
+                                    UpperRightY = 23,
+                                    ImageStream = imageStream
+                                },
+                                new UtilitesLibrary.Service.PdfContentTypes.PdfText
+                                {
+                                    SizeType = UtilitesLibrary.Service.PdfContentTypes.Enums.PdfSizeType.Millimeter,
+                                    LowerLeftX = 23,
+                                    LowerLeftY = 4,
+                                    UpperRightX = 41,
+                                    UpperRightY = 7,
+                                    Text = markedCodeText.Substring(0, 12),
+                                    FontFamily = "Arial",
+                                    FontSize = 7,
+                                    Bold = true
+                                },
+                                new UtilitesLibrary.Service.PdfContentTypes.PdfText
+                                {
+                                    SizeType = UtilitesLibrary.Service.PdfContentTypes.Enums.PdfSizeType.Millimeter,
+                                    LowerLeftX = 23,
+                                    LowerLeftY = 7,
+                                    UpperRightX = 41,
+                                    UpperRightY = 10,
+                                    Text = markedCodeText.Substring(12, 12),
+                                    FontFamily = "Arial",
+                                    FontSize = 7,
+                                    Bold = true
+                                },
+                                new UtilitesLibrary.Service.PdfContentTypes.PdfText
+                                {
+                                    SizeType = UtilitesLibrary.Service.PdfContentTypes.Enums.PdfSizeType.Millimeter,
+                                    LowerLeftX = 23,
+                                    LowerLeftY = 10,
+                                    UpperRightX = 41,
+                                    UpperRightY = 13,
+                                    Text = markedCodeText.Substring(24),
+                                    FontFamily = "Arial",
+                                    FontSize = 7,
+                                    Bold = true
+                                }
+                            })
+                        };
+
+                        pdfPages.Add(pdfPage);
                     }
+
+                    UtilitesLibrary.Interfaces.IPdfFileWorker pdfWorker = new UtilitesLibrary.Service.PDFsharpWorker();
+                    pdfWorker.GetPdfFileFromContents(pdfPages, $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}.pdf");
 
                     var loadWindow = new LoadWindow();
                     loadWindow.AfterSuccessfullLoading("Коды успешно сохранёны.");
