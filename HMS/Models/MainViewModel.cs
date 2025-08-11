@@ -2410,10 +2410,22 @@ namespace HonestMarkSystem.Models
                 return;
             else
             {
-                var markedCodesInBase = _dataBaseAdapter.GetMarkedCodesByDocumentId(idDoc) ?? new List<string>();
+                if (_dataBaseAdapter.IsExistsReceivedCodes(idDoc))
+                    throw new Exception("В списке кодов есть оприходованные коды");
 
-                if (markedCodesInBase.Count() > markedCodes.Count)
-                    throw new Exception("Число сохранённых кодов в базе по документу больше числа кодов в документе.");
+                var markedCodesInBase = _dataBaseAdapter.GetRefMarkedCodesByDocumentId(idDoc).Cast<DocGoodsDetailsLabels>() ?? new List<DocGoodsDetailsLabels>();
+
+                if (markedCodesInBase.Count() > 0)
+                {
+                    var markedCodesFromBaseWhichNotInTheDocument = markedCodesInBase.Where(mb => !markedCodes.Any(md => md.Key == mb.DmLabel));
+
+                    if (markedCodesFromBaseWhichNotInTheDocument.Count() > 0)
+                    {
+                        markedCodesFromBaseWhichNotInTheDocument = markedCodesFromBaseWhichNotInTheDocument.ToList();
+
+                        _dataBaseAdapter.DeleteLabels(markedCodesFromBaseWhichNotInTheDocument);
+                    }
+                }
             }
 
             var markedCodesArray = markedCodes.Select(m => m.Key);

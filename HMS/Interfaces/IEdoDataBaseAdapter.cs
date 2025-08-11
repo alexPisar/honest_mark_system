@@ -45,6 +45,8 @@ namespace HonestMarkSystem.Interfaces
 
         void UpdateRefGoodForMarkedCodes(decimal idDocJournal, decimal oldIdGood, decimal newIdGood);
 
+        void DeleteLabels(IEnumerable<object> detailsLabels);
+
         List<object> GetRefGoodsByBarCode(string barCode);
 
         string GetBarCodeByIdGood(decimal idGood);
@@ -58,6 +60,8 @@ namespace HonestMarkSystem.Interfaces
         List<object> GetAllMarkedCodes();
 
         IEnumerable<string> GetMarkedCodesByDocumentId(decimal? docJournalId);
+
+        IEnumerable<object> GetRefMarkedCodesByDocumentId(decimal? docJournalId);
 
         IEnumerable<string> GetMarkedCodesByDocGoodId(object docJournalObj, decimal? idGood);
 
@@ -76,6 +80,8 @@ namespace HonestMarkSystem.Interfaces
         decimal ExportDocument(object documentObject);
 
         bool IsExistsNotReceivedCodes(decimal idDoc, int docType);
+
+        bool IsExistsReceivedCodes(decimal? idDoc);
 
         List<string> GetErrorsWithMarkedCodes(decimal idDoc, int docType);
 

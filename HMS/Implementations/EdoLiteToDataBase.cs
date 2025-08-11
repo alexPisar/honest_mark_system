@@ -302,6 +302,13 @@ namespace HonestMarkSystem.Implementations
                 label.IdGood = newIdGood;
         }
 
+        public void DeleteLabels(IEnumerable<object> detailsLabels)
+        {
+            var docGoodsDetailsLabels = detailsLabels.Cast<DocGoodsDetailsLabels>();
+
+            _abt.DocGoodsDetailsLabels.RemoveRange(docGoodsDetailsLabels);
+        }
+
         public List<object> GetRefGoodsByBarCode(string barCode)
         {
             var refGoods = (from refBarCode in _abt.RefBarCodes
@@ -357,6 +364,14 @@ namespace HonestMarkSystem.Implementations
                 return null;
 
             return _abt.DocGoodsDetailsLabels.Where(l => l.IdDoc == docJournalId).Select(l => l.DmLabel);
+        }
+
+        public IEnumerable<object> GetRefMarkedCodesByDocumentId(decimal? docJournalId)
+        {
+            if (docJournalId == null)
+                return null;
+
+            return _abt.DocGoodsDetailsLabels.Where(l => l.IdDoc == docJournalId);
         }
 
         public IEnumerable<string> GetMarkedCodesByDocGoodId(object docJournalObj, decimal? idGood)
@@ -497,6 +512,16 @@ namespace HonestMarkSystem.Implementations
                 count = _abt.Database.SqlQuery<int>($"select count(*) from doc_goods_details_labels where id_doc = {idDoc} and LABEL_STATUS <> 1").First();
             else if (docType == (int)DataContextManagementUnit.DataAccess.DocJournalType.Translocation)
                 count = _abt.Database.SqlQuery<int>($"select count(*) from doc_goods_details_labels where id_doc_sale = {idDoc} and LABEL_STATUS <> 2").First();
+
+            return count > 0;
+        }
+
+        public bool IsExistsReceivedCodes(decimal? idDoc)
+        {
+            if (idDoc == null)
+                return false;
+
+            int count = _abt.Database.SqlQuery<int>($"select count(*) from doc_goods_details_labels where id_doc = {idDoc} and LABEL_STATUS = 2").First();
 
             return count > 0;
         }
