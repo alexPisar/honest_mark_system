@@ -49,6 +49,7 @@ namespace HonestMarkSystem.Models
         public RelayCommand RejectDocumentCommand => new RelayCommand((o) => { RejectDocument(); });
         public RelayCommand RevokeDocumentCommand => new RelayCommand((o) => { RevokeDocument(); });
         public RelayCommand SaveDocumentFileCommand => new RelayCommand((o) => { SaveDocumentFile(); });
+        public RelayCommand ShowXmlDocumentCommand => new RelayCommand((o) => { ShowXmlDocument(); });
 
         public MainViewModel(Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter, List<ConsignorOrganization> myOrganizations)
         {
@@ -2288,6 +2289,116 @@ namespace HonestMarkSystem.Models
                 var errorsWindow = new ErrorsWindow("Произошла ошибка сохранения документа в файл.", new List<string>(new string[] { errorMessage }));
                 errorsWindow.ShowDialog();
             }
+        }
+
+        private async void ShowXmlDocument()
+        {
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана своя организация.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            var edoSystem = SelectedMyOrganization.EdoSystem;
+
+            if (edoSystem.HasZipContent && !File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip"))
+            {
+                System.Windows.MessageBox.Show(
+                    "Не найден zip файл документооборота.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            LoadWindow loadWindow = new LoadWindow("Подождите, идёт загрузка данных");
+
+            if (this.Owner != null)
+                loadWindow.Owner = this.Owner;
+
+            loadWindow.Show();
+
+            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
+            {
+                if (edoSystem.HasZipContent)
+                {
+                    try
+                    {
+                        using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                        {
+                            var entry = zipArchive.Entries.FirstOrDefault(x => x.Name == $"{SelectedItem.FileName}.xml");
+                            entry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        string errorMessage = _log.GetRecursiveInnerException(ex);
+                        _log.Log(errorMessage);
+
+                        var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла xml из архива.", new List<string>(new string[] { errorMessage }));
+                        errorsWindow.ShowDialog();
+                        return;
+                    }
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+            }
+
+            var showXmlDocumentWindow = new ShowXmlDocumentWindow(SelectedMyOrganization);
+            try
+            {
+                Exception exception = null;
+                System.Net.WebException webException = null;
+
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        showXmlDocumentWindow.InitializeDocument(SelectedItem.DocVersionFormat, $"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                    }
+                    catch (System.Net.WebException webExec)
+                    {
+                        webException = webExec;
+                    }
+                    catch(Exception exec)
+                    {
+                        exception = exec;
+                    }
+                });
+
+                if (webException != null)
+                    throw webException;
+
+                if (exception != null)
+                    throw exception;
+
+                showXmlDocumentWindow.SetItems();
+            }
+            catch (System.Net.WebException webEx)
+            {
+                var errorMessage = _log.GetRecursiveInnerException(webEx);
+                var errorsWindow = new ErrorsWindow("Произошла ошибка на удалённом сервере.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = _log.GetRecursiveInnerException(ex);
+                var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+            finally
+            {
+                loadWindow.Close();
+            }
+            showXmlDocumentWindow.ShowDialog();
         }
 
         private bool MarkedCodesOwnerCheck(IEnumerable<string> markedCodes, string ownerInn, ErrorTextModel errorModel = null)

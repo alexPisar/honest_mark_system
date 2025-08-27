@@ -1,0 +1,33 @@
+﻿<Window x:Class="HonestMarkSystem.ShowXmlDocumentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HonestMarkSystem"
+        mc:Ignorable="d"
+        Title="Состав XML документа" Height="450" Width="800">
+    <Grid>
+        <dxg:GridControl Name="DocumentDetailsDataGrid" ShowBorder="False">
+            <dxg:GridControl.Columns>
+                <dxg:GridColumn FieldName="Name" Header="Название/код маркировки товара" Width="5*"/>
+                <dxg:GridColumn FieldName="BarCode" Header="Код товара" Width="*"/>
+                <dxg:GridColumn FieldName="Quantity" Header="Количество" Width="*"/>
+                <dxg:GridColumn FieldName="NotAllDocumentsMarked" Visible="False"/>
+                <dxg:GridColumn FieldName="NotMarked" Visible="False"/>
+            </dxg:GridControl.Columns>
+            <dxg:GridControl.View>
+                <dxg:TreeListView Name="treeList" AllowEditing="False" NavigationStyle="Row" ShowSearchPanelMode="Always">
+                    <dxg:TreeListView.FormatConditions>
+                        <dxg:FormatCondition ApplyToRow="True"  Expression="[NotAllDocumentsMarked] and ![NotMarked]" FieldName="NotAllDocumentsMarked">
+                            <dxg:Format Background="#e69c9c"/>
+                        </dxg:FormatCondition>
+                        <dxg:FormatCondition ApplyToRow="True"  Expression="[NotMarked]" FieldName="NotMarked">
+                            <dxg:Format Background="Gray"/>
+                        </dxg:FormatCondition>
+                    </dxg:TreeListView.FormatConditions>
+                </dxg:TreeListView>
+            </dxg:GridControl.View>
+        </dxg:GridControl>
+    </Grid>
+</Window>

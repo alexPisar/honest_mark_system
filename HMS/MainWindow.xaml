@@ -77,6 +77,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Просмотр состава документа" Command="{Binding ShowXmlDocumentCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/XAF/Action_Export_ToXML.svg}"/>
+                            <TextBlock Text="Состав" HorizontalAlignment="Center" />
+                            <TextBlock Text="документа" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
             <dxb:BarButtonItem ToolTip="Возврат кодов маркировки" Command="{Binding ReturnMarkedCodesCommand}">
                 <dxb:BarButtonItem.ContentTemplate>
                     <DataTemplate>
