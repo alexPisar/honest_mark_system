@@ -135,5 +135,102 @@ namespace HmsTests
 
             }
         }
+
+        [TestMethod]
+        public void ConvertImageTest()
+        {
+
+            //var converter = new UtilitesLibrary.Service.DataMatrixNetGenerator();
+            //converter.ConvertRasterToVector("C:\\Users\\developer3\\Desktop\\HonestMark.png", "C:\\Users\\developer3\\Desktop\\HonestMark.eps");
+
+            //using (ImageMagick.IMagickImage image = new ImageMagick.MagickImage("svgFilePath"))
+            //{
+            //    // Set the desired output format to EPS
+            //    image.Format = MagickFormat.Eps;
+
+            //    // Write the image to the specified EPS file path
+            //    image.Write(epsFilePath);
+            //}
+
+            //var fileText = System.IO.File.ReadAllText("C:\\Users\\developer3\\Desktop\\images3\\img.svg");
+
+            //var importFileObj = new WebSystems.Models.Convertio.ConvertRequest
+            //{
+            //    Input = "raw",
+            //    //File = fileText,
+            //    FileName = "img.svg",
+            //    OutputFormat = "eps"
+            //};
+
+            //ConvertioApiClient convertioApiClient = new ConvertioApiClient();
+
+            try
+            {
+                //var convertResponse = convertioApiClient.Convert(importFileObj);
+
+                //var statusConvert = convertioApiClient.GetStatusConvertion(convertResponse.Data.Id);
+
+                //System.Net.WebClient client = new System.Net.WebClient();
+
+                //if (ConfigSet.Configs.Config.GetInstance().ProxyEnabled)
+                //{
+                //    var webProxy = new System.Net.WebProxy();
+
+                //    webProxy.Address = new Uri("http://" + ConfigSet.Configs.Config.GetInstance().ProxyAddress);
+                //    webProxy.Credentials = new System.Net.NetworkCredential(ConfigSet.Configs.Config.GetInstance().ProxyUserName,
+                //        ConfigSet.Configs.Config.GetInstance().ProxyUserPassword);
+
+                //    client.Proxy = webProxy;
+                //}
+
+                //var fileBytes = client.DownloadData(statusConvert.Data.Output.Url);
+                //System.IO.File.WriteAllBytes("C:\\Users\\developer3\\Desktop\\images3\\img_api_1.eps", fileBytes);
+
+                //var fileContentResponse = convertioApiClient.GetResultFileContent(convertResponse.Data.Id);
+                //var fileContent = Convert.FromBase64String(fileContentResponse.Data.Content);
+                //System.IO.File.WriteAllBytes("C:\\Users\\developer3\\Desktop\\images3\\img_api_2.eps", fileContent);
+
+                //var dataMatrixCodeStr = "0104011669330632215Fd7/w91EE1092RgaucporYleYxJM8G6rYCMTX5Lvnq7hCRcX6gfXnRD8=";
+                //var dataMatrix = new RasterEdge.XImage.BarcodeCreator.DataMatrix();
+                //dataMatrix.Data = dataMatrixCodeStr;
+                //dataMatrix.DataMode = RasterEdge.XImage.BarcodeCreator.DataMatrixDataMode.Auto;
+                //dataMatrix.BarcodeHeight = 300;
+                //dataMatrix.BarcodeWidth = 300;
+                ////dataMatrix.ToImage();
+                //dataMatrix.DrawBarcode("C:\\Users\\developer3\\Desktop\\images2\\img_data_matrix_2.eps", RasterEdge.XImage.BarcodeCreator.OutputFileType.EPS);
+                var path = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu);
+                string svgFilePath = "C:\\Users\\developer3\\Desktop\\images3\\04011669330632_00002.svg";
+                string epsFilePath = "C:\\Users\\developer3\\Desktop\\images3\\inkscape_2.eps";
+                string inkscapePath = "D:\\Program Files\\Inkscape\\bin\\inkscape.exe";
+                string arguments = $"-z {svgFilePath} --export-type=eps -o {epsFilePath}";
+                System.Diagnostics.Process process = new System.Diagnostics.Process();
+                process.StartInfo.FileName = inkscapePath;
+                process.StartInfo.Arguments = arguments;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.CreateNoWindow = true;
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                if (process.ExitCode == 0)
+                {
+                    Console.WriteLine($"Файл успешно сконвертирован в {epsFilePath}");
+                }
+                else
+                {
+                    Console.WriteLine($"Ошибка при конвертации. Код выхода: {process.ExitCode}");
+                    Console.WriteLine($"Вывод: {output}");
+                }
+            }
+            catch (System.Net.WebException webEx)
+            {
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
     }
 }

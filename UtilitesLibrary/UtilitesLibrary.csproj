@@ -34,6 +34,9 @@
     <Reference Include="BouncyCastle.Crypto, Version=1.8.9.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
       <HintPath>..\packages\BouncyCastle.1.8.9\lib\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
+    <Reference Include="DataMatrix.net, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DataMatrix.net.0.4.2\lib\20\DataMatrix.net.dll</HintPath>
+    </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.7.13\lib\net45\NLog.dll</HintPath>
     </Reference>
@@ -69,12 +72,6 @@
     <Reference Include="WpfAnimatedGif, Version=2.0.0.0, Culture=neutral, PublicKeyToken=9e7cd3b544a090dc, processorArchitecture=MSIL">
       <HintPath>..\packages\WpfAnimatedGif.2.0.2\lib\net40\WpfAnimatedGif.dll</HintPath>
     </Reference>
-    <Reference Include="zxing, Version=0.16.10.0, Culture=neutral, PublicKeyToken=4e88037ac681fe60, processorArchitecture=MSIL">
-      <HintPath>..\packages\ZXing.Net.0.16.10\lib\net461\zxing.dll</HintPath>
-    </Reference>
-    <Reference Include="zxing.presentation, Version=0.16.10.0, Culture=neutral, PublicKeyToken=4e88037ac681fe60, processorArchitecture=MSIL">
-      <HintPath>..\packages\ZXing.Net.0.16.10\lib\net461\zxing.presentation.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\ErrorsControl.xaml.cs">
@@ -99,13 +96,13 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Service\DataMatrixNetGenerator.cs" />
     <Compile Include="Service\CryptoUtil.cs" />
     <Compile Include="Service\PdfContentTypes\Enums\PdfSizeType.cs" />
     <Compile Include="Service\PdfContentTypes\PdfImage.cs" />
     <Compile Include="Service\PdfContentTypes\PdfText.cs" />
     <Compile Include="Service\PDFsharpWorker.cs" />
     <Compile Include="Service\OokiiDialogsWpf.cs" />
-    <Compile Include="Service\ZXingDataMatrixGenerator.cs" />
     <Compile Include="Service\DateTimeUtil.cs" />
     <Compile Include="Service\EnumUtil.cs" />
     <Compile Include="Service\UtilityLog.cs" />

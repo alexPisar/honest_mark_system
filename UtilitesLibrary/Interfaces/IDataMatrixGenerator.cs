@@ -8,6 +8,16 @@ namespace UtilitesLibrary.Interfaces
 {
     public abstract class IDataMatrixGenerator
     {
-        public abstract System.Drawing.Image GenerateDataMatrix(string text, int width = 200, int height = 200);
+        public abstract byte[] GenerateAndSaveDataMatrix(string text, string fileName, string fileFolder, int width = 200, int height = 200);
+        public abstract System.Drawing.Image GetImageByDataMatrix(string text, int width = 200, int height = 200);
+
+        public virtual System.IO.Stream GetImageStreamByDataMatrix(string text, int width = 200, int height = 200)
+        {
+            var img = GetImageByDataMatrix(text, width, height);
+            System.IO.MemoryStream memoryStream = new System.IO.MemoryStream();
+            img.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+
+            return memoryStream;
+        }
     }
 }

@@ -159,7 +159,7 @@ namespace OmsQrCodesMakerApp.Models
             }
         }
 
-        public void RetryGetPrintCodes()
+        public async void RetryGetPrintCodes()
         {
             if (SelectedItem == null)
             {
@@ -194,7 +194,7 @@ namespace OmsQrCodesMakerApp.Models
                 }
 
                 UtilitesLibrary.Interfaces.IOpenDialogsWpf openPathDialog = new UtilitesLibrary.Service.OokiiDialogsWpf();
-                UtilitesLibrary.Interfaces.IDataMatrixGenerator dataMatrixGenerator = new UtilitesLibrary.Service.ZXingDataMatrixGenerator();
+                UtilitesLibrary.Interfaces.IDataMatrixGenerator dataMatrixGenerator = new UtilitesLibrary.Service.DataMatrixNetGenerator();//new UtilitesLibrary.Service.ZXingDataMatrixGenerator();
                 var pathFolder = openPathDialog.ChangePathDialog("Выберите папку для сохранения файлов");
 
                 if (string.IsNullOrEmpty(pathFolder))
@@ -204,23 +204,69 @@ namespace OmsQrCodesMakerApp.Models
 
                 if (savePrintDataMatrixWindow.ShowDialog() == true)
                 {
+                    var loadWindow = new LoadWindow("Идёт загрузка...");
+                    loadWindow.Show();
+
                     int indx = savePrintDataMatrixWindow.Index.Value;
                     var pdfPages = new List<PdfPage>();
+
+                    string inkscapePath = null;
+                    System.Diagnostics.Process process = null;
+
+                    if(System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk"))
+                        inkscapePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk";
+                    else if (System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk"))
+                        inkscapePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk";
+
+                    if (!string.IsNullOrEmpty(inkscapePath))
+                    {
+                        inkscapePath = WindowsShortcutFactory.WindowsShortcut.Load(inkscapePath)?.Path;
+                        process = new System.Diagnostics.Process();
+                        process.StartInfo.FileName = inkscapePath;
+                        process.StartInfo.UseShellExecute = false;
+                        process.StartInfo.RedirectStandardOutput = true;
+                        process.StartInfo.CreateNoWindow = true;
+                    }
+
                     foreach (var markedCode in markedCodes)
                     {
-                        var img = dataMatrixGenerator.GenerateDataMatrix(markedCode, 300, 300);
-
                         string indxStr = indx.ToString();
 
                         if (indxStr.Length < 5)
                             indxStr = indxStr.PadLeft(5, '0');
 
-                        img.Save($"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.eps");
-                        indx++;
+                        string fileName = $"{savePrintDataMatrixWindow.Prefix}_{indxStr}";
+                        string svgFilePath = $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.svg";
+                        string epsFilePath = $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.eps";
+                        string arguments = $"-z {svgFilePath} --export-type=eps -o {epsFilePath}";
 
                         var markedCodeText = markedCode.Substring(0, markedCode.IndexOf((char)29));
+                        //System.IO.Stream imageStream = null;
 
-                        var imageStream = new System.IO.FileStream($"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.eps", System.IO.FileMode.Open);
+                        await Task.Run(() =>
+                        {
+                            var img = dataMatrixGenerator.GenerateAndSaveDataMatrix(markedCode, fileName, pathFolder, 300, 300);
+
+                            if (!string.IsNullOrEmpty(inkscapePath))
+                            {
+                                process.StartInfo.Arguments = arguments;
+                                process.Start();
+                                string output = process.StandardOutput.ReadToEnd();
+                                process.WaitForExit();
+                            }
+                        });
+
+                        if (!string.IsNullOrEmpty(inkscapePath))
+                        {
+                            if (process.ExitCode != 0)
+                                throw new Exception($"Ошибка при конвертации. Код выхода: {process.ExitCode}");
+
+                            System.IO.File.Delete($"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.svg");
+                        }
+
+                        indx++;
+
+                        var imageStream = dataMatrixGenerator.GetImageStreamByDataMatrix(markedCode, 300, 300);
 
                         var pdfPage = new PdfPage()
                         {
@@ -282,9 +328,7 @@ namespace OmsQrCodesMakerApp.Models
                     UtilitesLibrary.Interfaces.IPdfFileWorker pdfWorker = new UtilitesLibrary.Service.PDFsharpWorker();
                     pdfWorker.GetPdfFileFromContents(pdfPages, $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}.pdf");
 
-                    var loadWindow = new LoadWindow();
                     loadWindow.AfterSuccessfullLoading("Коды успешно сохранёны.");
-                    loadWindow.Show();
                 }
             }
             catch (System.Net.WebException webEx)
