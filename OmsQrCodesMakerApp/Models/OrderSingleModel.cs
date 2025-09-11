@@ -238,7 +238,7 @@ namespace OmsQrCodesMakerApp.Models
                         string fileName = $"{savePrintDataMatrixWindow.Prefix}_{indxStr}";
                         string svgFilePath = $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.svg";
                         string epsFilePath = $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.eps";
-                        string arguments = $"-z {svgFilePath} --export-type=eps -o {epsFilePath}";
+                        string arguments = $"-z \"{svgFilePath}\" --export-type=eps -o \"{epsFilePath}\"";
 
                         var markedCodeText = markedCode.Substring(0, markedCode.IndexOf((char)29));
                         //System.IO.Stream imageStream = null;
