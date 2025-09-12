@@ -185,6 +185,7 @@
       <DependentUpon>LoadWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\OrderSingleModel.cs" />
+    <Compile Include="Models\SavePrintDataMatrixModel.cs" />
     <Compile Include="OrderSingleWindow.xaml.cs">
       <DependentUpon>OrderSingleWindow.xaml</DependentUpon>
     </Compile>

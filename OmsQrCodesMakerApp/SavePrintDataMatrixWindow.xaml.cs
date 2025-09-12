@@ -19,10 +19,11 @@ namespace OmsQrCodesMakerApp
     /// </summary>
     public partial class SavePrintDataMatrixWindow : Window
     {
-        public SavePrintDataMatrixWindow(string defaultPrefix = null)
+        public SavePrintDataMatrixWindow()
         {
             InitializeComponent();
-            PrefixTextEdit.EditValue = defaultPrefix;
+            SavedFileNameStackPanel.Visibility = Visibility.Hidden;
+            IndexStackPanel.Visibility = Visibility.Hidden;
         }
 
         public int? Index
@@ -35,15 +36,58 @@ namespace OmsQrCodesMakerApp
                 return Convert.ToInt32(IndexSpinEdit.EditValue);
             }
         }
-        public string Prefix => PrefixTextEdit?.EditValue as string;
+
+        public string InkscapeLnkPath { get; set; }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            if(string.IsNullOrEmpty(PrefixTextEdit?.EditValue as string))
+            if((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == null)
             {
-                DialogResult = false;
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не указан префикс!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                DevExpress.Xpf.Core.DXMessageBox.Show("Не указан формат файла", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
+            }
+
+            if(string.IsNullOrEmpty((DataContext as Models.SavePrintDataMatrixModel)?.FolderPath))
+            {
+                DevExpress.Xpf.Core.DXMessageBox.Show("Не указана папка для сохранения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if(!System.IO.Directory.Exists((DataContext as Models.SavePrintDataMatrixModel).FolderPath))
+            {
+                DevExpress.Xpf.Core.DXMessageBox.Show("Не найдена папка для сохранения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if(string.IsNullOrEmpty((DataContext as Models.SavePrintDataMatrixModel)?.SavedFileName))
+            {
+                var errorMessage = string.Empty;
+
+                if ((DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf)
+                    errorMessage = "Не указано наименование файла!";
+                else
+                    errorMessage = "Не указан префикс!";
+
+                DevExpress.Xpf.Core.DXMessageBox.Show(errorMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if((DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Eps)
+            {
+                if (System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk"))
+                {
+                    InkscapeLnkPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk";
+                }
+                else if (System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk"))
+                {
+                    InkscapeLnkPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk";
+                }
+                else
+                {
+                    InkscapeLnkPath = null;
+                    DevExpress.Xpf.Core.DXMessageBox.Show("Невозможно экспортировать коды в формате EPS.\nНе установлена программа Inkscape.\nПроверьте установку программы.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
             }
 
             DialogResult = true;
@@ -54,6 +98,30 @@ namespace OmsQrCodesMakerApp
         {
             DialogResult = false;
             this.Close();
+        }
+
+        private void ChangeFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            UtilitesLibrary.Interfaces.IOpenDialogsWpf openPathDialog = new UtilitesLibrary.Service.OokiiDialogsWpf();
+            (DataContext as Models.SavePrintDataMatrixModel).FolderPath = openPathDialog.ChangePathDialog("Выберите папку для сохранения файлов");
+            (DataContext as Models.SavePrintDataMatrixModel).OnPropertyChanged("FolderPath");
+        }
+
+        private void ChangeFileTypeComboBox_EditValueChanged(object sender, DevExpress.Xpf.Editors.EditValueChangedEventArgs e)
+        {
+            if((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf)
+            {
+                SavedFileNameStackPanel.Visibility = Visibility.Visible;
+                IndexStackPanel.Visibility = Visibility.Hidden;
+                SavedFileNameLabel.Content = "Наименование";
+            }
+            else if ((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Svg ||
+                (DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Eps)
+            {
+                SavedFileNameStackPanel.Visibility = Visibility.Visible;
+                IndexStackPanel.Visibility = Visibility.Visible;
+                SavedFileNameLabel.Content = "Префикс";
+            }
         }
     }
 }

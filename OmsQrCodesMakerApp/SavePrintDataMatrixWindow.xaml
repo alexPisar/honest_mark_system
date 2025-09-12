@@ -6,7 +6,7 @@
         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
         xmlns:local="clr-namespace:OmsQrCodesMakerApp"
         mc:Ignorable="d" ResizeMode="NoResize"
-        Title="Настройки сохранения файлов EPS" Height="150" Width="320">
+        Title="Настройки сохранения файлов" Height="220" Width="550">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -14,11 +14,22 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Vertical" Grid.Row="0">
             <StackPanel Orientation="Horizontal">
-                <Label Width="100" Margin="10 5" Content="Префикс" />
-                <dxe:TextEdit x:Name="PrefixTextEdit" Margin="10 5" Width="150" />
+                <Label Width="120" Margin="10 5" Content="Папка сохранения"/>
+                <dxe:TextEdit Text="{Binding FolderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5 5 5" Width="300" />
+                <Button x:Name="ChangeFolderButton" Margin="2 5 5 5" Content="..." Click="ChangeFolderButton_Click" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
-                <Label Width="100" Margin="10 5" Content="Нумерация с:" />
+                <Label Width="120" Margin="10 5" Content="Формат сохранения"/>
+                <dxe:ComboBoxEdit x:Name="ChangeFileTypeComboBox" ItemsSource="{Binding FileTypes}" DisplayMember="Value" ValueMember="Key" 
+                                  EditValue="{Binding SelectedFileType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5" Width="150" 
+                                  EditValueChanged="ChangeFileTypeComboBox_EditValueChanged"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" x:Name="SavedFileNameStackPanel">
+                <Label x:Name="SavedFileNameLabel" Width="120" Margin="10 5" />
+                <dxe:TextEdit x:Name="SavedFileNameTextEdit" Text="{Binding SavedFileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5" Width="380" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" x:Name="IndexStackPanel">
+                <Label Width="120" Margin="10 5" Content="Нумерация с:" />
                 <dxe:SpinEdit x:Name="IndexSpinEdit"  Margin="10 5" EditValue="1" Increment="1" MinValue="1" Width="150" MaskType="Regular" Mask="00000" MaskUseAsDisplayFormat="True"/>
             </StackPanel>
         </StackPanel>

@@ -80,6 +80,7 @@
     <Compile Include="Controls\LoadControl.xaml.cs">
       <DependentUpon>LoadControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Enums\FileTypeEnum.cs" />
     <Compile Include="Interfaces\IDataMatrixGenerator.cs" />
     <Compile Include="Interfaces\IOpenDialogsWpf.cs" />
     <Compile Include="Interfaces\IPdfFileWorker.cs" />

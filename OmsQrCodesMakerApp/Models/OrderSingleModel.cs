@@ -193,87 +193,100 @@ namespace OmsQrCodesMakerApp.Models
                     return;
                 }
 
-                UtilitesLibrary.Interfaces.IOpenDialogsWpf openPathDialog = new UtilitesLibrary.Service.OokiiDialogsWpf();
-                UtilitesLibrary.Interfaces.IDataMatrixGenerator dataMatrixGenerator = new UtilitesLibrary.Service.DataMatrixNetGenerator();//new UtilitesLibrary.Service.ZXingDataMatrixGenerator();
-                var pathFolder = openPathDialog.ChangePathDialog("Выберите папку для сохранения файлов");
+                UtilitesLibrary.Interfaces.IDataMatrixGenerator dataMatrixGenerator = new UtilitesLibrary.Service.DataMatrixNetGenerator();
 
-                if (string.IsNullOrEmpty(pathFolder))
-                    return;
-
-                var savePrintDataMatrixWindow = new SavePrintDataMatrixWindow(SelectedItem.Gtin);
+                var savePrintDataMatrixWindow = new SavePrintDataMatrixWindow();
+                var savePrintDataMatrixModel = new SavePrintDataMatrixModel($"order_{_order.OrderId}_gtin_{SelectedItem.Gtin}");
+                savePrintDataMatrixWindow.DataContext = savePrintDataMatrixModel;
 
                 if (savePrintDataMatrixWindow.ShowDialog() == true)
                 {
+                    var pathFolder = savePrintDataMatrixModel.FolderPath;
                     var loadWindow = new LoadWindow("Идёт загрузка...");
                     loadWindow.Show();
 
-                    int indx = savePrintDataMatrixWindow.Index.Value;
+                    int indx;
+
+                    if (savePrintDataMatrixModel.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Svg ||
+                        savePrintDataMatrixModel.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Eps)
+                        indx = savePrintDataMatrixWindow.Index.Value;
+                    else
+                        indx = 0;
+
                     var pdfPages = new List<PdfPage>();
 
                     string inkscapePath = null;
                     System.Diagnostics.Process process = null;
 
-                    if(System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk"))
-                        inkscapePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk";
-                    else if (System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk"))
-                        inkscapePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk";
-
-                    if (!string.IsNullOrEmpty(inkscapePath))
+                    if (savePrintDataMatrixModel.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Eps)
                     {
-                        inkscapePath = WindowsShortcutFactory.WindowsShortcut.Load(inkscapePath)?.Path;
-                        process = new System.Diagnostics.Process();
-                        process.StartInfo.FileName = inkscapePath;
-                        process.StartInfo.UseShellExecute = false;
-                        process.StartInfo.RedirectStandardOutput = true;
-                        process.StartInfo.CreateNoWindow = true;
+                        inkscapePath = savePrintDataMatrixWindow.InkscapeLnkPath;
+
+                        if (!string.IsNullOrEmpty(inkscapePath))
+                        {
+                            inkscapePath = WindowsShortcutFactory.WindowsShortcut.Load(inkscapePath)?.Path;
+                            process = new System.Diagnostics.Process();
+                            process.StartInfo.FileName = inkscapePath;
+                            process.StartInfo.UseShellExecute = false;
+                            process.StartInfo.RedirectStandardOutput = true;
+                            process.StartInfo.CreateNoWindow = true;
+                        }
+                        else
+                            throw new Exception("Невозможно экспортировать коды в формате EPS - не установлена программа Inkscape.\nПроверьте установку программы.");
                     }
 
                     foreach (var markedCode in markedCodes)
                     {
-                        string indxStr = indx.ToString();
-
-                        if (indxStr.Length < 5)
-                            indxStr = indxStr.PadLeft(5, '0');
-
-                        string fileName = $"{savePrintDataMatrixWindow.Prefix}_{indxStr}";
-                        string svgFilePath = $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.svg";
-                        string epsFilePath = $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.eps";
-                        string arguments = $"-z \"{svgFilePath}\" --export-type=eps -o \"{epsFilePath}\"";
-
                         var markedCodeText = markedCode.Substring(0, markedCode.IndexOf((char)29));
-                        //System.IO.Stream imageStream = null;
 
-                        await Task.Run(() =>
+                        if (savePrintDataMatrixModel.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Svg ||
+                            savePrintDataMatrixModel.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Eps)
                         {
-                            var img = dataMatrixGenerator.GenerateAndSaveDataMatrix(markedCode, fileName, pathFolder, 300, 300);
+                            string indxStr = indx.ToString();
+
+                            if (indxStr.Length < 5)
+                                indxStr = indxStr.PadLeft(5, '0');
+
+                            string fileName = $"{savePrintDataMatrixModel.SavedFileName}_{indxStr}";
+                            string svgFilePath = $"{pathFolder}\\{savePrintDataMatrixModel.SavedFileName}_{indxStr}.svg";
+                            var savedFileName = savePrintDataMatrixModel.SavedFileName;
+
+                            await Task.Run(() =>
+                            {
+                                var img = dataMatrixGenerator.GenerateAndSaveDataMatrix(markedCode, fileName, pathFolder, 300, 300);
+
+                                if (!string.IsNullOrEmpty(inkscapePath))
+                                {
+                                    string epsFilePath = $"{pathFolder}\\{savedFileName}_{indxStr}.eps";
+                                    string arguments = $"-z \"{svgFilePath}\" --export-type=eps -o \"{epsFilePath}\"";
+
+                                    process.StartInfo.Arguments = arguments;
+                                    process.Start();
+                                    string output = process.StandardOutput.ReadToEnd();
+                                    process.WaitForExit();
+                                }
+                            });
 
                             if (!string.IsNullOrEmpty(inkscapePath))
                             {
-                                process.StartInfo.Arguments = arguments;
-                                process.Start();
-                                string output = process.StandardOutput.ReadToEnd();
-                                process.WaitForExit();
+                                if (process.ExitCode != 0)
+                                    throw new Exception($"Ошибка при конвертации. Код выхода: {process.ExitCode}");
+
+                                System.IO.File.Delete($"{pathFolder}\\{savePrintDataMatrixModel.SavedFileName}_{indxStr}.svg");
                             }
-                        });
 
-                        if (!string.IsNullOrEmpty(inkscapePath))
-                        {
-                            if (process.ExitCode != 0)
-                                throw new Exception($"Ошибка при конвертации. Код выхода: {process.ExitCode}");
-
-                            System.IO.File.Delete($"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}_{indxStr}.svg");
+                            indx++;
                         }
-
-                        indx++;
-
-                        var imageStream = dataMatrixGenerator.GetImageStreamByDataMatrix(markedCode, 300, 300);
-
-                        var pdfPage = new PdfPage()
+                        else if (savePrintDataMatrixModel.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf)
                         {
-                            SizeType = UtilitesLibrary.Service.PdfContentTypes.Enums.PdfSizeType.Millimeter,
-                            Height = 25,
-                            Width = 43,
-                            Contents = new List<IPdfContent>(new IPdfContent[] {
+                            var imageStream = dataMatrixGenerator.GetImageStreamByDataMatrix(markedCode, 300, 300);
+
+                            var pdfPage = new PdfPage()
+                            {
+                                SizeType = UtilitesLibrary.Service.PdfContentTypes.Enums.PdfSizeType.Millimeter,
+                                Height = 25,
+                                Width = 43,
+                                Contents = new List<IPdfContent>(new IPdfContent[] {
                                 new UtilitesLibrary.Service.PdfContentTypes.PdfImage
                                 {
                                     SizeType = UtilitesLibrary.Service.PdfContentTypes.Enums.PdfSizeType.Millimeter,
@@ -320,13 +333,17 @@ namespace OmsQrCodesMakerApp.Models
                                     Bold = true
                                 }
                             })
-                        };
+                            };
 
-                        pdfPages.Add(pdfPage);
+                            pdfPages.Add(pdfPage);
+                        }
                     }
 
-                    UtilitesLibrary.Interfaces.IPdfFileWorker pdfWorker = new UtilitesLibrary.Service.PDFsharpWorker();
-                    pdfWorker.GetPdfFileFromContents(pdfPages, $"{pathFolder}\\{savePrintDataMatrixWindow.Prefix}.pdf");
+                    if (savePrintDataMatrixModel.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf)
+                    {
+                        UtilitesLibrary.Interfaces.IPdfFileWorker pdfWorker = new UtilitesLibrary.Service.PDFsharpWorker();
+                        pdfWorker.GetPdfFileFromContents(pdfPages, $"{pathFolder}\\{savePrintDataMatrixModel.SavedFileName}.pdf");
+                    }
 
                     loadWindow.AfterSuccessfullLoading("Коды успешно сохранёны.");
                 }
