@@ -63,7 +63,8 @@ namespace OmsQrCodesMakerApp
             {
                 var errorMessage = string.Empty;
 
-                if ((DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf)
+                if ((DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf ||
+                    (DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Csv)
                     errorMessage = "Не указано наименование файла!";
                 else
                     errorMessage = "Не указан префикс!";
@@ -109,7 +110,8 @@ namespace OmsQrCodesMakerApp
 
         private void ChangeFileTypeComboBox_EditValueChanged(object sender, DevExpress.Xpf.Editors.EditValueChangedEventArgs e)
         {
-            if((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf)
+            if((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf ||
+                (DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Csv)
             {
                 SavedFileNameStackPanel.Visibility = Visibility.Visible;
                 IndexStackPanel.Visibility = Visibility.Hidden;

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace UtilitesLibrary.Interfaces
 {
-    public interface IPdfFileWorker
+    public interface ISaveMarkedCodes
     {
-        Task<byte[]> GetPdfFileFromContents(List<ModelBase.PdfPage> pdfPages);
+        Task SaveMarkedCodes(string pathFolder, string savedFileName, List<string> fullMarkedCodes);
     }
 }

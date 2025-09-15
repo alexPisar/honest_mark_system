@@ -30,12 +30,8 @@
                                        Command="{Binding ReleaseCodesCommand}"/>
                     <dxb:BarButtonItem Content="Получить коды повторно" 
                                        RibbonStyle="Large" 
-                                       LargeGlyph="{dx:DXImage SvgImages/XAF/Action_SingleChoiceAction.svg}"
-                                       Command="{Binding RetryGetCodesCommand}"/>
-                    <dxb:BarButtonItem Content="Получить повторно печатные коды"
-                                       RibbonStyle="Large" 
                                        LargeGlyph="{dx:DXImage SvgImages/Content/CheckBox.svg}"
-                                       Command="{Binding RetryGetPrintCodesCommand}"/>
+                                       Command="{Binding RetryGetCodesCommand}"/>
                 </dxr:RibbonPageGroup>
             </dxr:RibbonPage>
         </dxr:RibbonControl>

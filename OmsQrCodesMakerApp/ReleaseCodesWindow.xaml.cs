@@ -93,8 +93,6 @@ namespace OmsQrCodesMakerApp
                     {
                         using (var streamWriter = new System.IO.StreamWriter(fileStream))
                         {
-                            streamWriter.WriteLine("DataMatrix");
-
                             foreach (var markedCode in markedCodes.Codes)
                                 streamWriter.WriteLine(markedCode);
                         }

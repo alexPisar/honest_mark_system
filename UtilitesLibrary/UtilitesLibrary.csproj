@@ -69,6 +69,9 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
+    <Reference Include="WindowsShortcutFactory, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\WindowsShortcutFactory.1.2.0\lib\netstandard2.0\WindowsShortcutFactory.dll</HintPath>
+    </Reference>
     <Reference Include="WpfAnimatedGif, Version=2.0.0.0, Culture=neutral, PublicKeyToken=9e7cd3b544a090dc, processorArchitecture=MSIL">
       <HintPath>..\packages\WpfAnimatedGif.2.0.2\lib\net40\WpfAnimatedGif.dll</HintPath>
     </Reference>
@@ -81,9 +84,15 @@
       <DependentUpon>LoadControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Enums\FileTypeEnum.cs" />
+    <Compile Include="Implementations\CsvSaveMarkedCodes.cs" />
+    <Compile Include="Implementations\EpsSaveMarkedCodes.cs" />
+    <Compile Include="Implementations\ImageSaveMarkedCodes.cs" />
+    <Compile Include="Implementations\PdfSaveMarkedCodes.cs" />
+    <Compile Include="Implementations\SaveMarkedCodesOptionFactory.cs" />
     <Compile Include="Interfaces\IDataMatrixGenerator.cs" />
     <Compile Include="Interfaces\IOpenDialogsWpf.cs" />
     <Compile Include="Interfaces\IPdfFileWorker.cs" />
+    <Compile Include="Interfaces\ISaveMarkedCodes.cs" />
     <Compile Include="ModelBase\ErrorTextModel.cs" />
     <Compile Include="ModelBase\IPdfContent.cs" />
     <Compile Include="ModelBase\ListViewModel.cs" />

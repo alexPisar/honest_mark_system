@@ -10,6 +10,7 @@ namespace UtilitesLibrary.Enums
     {
         Pdf = 0,
         Svg,
-        Eps
+        Eps,
+        Csv
     }
 }
