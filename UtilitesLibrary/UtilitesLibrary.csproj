@@ -107,6 +107,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Service\CertificateObject.cs" />
     <Compile Include="Service\DataMatrixNetGenerator.cs" />
     <Compile Include="Service\CryptoUtil.cs" />
     <Compile Include="Service\KnownFolders.cs" />

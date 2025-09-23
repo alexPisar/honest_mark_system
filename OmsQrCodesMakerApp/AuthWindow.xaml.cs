@@ -38,7 +38,7 @@ namespace OmsQrCodesMakerApp
 
             var authModel = DataContext as Models.AuthModel;
 
-            if(authModel.SelectedCertificate == null)
+            if(authModel.SelectedCertificate?.Certificate == null)
             {
                 DevExpress.Xpf.Core.DXMessageBox.Show("Не выбран сертификат!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -50,7 +50,7 @@ namespace OmsQrCodesMakerApp
                 return;
             }
 
-            if(!WebSystems.WebClients.OrderManagementStationClient.GetInstance().Authorization(authModel.SelectedCertificate,
+            if(!WebSystems.WebClients.OrderManagementStationClient.GetInstance().Authorization(authModel.SelectedCertificate.Certificate,
                 authModel.SelectedOrganization.OmsConnection, authModel.SelectedOrganization.OmsId, authModel.SelectedOrganization.Inn))
             {
                 DevExpress.Xpf.Core.DXMessageBox.Show("Не удалось авторизоваться в СУЗ!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);

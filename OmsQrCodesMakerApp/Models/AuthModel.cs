@@ -21,22 +21,23 @@ namespace OmsQrCodesMakerApp.Models
             _powerOfAttorneys = GetPowerOfAttorneysFromDb();
             _allOrganizations = GetOrganizations();
             Certificates = _cryptoUtil.GetPersonalCertificates().OrderByDescending(c => c.NotBefore)?
-                .Where(cert => _cryptoUtil.IsCertificateValid(cert) && cert.NotAfter > DateTime.Now).ToList();
+                .Where(cert => _cryptoUtil.IsCertificateValid(cert) && cert.NotAfter > DateTime.Now)?
+                .Select(c => new CertificateObject(c, _cryptoUtil))?.ToList();
         }
 
-        public List<X509Certificate2> Certificates { get; set; }
-        public X509Certificate2 SelectedCertificate { get; set; }
+        public List<CertificateObject> Certificates { get; set; }
+        public CertificateObject SelectedCertificate { get; set; }
 
         public List<ViewModels.OmsOrganization> Organizations { get; set; }
         public ViewModels.OmsOrganization SelectedOrganization { get; set; }
 
         public void SelectedCertificateChanged()
         {
-            if (SelectedCertificate == null)
+            if (SelectedCertificate?.Certificate == null)
                 return;
 
-            var certInn = _cryptoUtil.ParseCertAttribute(SelectedCertificate.Subject, "ИНН");
-            var certOrgInn = _cryptoUtil.GetOrgInnFromCertificate(SelectedCertificate);
+            var certInn = SelectedCertificate.Inn;
+            var certOrgInn = SelectedCertificate.OrgInn;
 
             if (certInn == certOrgInn || string.IsNullOrEmpty(certOrgInn))
             {

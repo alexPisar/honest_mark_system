@@ -24,21 +24,22 @@
                                 ItemsSource="{Binding Certificates, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                 SelectedItem="{Binding SelectedCertificate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 EditValueChanged="CertificatesLookUpEdit_EditValueChanged"
-                                DisplayMember="Subject" ImmediatePopup="True" AutoPopulateColumns="False">
+                                DisplayMember="SubjectName" ImmediatePopup="True" AutoPopulateColumns="False">
                     <dxg:LookUpEdit.PopupContentTemplate>
                         <ControlTemplate TargetType="{x:Type ContentControl}">
                             <dxg:GridControl x:Name="PART_GridControl" ShowBorder="False" >
                                 <dxg:GridControl.Columns>
-                                    <dxg:GridColumn Header="Отпечаток" Width="280" FieldName="Thumbprint"/>
-                                    <dxg:GridColumn Header="Субьект" Width="300" FieldName="Subject">
+                                    <dxg:GridColumn Header="Субьект" Width="150" FieldName="SubjectName">
                                         <dxg:GridColumn.EditSettings>
                                             <dxe:TextEditSettings TextWrapping="Wrap"/>
                                         </dxg:GridColumn.EditSettings>
                                     </dxg:GridColumn>
+                                    <dxg:GridColumn Header="ИНН" Width="120" FieldName="Inn"/>
+                                    <dxg:GridColumn Header="Отпечаток" Width="280" FieldName="Thumbprint"/>
                                 </dxg:GridControl.Columns>
                                 <dxg:GridControl.View>
                                     <dxg:TableView AllowPerPixelScrolling="True" 
-                                                   ShowSearchPanelMode="Always" 
+                                                   ShowSearchPanelMode="Always"
                                                    AllowEditing="False" 
                                                    NavigationStyle="Row" 
                                                    ShowGroupPanel="False" 
@@ -47,6 +48,9 @@
                             </dxg:GridControl>
                         </ControlTemplate>
                     </dxg:LookUpEdit.PopupContentTemplate>
+                    <dxg:LookUpEdit.StyleSettings>
+                        <dxg:SearchLookUpEditStyleSettings/>
+                    </dxg:LookUpEdit.StyleSettings>
                 </dxg:LookUpEdit>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0 5">
@@ -73,6 +77,9 @@
                             </dxg:GridControl>
                         </ControlTemplate>
                     </dxg:LookUpEdit.PopupContentTemplate>
+                    <dxg:LookUpEdit.StyleSettings>
+                        <dxg:SearchLookUpEditStyleSettings/>
+                    </dxg:LookUpEdit.StyleSettings>
                 </dxg:LookUpEdit>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 5">
