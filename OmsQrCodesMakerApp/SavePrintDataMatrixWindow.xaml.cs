@@ -55,8 +55,17 @@ namespace OmsQrCodesMakerApp
 
             if(!System.IO.Directory.Exists((DataContext as Models.SavePrintDataMatrixModel).FolderPath))
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не найдена папка для сохранения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                var defaultDirectory = (DataContext as Models.SavePrintDataMatrixModel)?.DefaultFolderPath;
+
+                if ((DataContext as Models.SavePrintDataMatrixModel).FolderPath == defaultDirectory)
+                {
+                    System.IO.Directory.CreateDirectory(defaultDirectory);
+                }
+                else
+                {
+                    DevExpress.Xpf.Core.DXMessageBox.Show("Не найдена папка для сохранения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
             }
 
             if(string.IsNullOrEmpty((DataContext as Models.SavePrintDataMatrixModel)?.SavedFileName))
@@ -113,6 +122,9 @@ namespace OmsQrCodesMakerApp
             if((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf ||
                 (DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Csv)
             {
+                (DataContext as Models.SavePrintDataMatrixModel).SavedFileName = $"order_{(DataContext as Models.SavePrintDataMatrixModel)?.OrderId}_gtin_{(DataContext as Models.SavePrintDataMatrixModel)?.Gtin}_quantity_{(DataContext as Models.SavePrintDataMatrixModel)?.Quantity}";
+                (DataContext as Models.SavePrintDataMatrixModel).OnPropertyChanged("SavedFileName");
+
                 SavedFileNameStackPanel.Visibility = Visibility.Visible;
                 IndexStackPanel.Visibility = Visibility.Hidden;
                 SavedFileNameLabel.Content = "Наименование";
@@ -120,6 +132,9 @@ namespace OmsQrCodesMakerApp
             else if ((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Svg ||
                 (DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Eps)
             {
+                (DataContext as Models.SavePrintDataMatrixModel).SavedFileName = $"order_{(DataContext as Models.SavePrintDataMatrixModel)?.OrderId}_gtin_{(DataContext as Models.SavePrintDataMatrixModel)?.Gtin}";
+                (DataContext as Models.SavePrintDataMatrixModel).OnPropertyChanged("SavedFileName");
+
                 SavedFileNameStackPanel.Visibility = Visibility.Visible;
                 IndexStackPanel.Visibility = Visibility.Visible;
                 SavedFileNameLabel.Content = "Префикс";

@@ -120,7 +120,7 @@ namespace OmsQrCodesMakerApp.Models
                 UtilitesLibrary.Interfaces.IDataMatrixGenerator dataMatrixGenerator = new UtilitesLibrary.Service.DataMatrixNetGenerator();
 
                 var savePrintDataMatrixWindow = new SavePrintDataMatrixWindow();
-                var savePrintDataMatrixModel = new SavePrintDataMatrixModel($"order_{_order.OrderId}_gtin_{SelectedItem.Gtin}");
+                var savePrintDataMatrixModel = new SavePrintDataMatrixModel(_order.OrderId, SelectedItem.Gtin, markedCodes.Count);
                 savePrintDataMatrixWindow.DataContext = savePrintDataMatrixModel;
 
                 if (savePrintDataMatrixWindow.ShowDialog() == true)

@@ -15,7 +15,7 @@
         <StackPanel Orientation="Vertical" Grid.Row="0">
             <StackPanel Orientation="Horizontal">
                 <Label Width="120" Margin="10 5" Content="Папка сохранения"/>
-                <dxe:TextEdit Text="{Binding FolderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5 5 5" Width="300" />
+                <dxe:TextEdit IsReadOnly="True" Text="{Binding FolderPath, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5 5 5" Width="300" />
                 <Button x:Name="ChangeFolderButton" Margin="2 5 5 5" Content="..." Click="ChangeFolderButton_Click" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
