@@ -139,6 +139,7 @@ namespace OmsQrCodesMakerApp
                 IndexStackPanel.Visibility = Visibility.Visible;
                 SavedFileNameLabel.Content = "Префикс";
             }
+            (DataContext as Models.SavePrintDataMatrixModel).OnPropertyChanged("FolderPath");
         }
     }
 }
