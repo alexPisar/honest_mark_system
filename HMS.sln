@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataContextManagementUnit",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reporter", "Reporter\Reporter.csproj", "{E2D943FA-8F50-4DE9-80BB-B91B4FAD8DE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmsQrCodesMakerApp", "OmsQrCodesMakerApp\OmsQrCodesMakerApp.csproj", "{74F428EF-60E6-4C5F-B487-3A31F31254D1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OmsCodesMakerApp", "OmsQrCodesMakerApp\OmsCodesMakerApp.csproj", "{74F428EF-60E6-4C5F-B487-3A31F31254D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
