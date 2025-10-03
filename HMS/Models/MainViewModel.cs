@@ -2341,12 +2341,14 @@ namespace HonestMarkSystem.Models
                         _log.Log(errorMessage);
 
                         var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла xml из архива.", new List<string>(new string[] { errorMessage }));
+                        loadWindow.Close();
                         errorsWindow.ShowDialog();
                         return;
                     }
                 }
                 else
                 {
+                    loadWindow.Close();
                     System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                     return;
                 }

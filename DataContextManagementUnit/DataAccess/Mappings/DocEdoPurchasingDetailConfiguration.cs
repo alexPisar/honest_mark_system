@@ -7,7 +7,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
         public DocEdoPurchasingDetailConfiguration()
         {
             this
-                .HasKey(d => new { d.BarCode, d.IdDocEdoPurchasing })
+                .HasKey(d => new { d.IdDocEdoPurchasing, d.DetailNumber })
                 .ToTable("DOC_EDO_PURCHASING_DETAILS", "EDI");
 
             this
