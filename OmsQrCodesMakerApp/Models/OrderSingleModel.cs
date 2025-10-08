@@ -73,13 +73,6 @@ namespace OmsQrCodesMakerApp.Models
             releaseCodesWindow.Order = _order;
             releaseCodesWindow.Product = SelectedItem;
 
-            if (releaseCodesWindow.ShowDialog() == true)
-            {
-                var loadWindow = new LoadWindow();
-                loadWindow.AfterSuccessfullLoading("Коды успешно получены.");
-                loadWindow.Show();
-            }
-
             this.Refresh();
         }
 
@@ -129,26 +122,34 @@ namespace OmsQrCodesMakerApp.Models
                     var loadWindow = new LoadWindow("Идёт загрузка...");
                     loadWindow.Show();
 
-                    UtilitesLibrary.Interfaces.ISaveMarkedCodes saveCodesObj = 
-                        new UtilitesLibrary.Implementations.SaveMarkedCodesOptionFactory(savePrintDataMatrixModel.SelectedFileType.Value)
-                        .GetSaveMarkedCodesOption();
-
-                    if(saveCodesObj as UtilitesLibrary.Implementations.ImageSaveMarkedCodes != null)
+                    try
                     {
-                        var imageSaveCodesObj = saveCodesObj as UtilitesLibrary.Implementations.ImageSaveMarkedCodes;
-                        imageSaveCodesObj.Index = savePrintDataMatrixWindow.Index.Value;
+                        UtilitesLibrary.Interfaces.ISaveMarkedCodes saveCodesObj =
+                            new UtilitesLibrary.Implementations.SaveMarkedCodesOptionFactory(savePrintDataMatrixModel.SelectedFileType.Value)
+                            .GetSaveMarkedCodesOption();
 
-                        if (saveCodesObj as UtilitesLibrary.Implementations.EpsSaveMarkedCodes != null)
+                        if(saveCodesObj as UtilitesLibrary.Implementations.ImageSaveMarkedCodes != null)
                         {
-                            var epsSaveCodesObj = saveCodesObj as UtilitesLibrary.Implementations.EpsSaveMarkedCodes;
-                            epsSaveCodesObj.InkscapeLnkPath = savePrintDataMatrixWindow.InkscapeLnkPath;
-                        }
-                    }
+                            var imageSaveCodesObj = saveCodesObj as UtilitesLibrary.Implementations.ImageSaveMarkedCodes;
+                            imageSaveCodesObj.Index = savePrintDataMatrixWindow.Index.Value;
 
-                    var task = saveCodesObj.SaveMarkedCodes(pathFolder, savePrintDataMatrixModel.SavedFileName, markedCodes);
-                    await task;
-                    
-                    loadWindow.AfterSuccessfullLoading("Коды успешно сохранёны.");
+                            if (saveCodesObj as UtilitesLibrary.Implementations.EpsSaveMarkedCodes != null)
+                            {
+                                var epsSaveCodesObj = saveCodesObj as UtilitesLibrary.Implementations.EpsSaveMarkedCodes;
+                                epsSaveCodesObj.InkscapeLnkPath = savePrintDataMatrixWindow.InkscapeLnkPath;
+                            }
+                        }
+
+                        var task = saveCodesObj.SaveMarkedCodes(pathFolder, savePrintDataMatrixModel.SavedFileName, markedCodes);
+                        await task;
+
+                        loadWindow.AfterSuccessfullLoading("Коды успешно сохранены.");
+                    }
+                    finally
+                    {
+                        if(System.Windows.Application.Current?.Windows?.OfType<LoadWindow>()?.Contains(loadWindow) ?? false)
+                            loadWindow.Close();
+                    }
                 }
             }
             catch (System.Net.WebException webEx)

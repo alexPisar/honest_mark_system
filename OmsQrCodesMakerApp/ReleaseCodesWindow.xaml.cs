@@ -85,7 +85,7 @@ namespace OmsQrCodesMakerApp
                 var savePathDialog = new Microsoft.Win32.SaveFileDialog();
                 savePathDialog.Title = "Сохранение файла";
                 savePathDialog.Filter = "CSV File|*.csv";
-                savePathDialog.FileName = $"{markedCodes.BlockId}";
+                savePathDialog.FileName = $"order_{Order.OrderId}_gtin_{Product.Gtin}_quantity_{quantity}";
 
                 if (savePathDialog.ShowDialog() == true)
                 {
