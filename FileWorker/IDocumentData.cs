@@ -4,14 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UtilitesLibrary.Enums
+namespace FileWorker
 {
-    public enum FileTypeEnum
+    public abstract class IDocumentData
     {
-        Pdf = 0,
-        Svg,
-        Eps,
-        Csv,
-        Xlsx
+        public IDocumentData(){}
     }
 }

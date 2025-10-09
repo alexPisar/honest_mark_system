@@ -63,6 +63,7 @@ namespace OmsQrCodesMakerApp.Models
             FileTypes.Add(new KeyValuePair<UtilitesLibrary.Enums.FileTypeEnum, string>(UtilitesLibrary.Enums.FileTypeEnum.Svg, "SVG (*.svg)"));
             FileTypes.Add(new KeyValuePair<UtilitesLibrary.Enums.FileTypeEnum, string>(UtilitesLibrary.Enums.FileTypeEnum.Eps, "EPS (*.eps)"));
             FileTypes.Add(new KeyValuePair<UtilitesLibrary.Enums.FileTypeEnum, string>(UtilitesLibrary.Enums.FileTypeEnum.Csv, "CSV (*.csv)"));
+            FileTypes.Add(new KeyValuePair<UtilitesLibrary.Enums.FileTypeEnum, string>(UtilitesLibrary.Enums.FileTypeEnum.Xlsx, "XLSX (*.xlsx)"));
         }
     }
 }

@@ -50,6 +50,9 @@ namespace ConfigSet.Configs
         private const string _salt = "uc*nwex^wgx#kriior&gcier+irerzqqp?wiqavb";
 
         [NonSerialized]
+        private const string _proxySalt = "3n2s4873091m3298^wxmw9$XRdmu6ie,wwe30mc4";
+
+        [NonSerialized]
         private static volatile Config _instance;
 
         [NonSerialized]

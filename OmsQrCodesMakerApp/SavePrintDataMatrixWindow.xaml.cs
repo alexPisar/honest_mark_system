@@ -73,7 +73,8 @@ namespace OmsQrCodesMakerApp
                 var errorMessage = string.Empty;
 
                 if ((DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf ||
-                    (DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Csv)
+                    (DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Csv ||
+                    (DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Xlsx)
                     errorMessage = "Не указано наименование файла!";
                 else
                     errorMessage = "Не указан префикс!";
@@ -120,7 +121,8 @@ namespace OmsQrCodesMakerApp
         private void ChangeFileTypeComboBox_EditValueChanged(object sender, DevExpress.Xpf.Editors.EditValueChangedEventArgs e)
         {
             if((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf ||
-                (DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Csv)
+                (DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Csv ||
+                (DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Xlsx)
             {
                 (DataContext as Models.SavePrintDataMatrixModel).SavedFileName = $"order_{(DataContext as Models.SavePrintDataMatrixModel)?.OrderId}_gtin_{(DataContext as Models.SavePrintDataMatrixModel)?.Gtin}_quantity_{(DataContext as Models.SavePrintDataMatrixModel)?.Quantity}";
                 (DataContext as Models.SavePrintDataMatrixModel).OnPropertyChanged("SavedFileName");

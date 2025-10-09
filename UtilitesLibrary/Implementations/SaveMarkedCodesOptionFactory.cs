@@ -25,6 +25,8 @@ namespace UtilitesLibrary.Implementations
                 return new EpsSaveMarkedCodes();
             else if (_fileType == Enums.FileTypeEnum.Csv)
                 return new CsvSaveMarkedCodes();
+            else if (_fileType == Enums.FileTypeEnum.Xlsx)
+                return new XlsxSaveMarkedCodes();
 
             return null;
         }
