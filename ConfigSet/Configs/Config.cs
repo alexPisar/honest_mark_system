@@ -50,7 +50,7 @@ namespace ConfigSet.Configs
         private const string _salt = "uc*nwex^wgx#kriior&gcier+irerzqqp?wiqavb";
 
         [NonSerialized]
-        private const string _proxySalt = "3n2s4873091m3298^wxmw9$XRdmu6ie,wwe30mc4";
+        private const string _proxySalt = "3n2s4873091m3298^wxmw9$XRdmu6ie,uwe30mc4";
 
         [NonSerialized]
         private static volatile Config _instance;
@@ -86,38 +86,7 @@ namespace ConfigSet.Configs
             {
                 if (!string.IsNullOrEmpty(CipherDataBasePassword))
                 {
-                    var skitalaBytes = System.Text.Encoding.ASCII.GetBytes(CipherDataBasePassword);
-                    var saltData = System.Text.Encoding.ASCII.GetBytes(_salt);
-
-                    int position, shift;
-                    GetParametersForPassword(out position, out shift);
-                    var bytes = new byte[40];
-
-                    for (int j = 0; j < 8; j++)
-                    {
-                        for (int k = 0; k < 5; k++)
-                        {
-                            bytes[j * 5 + k] = skitalaBytes[j + k * 8];
-                        }
-                    }
-
-                    var passData = new System.Collections.Generic.List<byte>();
-                    int i = 0;
-                    while (saltData[(position + i * shift) % bytes.Length] != bytes[(position + i * shift) % bytes.Length])
-                    {
-                        byte b;
-                        if (saltData[(position + i * shift) % bytes.Length] > bytes[(position + i * shift) % bytes.Length])
-                        {
-                            b = (byte)(128 + (int)bytes[(position + i * shift) % bytes.Length] - (int)saltData[(position + i * shift) % bytes.Length]);
-                        }
-                        else
-                        {
-                            b = (byte)(bytes[(position + i * shift) % bytes.Length] - saltData[(position + i * shift) % bytes.Length]);
-                        }
-                        passData.Add(b);
-                        i++;
-                    }
-                    _password = System.Text.Encoding.ASCII.GetString(passData.ToArray());
+                    _password = GetPasswordFromHash(_salt, CipherDataBasePassword);
                 }
             }
             return _password;
@@ -128,8 +97,14 @@ namespace ConfigSet.Configs
             int position, shift;
             GetParametersForPassword(out position, out shift);
 
+            CipherDataBasePassword = GetHashedPassword(_salt, password, position, shift);
+            _password = password;
+        }
+
+        private string GetHashedPassword(string salt, string password, int position, int shift)
+        {
             var passwordData = Encoding.ASCII.GetBytes(password);
-            var saltData = Encoding.ASCII.GetBytes(_salt);
+            var saltData = Encoding.ASCII.GetBytes(salt);
 
             int i = 0;
             foreach (var p in passwordData)
@@ -149,8 +124,45 @@ namespace ConfigSet.Configs
                 }
             }
 
-            CipherDataBasePassword = Encoding.ASCII.GetString(skitalaBytes);
-            _password = password;
+            var cipherPassword = Encoding.ASCII.GetString(skitalaBytes);
+            return cipherPassword;
+        }
+
+        private string GetPasswordFromHash(string salt, string cipherPassword)
+        {
+            var skitalaBytes = Encoding.ASCII.GetBytes(cipherPassword);
+            var saltData = Encoding.ASCII.GetBytes(salt);
+
+            int position, shift;
+            GetParametersForPassword(out position, out shift);
+            var bytes = new byte[40];
+
+            for (int j = 0; j < 8; j++)
+            {
+                for (int k = 0; k < 5; k++)
+                {
+                    bytes[j * 5 + k] = skitalaBytes[j + k * 8];
+                }
+            }
+
+            var passData = new List<byte>();
+            int i = 0;
+            while (saltData[(position + i * shift) % bytes.Length] != bytes[(position + i * shift) % bytes.Length])
+            {
+                byte b;
+                if (saltData[(position + i * shift) % bytes.Length] > bytes[(position + i * shift) % bytes.Length])
+                {
+                    b = (byte)(128 + (int)bytes[(position + i * shift) % bytes.Length] - (int)saltData[(position + i * shift) % bytes.Length]);
+                }
+                else
+                {
+                    b = (byte)(bytes[(position + i * shift) % bytes.Length] - saltData[(position + i * shift) % bytes.Length]);
+                }
+                passData.Add(b);
+                i++;
+            }
+            var password = Encoding.ASCII.GetString(passData.ToArray());
+            return password;
         }
 
         public void GenerateParametersForPassword()
