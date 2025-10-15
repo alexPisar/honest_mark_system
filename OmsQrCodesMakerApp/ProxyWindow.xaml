@@ -1,0 +1,13 @@
+﻿<Window x:Class="OmsQrCodesMakerApp.ProxyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:util="clr-namespace:UtilitesLibrary.Controls;assembly=UtilitesLibrary"
+        xmlns:local="clr-namespace:OmsQrCodesMakerApp"
+        mc:Ignorable="d"
+        Title="Введите логин и пароль прокси" Height="190" Width="370">
+    <Grid>
+        <util:ProxyControl x:Name="proxyControl" Margin="5" />
+    </Grid>
+</Window>

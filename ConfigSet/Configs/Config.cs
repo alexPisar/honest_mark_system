@@ -47,6 +47,9 @@ namespace ConfigSet.Configs
         private string _password = null;
 
         [NonSerialized]
+        private string _proxyPassword = null;
+
+        [NonSerialized]
         private const string _salt = "uc*nwex^wgx#kriior&gcier+irerzqqp?wiqavb";
 
         [NonSerialized]
@@ -92,6 +95,19 @@ namespace ConfigSet.Configs
             return _password;
         }
 
+        public string GetProxyPassword()
+        {
+            if(_proxyPassword == null)
+            {
+                if (!string.IsNullOrEmpty(ProxyUserPassword))
+                {
+                    _proxyPassword = GetPasswordFromHash(_proxySalt, ProxyUserPassword);
+                }
+            }
+
+            return _proxyPassword;
+        }
+
         public void SetDataBasePassword(string password)
         {
             int position, shift;
@@ -99,6 +115,15 @@ namespace ConfigSet.Configs
 
             CipherDataBasePassword = GetHashedPassword(_salt, password, position, shift);
             _password = password;
+        }
+
+        public void SetProxyPassword(string password)
+        {
+            int position, shift;
+            GetParametersForPassword(out position, out shift);
+
+            ProxyUserPassword = GetHashedPassword(_proxySalt, password, position, shift);
+            _proxyPassword = password;
         }
 
         private string GetHashedPassword(string salt, string password, int position, int shift)

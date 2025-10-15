@@ -39,7 +39,7 @@ namespace WebSystems.WebClients
                 hClient.UseSystemProxy = false;
                 hClient.SetProxyCredentials(new System.Net.NetworkCredential(
                     _config.ProxyUserName,
-                    _config.ProxyUserPassword
+                    _config.GetProxyPassword()
                 ));
             }
 

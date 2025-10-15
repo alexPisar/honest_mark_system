@@ -36,6 +36,40 @@ namespace OmsQrCodesMakerApp
             if ((DataContext as Models.AuthModel) == null)
                 return;
 
+            if (ConfigSet.Configs.Config.GetInstance().ProxyEnabled)
+            {
+                var finDbWebClient = WebSystems.WebClients.FinDbWebClient.GetInstance();
+                var appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+                var checkProxyBaseUrl = finDbWebClient.GetApplicationConfigParameter<string>(appName, "CheckProxyBaseUrl");
+
+                bool checkConnectResult = false;
+                if (!(string.IsNullOrEmpty(ConfigSet.Configs.Config.GetInstance()?.ProxyUserName) || string.IsNullOrEmpty(ConfigSet.Configs.Config.GetInstance()?.ProxyUserPassword)))
+                {
+                    var proxyConnectObj = new UtilitesLibrary.Service.ProxyConnect(ConfigSet.Configs.Config.GetInstance().ProxyAddress, checkProxyBaseUrl);
+                    checkConnectResult = proxyConnectObj.CheckProxyConnect(ConfigSet.Configs.Config.GetInstance().ProxyUserName, ConfigSet.Configs.Config.GetInstance().GetProxyPassword());
+                }
+
+                if (!checkConnectResult)
+                {
+                    var proxyWindow = new ProxyWindow(ConfigSet.Configs.Config.GetInstance().ProxyAddress, checkProxyBaseUrl);
+                    proxyWindow.ProxyLogin = ConfigSet.Configs.Config.GetInstance().ProxyUserName;
+                    proxyWindow.ProxyPassword = ConfigSet.Configs.Config.GetInstance().GetProxyPassword();
+                    checkConnectResult = proxyWindow.ShowDialog() ?? false;
+
+                    if (!checkConnectResult)
+                    {
+                        DevExpress.Xpf.Core.DXMessageBox.Show("Не удалось пройти авторизацию Прокси.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    else
+                    {
+                        ConfigSet.Configs.Config.GetInstance().ProxyUserName = proxyWindow.ProxyLogin;
+                        ConfigSet.Configs.Config.GetInstance().SetProxyPassword(proxyWindow.ProxyPassword);
+                        ConfigSet.Configs.Config.GetInstance().Save(ConfigSet.Configs.Config.GetInstance(), ConfigSet.Configs.Config.ConfFileName);
+                    }
+                }
+            }
+
             var authModel = DataContext as Models.AuthModel;
 
             if(authModel.SelectedCertificate?.Certificate == null)

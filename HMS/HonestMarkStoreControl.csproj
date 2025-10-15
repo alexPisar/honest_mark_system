@@ -217,6 +217,9 @@
     <Compile Include="Models\RefGoodsModel.cs" />
     <Compile Include="Models\ReturnModel.cs" />
     <Compile Include="Models\TreeListGoodInfo.cs" />
+    <Compile Include="ProxyWindow.xaml.cs">
+      <DependentUpon>ProxyWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PurchasingDocumentsWindow.xaml.cs">
       <DependentUpon>PurchasingDocumentsWindow.xaml</DependentUpon>
     </Compile>
@@ -289,6 +292,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="MarkedCodesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ProxyWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

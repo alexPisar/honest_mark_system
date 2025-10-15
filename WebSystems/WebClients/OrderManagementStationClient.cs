@@ -20,7 +20,7 @@ namespace WebSystems.WebClients
             if (Config.GetInstance().ProxyEnabled)
                 _webService = new ServiceManager(Config.GetInstance().ProxyAddress,
                     Config.GetInstance().ProxyUserName,
-                    Config.GetInstance().ProxyUserPassword);
+                    Config.GetInstance().GetProxyPassword());
             else
                 _webService = new ServiceManager();
         }

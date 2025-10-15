@@ -186,6 +186,9 @@
     <Compile Include="OrderSingleWindow.xaml.cs">
       <DependentUpon>OrderSingleWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ProxyWindow.xaml.cs">
+      <DependentUpon>ProxyWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ReleaseCodesWindow.xaml.cs">
       <DependentUpon>ReleaseCodesWindow.xaml</DependentUpon>
     </Compile>
@@ -225,6 +228,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="OrderSingleWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ProxyWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

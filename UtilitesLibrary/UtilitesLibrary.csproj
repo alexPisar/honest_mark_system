@@ -83,6 +83,9 @@
     <Compile Include="Controls\LoadControl.xaml.cs">
       <DependentUpon>LoadControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ProxyControl.xaml.cs">
+      <DependentUpon>ProxyControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Enums\FileTypeEnum.cs" />
     <Compile Include="Enums\KnownFolder.cs" />
     <Compile Include="Implementations\CsvSaveMarkedCodes.cs" />
@@ -109,6 +112,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Service\CertificateObject.cs" />
+    <Compile Include="Service\ProxyConnect.cs" />
     <Compile Include="Service\DataMatrixNetGenerator.cs" />
     <Compile Include="Service\CryptoUtil.cs" />
     <Compile Include="Service\KnownFolders.cs" />
@@ -155,6 +159,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\LoadControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ProxyControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

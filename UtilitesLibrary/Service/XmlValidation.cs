@@ -52,7 +52,7 @@ namespace UtilitesLibrary.Service
                 var proxy = new System.Net.WebProxy();
                 proxy.Address = new Uri("http://" + ConfigSet.Configs.Config.GetInstance().ProxyAddress);
                 proxy.Credentials = new System.Net.NetworkCredential(ConfigSet.Configs.Config.GetInstance().ProxyUserName,
-                    ConfigSet.Configs.Config.GetInstance().ProxyUserPassword);
+                    ConfigSet.Configs.Config.GetInstance().GetProxyPassword());
 
                 resolver.Proxy = proxy;
                 //resolver.Credentials = proxy.Credentials;

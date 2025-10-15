@@ -41,15 +41,44 @@ namespace HonestMarkSystem
             {
                 var client = new System.Net.WebClient();
 
+                string proxyPassword = null;
                 if (Config.GetInstance().ProxyEnabled)
                 {
+                    var finDbWebClient = WebSystems.WebClients.FinDbWebClient.GetInstance();
+                    var appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+                    var checkProxyBaseUrl = finDbWebClient.GetApplicationConfigParameter<string>(appName, "CheckProxyBaseUrl");
+
+                    bool checkConnectResult = false;
+                    if (!(string.IsNullOrEmpty(Config.GetInstance()?.ProxyUserName) || string.IsNullOrEmpty(Config.GetInstance()?.ProxyUserPassword)))
+                    {
+                        var proxyConnectObj = new ProxyConnect(Config.GetInstance().ProxyAddress, checkProxyBaseUrl);
+                        checkConnectResult = proxyConnectObj.CheckProxyConnect(Config.GetInstance().ProxyUserName, Config.GetInstance().GetProxyPassword());
+                    }
+
+                    if (!checkConnectResult)
+                    {
+                        var proxyWindow = new ProxyWindow(Config.GetInstance().ProxyAddress, checkProxyBaseUrl);
+                        proxyWindow.ProxyLogin = Config.GetInstance().ProxyUserName;
+                        proxyWindow.ProxyPassword = Config.GetInstance().GetProxyPassword();
+                        checkConnectResult = proxyWindow.ShowDialog() ?? false;
+
+                        if (!checkConnectResult)
+                            throw new Exception("Не удалось пройти авторизацию Прокси.");
+                        else
+                        {
+                            Config.GetInstance().ProxyUserName = proxyWindow.ProxyLogin;
+                            Config.GetInstance().SetProxyPassword(proxyWindow.ProxyPassword);
+                        }
+                    }
+
                     var webProxy = new System.Net.WebProxy();
 
                     webProxy.Address = new Uri("http://" + Config.GetInstance().ProxyAddress);
                     webProxy.Credentials = new System.Net.NetworkCredential(Config.GetInstance().ProxyUserName,
-                        Config.GetInstance().ProxyUserPassword);
+                        Config.GetInstance().GetProxyPassword());
 
                     client.Proxy = webProxy;
+                    proxyPassword = Config.GetInstance().GetProxyPassword();
                 }
 
                 var certs = new CryptoUtil().GetPersonalCertificates().OrderByDescending(c => c.NotBefore);
@@ -59,6 +88,10 @@ namespace HonestMarkSystem
 
                 ((Config)DataContext).GenerateParametersForPassword();
                 ((Config)DataContext).SetDataBasePassword(accountPassword.Text);
+
+                if (((Config)DataContext).ProxyEnabled)
+                    ((Config)DataContext).SetProxyPassword(proxyPassword);
+
                 ((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
                 dataBaseAdapter.InitializeContext();
 

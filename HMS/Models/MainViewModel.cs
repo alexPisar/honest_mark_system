@@ -1125,7 +1125,7 @@ namespace HonestMarkSystem.Models
 
                                 webProxy.Address = new Uri("http://" + ConfigSet.Configs.Config.GetInstance().ProxyAddress);
                                 webProxy.Credentials = new System.Net.NetworkCredential(ConfigSet.Configs.Config.GetInstance().ProxyUserName,
-                                    ConfigSet.Configs.Config.GetInstance().ProxyUserPassword);
+                                    ConfigSet.Configs.Config.GetInstance().GetProxyPassword());
 
                                 client.Proxy = webProxy;
                             }
