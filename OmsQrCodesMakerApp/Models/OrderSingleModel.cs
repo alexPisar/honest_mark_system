@@ -73,6 +73,8 @@ namespace OmsQrCodesMakerApp.Models
             releaseCodesWindow.Order = _order;
             releaseCodesWindow.Product = SelectedItem;
 
+            releaseCodesWindow.ShowDialog();
+
             this.Refresh();
         }
 
