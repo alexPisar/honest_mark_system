@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UtilitesLibrary.Implementations
 {
-    public class EpsSaveMarkedCodes : ImageSaveMarkedCodes
+    public class EpsInkscapeSaveMarkedCodes : ImageSaveMarkedCodes
     {
         private string _inkscapePath;
 
@@ -14,7 +14,7 @@ namespace UtilitesLibrary.Implementations
 
         System.Diagnostics.Process _process;
 
-        public EpsSaveMarkedCodes() : base()
+        public EpsInkscapeSaveMarkedCodes() : base()
         {
 
         }

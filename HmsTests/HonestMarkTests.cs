@@ -139,88 +139,77 @@ namespace HmsTests
         [TestMethod]
         public void ConvertImageTest()
         {
-
-            //var converter = new UtilitesLibrary.Service.DataMatrixNetGenerator();
-            //converter.ConvertRasterToVector("C:\\Users\\developer3\\Desktop\\HonestMark.png", "C:\\Users\\developer3\\Desktop\\HonestMark.eps");
-
-            //using (ImageMagick.IMagickImage image = new ImageMagick.MagickImage("svgFilePath"))
-            //{
-            //    // Set the desired output format to EPS
-            //    image.Format = MagickFormat.Eps;
-
-            //    // Write the image to the specified EPS file path
-            //    image.Write(epsFilePath);
-            //}
-
-            //var fileText = System.IO.File.ReadAllText("C:\\Users\\developer3\\Desktop\\images3\\img.svg");
-
-            //var importFileObj = new WebSystems.Models.Convertio.ConvertRequest
-            //{
-            //    Input = "raw",
-            //    //File = fileText,
-            //    FileName = "img.svg",
-            //    OutputFormat = "eps"
-            //};
-
-            //ConvertioApiClient convertioApiClient = new ConvertioApiClient();
-
             try
             {
-                //var convertResponse = convertioApiClient.Convert(importFileObj);
+                UtilitesLibrary.Service.DataMatrixNetGenerator encoder = new UtilitesLibrary.Service.DataMatrixNetGenerator();
 
-                //var statusConvert = convertioApiClient.GetStatusConvertion(convertResponse.Data.Id);
+                var dataMatrixRawCode = encoder.GetRawDataMatrixCode("0104580399049256215aK*ti91EE1192I+1TTm9sxJfvDaUkH+yADxoiNX8GzkfKDM6DF0lz6Jw=");
+                //var dataMatrixRawCode = encoder.GetRawDataMatrixCode("0106951237714182215Pun-K91EE1192XS+FrUdVpdSyxJUM+S4F/TEgfcMXHAqiX8Jy4wOFdp4=");
 
-                //System.Net.WebClient client = new System.Net.WebClient();
-
-                //if (ConfigSet.Configs.Config.GetInstance().ProxyEnabled)
-                //{
-                //    var webProxy = new System.Net.WebProxy();
-
-                //    webProxy.Address = new Uri("http://" + ConfigSet.Configs.Config.GetInstance().ProxyAddress);
-                //    webProxy.Credentials = new System.Net.NetworkCredential(ConfigSet.Configs.Config.GetInstance().ProxyUserName,
-                //        ConfigSet.Configs.Config.GetInstance().ProxyUserPassword);
-
-                //    client.Proxy = webProxy;
-                //}
-
-                //var fileBytes = client.DownloadData(statusConvert.Data.Output.Url);
-                //System.IO.File.WriteAllBytes("C:\\Users\\developer3\\Desktop\\images3\\img_api_1.eps", fileBytes);
-
-                //var fileContentResponse = convertioApiClient.GetResultFileContent(convertResponse.Data.Id);
-                //var fileContent = Convert.FromBase64String(fileContentResponse.Data.Content);
-                //System.IO.File.WriteAllBytes("C:\\Users\\developer3\\Desktop\\images3\\img_api_2.eps", fileContent);
-
-                //var dataMatrixCodeStr = "0104011669330632215Fd7/w91EE1092RgaucporYleYxJM8G6rYCMTX5Lvnq7hCRcX6gfXnRD8=";
-                //var dataMatrix = new RasterEdge.XImage.BarcodeCreator.DataMatrix();
-                //dataMatrix.Data = dataMatrixCodeStr;
-                //dataMatrix.DataMode = RasterEdge.XImage.BarcodeCreator.DataMatrixDataMode.Auto;
-                //dataMatrix.BarcodeHeight = 300;
-                //dataMatrix.BarcodeWidth = 300;
-                ////dataMatrix.ToImage();
-                //dataMatrix.DrawBarcode("C:\\Users\\developer3\\Desktop\\images2\\img_data_matrix_2.eps", RasterEdge.XImage.BarcodeCreator.OutputFileType.EPS);
-                var path = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu);
-                string svgFilePath = "C:\\Users\\developer3\\Desktop\\images3\\04011669330632_00002.svg";
-                string epsFilePath = "C:\\Users\\developer3\\Desktop\\images3\\inkscape_2.eps";
-                string inkscapePath = "D:\\Program Files\\Inkscape\\bin\\inkscape.exe";
-                string arguments = $"-z {svgFilePath} --export-type=eps -o {epsFilePath}";
-                System.Diagnostics.Process process = new System.Diagnostics.Process();
-                process.StartInfo.FileName = inkscapePath;
-                process.StartInfo.Arguments = arguments;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.CreateNoWindow = true;
-                process.Start();
-                string output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-
-                if (process.ExitCode == 0)
+                using (var fileStream = new System.IO.FileStream($"C:\\Users\\developer3\\Desktop\\file_result.eps", System.IO.FileMode.Create))
                 {
-                    Console.WriteLine($"Файл успешно сконвертирован в {epsFilePath}");
-                }
-                else
-                {
-                    Console.WriteLine($"Ошибка при конвертации. Код выхода: {process.ExitCode}");
-                    Console.WriteLine($"Вывод: {output}");
+                    using (var streamWriter = new System.IO.StreamWriter(fileStream))
+                    {
+                        var rawWidth = dataMatrixRawCode.GetLength(0);
+                        var rawHeight = dataMatrixRawCode.GetLength(1);
+
+                        decimal recHeight = 1.0001M;
+                        decimal recWidth = 1.0001M;
+
+                        streamWriter.WriteLine("%!PS-Adobe-3.0 EPSF-3.0\n" +
+                            $"%%BoundingBox: 0 0 {rawWidth + 3} {rawHeight + 3}\n" +
+                            $"%%HiResBoundingBox: 0 0 {(rawWidth + 2)*recWidth} {(rawHeight + 2) * recHeight}\n" +
+                            "%%Creator: Barcode4J (http://barcode4j.krysalis.org)\n" +
+                            $"%%CreationDate: {DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")}\n" +
+                            "%%LanguageLevel: 1\n" +
+                            "%%EndComments\n" +
+                            "%%BeginProlog\n" +
+                            "%%BeginProcSet: barcode4j-procset 1.1\n" +
+                            "/rf {\n" +
+                            "newpath\n" +
+                            "4 -2 roll moveto\n" +
+                            "dup neg 0 exch rlineto\n" +
+                            "exch 0 rlineto\n" +
+                            "0 neg exch rlineto\n" +
+                            "closepath fill\n" +
+                            "} def\n" +
+                            "/ct {\n" +
+                            "moveto dup stringwidth\n" +
+                            "2 div neg exch 2 div neg exch\n" +
+                            "rmoveto show\n" +
+                            "} def\n" +
+                            "/rt {\n" +
+                            "4 -1 roll dup stringwidth pop\n" +
+                            "5 -2 roll 1 index sub\n" +
+                            "3 -1 roll sub\n" +
+                            "add\n" +
+                            "3 -1 roll moveto show\n" +
+                            "} def\n" +
+                            "/jt {\n" +
+                            "4 -1 roll dup stringwidth pop\n" +
+                            "5 -2 roll 1 index sub\n" +
+                            "3 -1 roll sub\n" +
+                            "2 index length\n" +
+                            "1 sub div\n" +
+                            "0 4 -1 roll 4 -1 roll 5 -1 roll\n" +
+                            "moveto ashow\n" +
+                            "} def\n" +
+                            "%%EndProcSet: barcode4j-procset 1.0\n" +
+                            "%%EndProlog\n");
+
+                        for (int i = 0; i < rawHeight; i++)
+                        {
+                            for(int j = 0; j < rawWidth; j++)
+                            {
+                                if (dataMatrixRawCode[j, i])
+                                {
+                                    streamWriter.WriteLine($"{recWidth * (j + 1)} {recHeight * (rawHeight + 1 - i)} {recWidth} {recHeight} rf");
+                                }
+                            }
+                        }
+
+                        streamWriter.WriteLine("%%EOF");
+                    }
                 }
             }
             catch (System.Net.WebException webEx)

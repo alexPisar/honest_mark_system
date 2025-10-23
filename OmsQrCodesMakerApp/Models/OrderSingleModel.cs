@@ -135,9 +135,9 @@ namespace OmsQrCodesMakerApp.Models
                             var imageSaveCodesObj = saveCodesObj as UtilitesLibrary.Implementations.ImageSaveMarkedCodes;
                             imageSaveCodesObj.Index = savePrintDataMatrixWindow.Index.Value;
 
-                            if (saveCodesObj as UtilitesLibrary.Implementations.EpsSaveMarkedCodes != null)
+                            if (saveCodesObj as UtilitesLibrary.Implementations.EpsInkscapeSaveMarkedCodes != null)
                             {
-                                var epsSaveCodesObj = saveCodesObj as UtilitesLibrary.Implementations.EpsSaveMarkedCodes;
+                                var epsSaveCodesObj = saveCodesObj as UtilitesLibrary.Implementations.EpsInkscapeSaveMarkedCodes;
                                 epsSaveCodesObj.InkscapeLnkPath = savePrintDataMatrixWindow.InkscapeLnkPath;
                             }
                         }

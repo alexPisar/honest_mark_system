@@ -19,5 +19,10 @@ namespace UtilitesLibrary.Interfaces
 
             return memoryStream;
         }
+
+        public virtual bool[,] GetRawDataMatrixCode(string text)
+        {
+            return null;
+        }
     }
 }

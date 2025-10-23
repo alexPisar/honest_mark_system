@@ -23,5 +23,11 @@ namespace UtilitesLibrary.Service
             DmtxImageEncoder encoder = new DmtxImageEncoder();
             return encoder.EncodeImage(text);
         }
+
+        public override bool[,] GetRawDataMatrixCode(string text)
+        {
+            DmtxImageEncoder encoder = new DmtxImageEncoder();
+            return encoder.EncodeRawData(text);
+        }
     }
 }

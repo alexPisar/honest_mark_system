@@ -22,7 +22,7 @@ namespace UtilitesLibrary.Implementations
             else if (_fileType == Enums.FileTypeEnum.Svg)
                 return new ImageSaveMarkedCodes();
             else if (_fileType == Enums.FileTypeEnum.Eps)
-                return new EpsSaveMarkedCodes();
+                return new EpsInkscapeSaveMarkedCodes();
             else if (_fileType == Enums.FileTypeEnum.Csv)
                 return new CsvSaveMarkedCodes();
             else if (_fileType == Enums.FileTypeEnum.Xlsx)
