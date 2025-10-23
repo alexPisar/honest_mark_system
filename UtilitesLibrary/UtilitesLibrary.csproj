@@ -90,6 +90,7 @@
     <Compile Include="Enums\KnownFolder.cs" />
     <Compile Include="Implementations\CsvSaveMarkedCodes.cs" />
     <Compile Include="Implementations\EpsInkscapeSaveMarkedCodes.cs" />
+    <Compile Include="Implementations\EpsSaveMarkedCodes.cs" />
     <Compile Include="Implementations\ImageSaveMarkedCodes.cs" />
     <Compile Include="Implementations\PdfSaveMarkedCodes.cs" />
     <Compile Include="Implementations\SaveMarkedCodesOptionFactory.cs" />

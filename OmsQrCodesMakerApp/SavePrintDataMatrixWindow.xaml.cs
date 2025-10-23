@@ -83,23 +83,23 @@ namespace OmsQrCodesMakerApp
                 return;
             }
 
-            if((DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Eps)
-            {
-                if (System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk"))
-                {
-                    InkscapeLnkPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk";
-                }
-                else if (System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk"))
-                {
-                    InkscapeLnkPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk";
-                }
-                else
-                {
-                    InkscapeLnkPath = null;
-                    DevExpress.Xpf.Core.DXMessageBox.Show("Невозможно экспортировать коды в формате EPS.\nНе установлена программа Inkscape.\nПроверьте установку программы.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-            }
+            //if((DataContext as Models.SavePrintDataMatrixModel).SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Eps)
+            //{
+            //    if (System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk"))
+            //    {
+            //        InkscapeLnkPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape.lnk";
+            //    }
+            //    else if (System.IO.File.Exists($"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk"))
+            //    {
+            //        InkscapeLnkPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)}\\Programs\\Inkscape\\Inkscape.lnk";
+            //    }
+            //    else
+            //    {
+            //        InkscapeLnkPath = null;
+            //        DevExpress.Xpf.Core.DXMessageBox.Show("Невозможно экспортировать коды в формате EPS.\nНе установлена программа Inkscape.\nПроверьте установку программы.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            //        return;
+            //    }
+            //}
 
             DialogResult = true;
             this.Close();

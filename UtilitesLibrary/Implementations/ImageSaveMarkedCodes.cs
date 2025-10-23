@@ -8,7 +8,7 @@ namespace UtilitesLibrary.Implementations
 {
     public class ImageSaveMarkedCodes : Interfaces.ISaveMarkedCodes
     {
-        Interfaces.IDataMatrixGenerator _dataMatrixGenerator;
+        protected Interfaces.IDataMatrixGenerator _dataMatrixGenerator;
         public ImageSaveMarkedCodes()
         {
             _dataMatrixGenerator = new Service.DataMatrixNetGenerator();
