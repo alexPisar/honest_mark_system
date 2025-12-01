@@ -65,12 +65,14 @@ namespace WebSystems.EdoSystems
             string boxId = null;
             X509Certificate2 cert = null;
             string orgInn = this.CurrentOrgInn;
+            string representativeInn = this.CurrentRepresentativeInn;
 
             if (parameters.Length > 2)
             {
                 boxId = parameters[2] as string;
                 cert = parameters[3] as X509Certificate2;
                 orgInn = parameters[4] as string;
+                representativeInn = parameters[5] as string;
             }
 
             var recipientAttachment = new Diadoc.Api.Proto.Events.RecipientTitleAttachment
@@ -89,7 +91,8 @@ namespace WebSystems.EdoSystems
                     FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
                     {
                         RegistrationNumber = emchdId,
-                        IssuerInn = orgInn
+                        IssuerInn = orgInn,
+                        RepresentativeInn = representativeInn
                     }
                 };
 
@@ -128,7 +131,8 @@ namespace WebSystems.EdoSystems
                     FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
                     {
                         RegistrationNumber = emchdId,
-                        IssuerInn = this.CurrentOrgInn
+                        IssuerInn = this.CurrentOrgInn,
+                        RepresentativeInn = this.CurrentRepresentativeInn
                     }
                 };
 
@@ -257,7 +261,8 @@ namespace WebSystems.EdoSystems
                     FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
                     {
                         RegistrationNumber = emchdId,
-                        IssuerInn = this.CurrentOrgInn
+                        IssuerInn = this.CurrentOrgInn,
+                        RepresentativeInn = this.CurrentRepresentativeInn
                     }
                 };
 
@@ -278,7 +283,8 @@ namespace WebSystems.EdoSystems
                     FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
                     {
                         RegistrationNumber = emchdId,
-                        IssuerInn = this.CurrentOrgInn
+                        IssuerInn = this.CurrentOrgInn,
+                        RepresentativeInn = this.CurrentRepresentativeInn
                     }
                 };
 
@@ -302,7 +308,8 @@ namespace WebSystems.EdoSystems
                     FullId = new Diadoc.Api.Proto.PowersOfAttorney.PowerOfAttorneyFullId
                     {
                         RegistrationNumber = emchdId,
-                        IssuerInn = this.CurrentOrgInn
+                        IssuerInn = this.CurrentOrgInn,
+                        RepresentativeInn = this.CurrentRepresentativeInn
                     }
                 };
 

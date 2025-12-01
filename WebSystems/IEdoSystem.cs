@@ -27,6 +27,7 @@ namespace WebSystems
 
         public abstract bool HasZipContent { get; }
         public virtual string CurrentOrgInn { get; set; }
+        public virtual string CurrentRepresentativeInn { get; set; }
 
         public abstract byte[] GetZipContent(string documentId, DocumentInOutType inOutType = DocumentInOutType.None);
 

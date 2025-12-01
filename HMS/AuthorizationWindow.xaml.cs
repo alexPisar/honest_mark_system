@@ -146,7 +146,10 @@ namespace HonestMarkSystem
                         mainModel.SaveOrgData(organization);
 
                         if (organization.EdoSystem != null)
+                        {
                             organization.EdoSystem.CurrentOrgInn = organization.OrgInn;
+                            organization.EdoSystem.CurrentRepresentativeInn = refAuthoritySignDocuments?.Inn;
+                        }
 
                         if (refAuthoritySignDocuments != null)
                         {
