@@ -192,11 +192,15 @@ namespace WebSystems.EdoSystems
 
         public override byte[] GetDocumentContent(Models.IEdoSystemDocument<string> document, out byte[] signature, DocumentInOutType inOutType = DocumentInOutType.None)
         {
-            var webClient = _webClient as WebClients.DiadocEdoClient;
             var doc = document as Models.DiadocEdoDocument;
+            return GetDocumentContent(doc.EdoId, doc.EntityId, (int)doc.DocumentType, out signature, inOutType);
+        }
 
-            var events = webClient.GetEvents(doc.EdoId, doc.EntityId, true);
-            var mainEvent = events.FirstOrDefault(e => e.DocumentInfo.DocumentType == doc.DocumentType && e.Docflow?.DocumentAttachment != null);
+        public byte[] GetDocumentContent(string messageId, string entityId, int? docType, out byte[] signature, DocumentInOutType inOutType = DocumentInOutType.None)
+        {
+            var webClient = _webClient as WebClients.DiadocEdoClient;
+            var events = webClient.GetEvents(messageId, entityId, true);
+            var mainEvent = events.FirstOrDefault(e => docType == (int?)e?.DocumentInfo?.DocumentType && e.Docflow?.DocumentAttachment != null);
 
             var documentAttachment = mainEvent.Docflow.DocumentAttachment;
             signature = documentAttachment.Signature?.Entity?.Content?.Data;

@@ -497,6 +497,31 @@ namespace HonestMarkSystem.Models
                                 {
                                     loadContext.SetLoadingText("Сохранение кодов");
                                     var sellerXmlDocument = new XmlDocument();
+
+                                    if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
+                                    {
+                                        if(SelectedMyOrganization?.EdoSystem?.GetType() == typeof(DiadocEdoSystem))
+                                        {
+                                            var diadocEdoSystem = SelectedMyOrganization.EdoSystem as DiadocEdoSystem;
+
+                                            byte[] signature;
+                                            byte[] content = diadocEdoSystem.GetDocumentContent(SelectedItem.IdDocEdo, SelectedItem.ParentEntityId, SelectedItem.IdDocType,
+                                                out signature, DocumentInOutType.Inbox);
+
+                                            if (!Directory.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}"))
+                                                Directory.CreateDirectory($"{edoFilesPath}//{SelectedItem.IdDocEdo}");
+
+                                            var xml = Encoding.GetEncoding(1251).GetString(content);
+                                            var xmlDocument = new XmlDocument();
+                                            xmlDocument.LoadXml(xml);
+
+                                            xmlDocument.Save($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml.sig", signature);
+                                        }
+                                        else
+                                            throw new Exception("Не найден XML файл документооборота.");
+                                    }
+
                                     sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
                                     var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
 
