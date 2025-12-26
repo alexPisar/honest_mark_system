@@ -2543,8 +2543,20 @@ namespace HonestMarkSystem.Models
 
             var markedCodesArray = markedCodes.Select(m => m.Key);
 
-            errorModel = new ErrorTextModel("В списке кодов маркировки есть не принадлежащие отправителю:\n");
-            if (!MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn, errorModel))
+            bool markedCodesOwnerCheckResult = false;
+
+            if (SelectedItem.DocStatus == (int?)DocEdoStatus.Processed)
+            {
+                errorModel = new ErrorTextModel("В списке кодов маркировки есть не принадлежащие получателю:\n");
+                markedCodesOwnerCheckResult = MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.ReceiverInn, errorModel);
+            }
+            else
+            {
+                errorModel = new ErrorTextModel("В списке кодов маркировки есть не принадлежащие отправителю:\n");
+                markedCodesOwnerCheckResult = MarkedCodesOwnerCheck(markedCodesArray, SelectedItem.SenderInn, errorModel);
+            }
+
+            if (!markedCodesOwnerCheckResult)
                 throw new Exception(errorModel.ErrorMessage);
             else
                 errorModel = null;

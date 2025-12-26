@@ -176,9 +176,9 @@ namespace WebSystems.EdoSystems
             List<Diadoc.Api.Proto.Documents.Document> documents = null;
 
             if(inOutType == DocumentInOutType.Inbox)
-                documents = ((WebClients.DiadocEdoClient)_webClient).GetDocuments("Any.InboundNotFinished", fromDate, toDate);
+                documents = ((WebClients.DiadocEdoClient)_webClient).GetDocuments("Any.Inbound", fromDate, toDate);
             else if(inOutType == DocumentInOutType.Outbox)
-                documents = ((WebClients.DiadocEdoClient)_webClient).GetDocuments("Any.OutboundNotFinished", fromDate, toDate);
+                documents = ((WebClients.DiadocEdoClient)_webClient).GetDocuments("Any.Outbound", fromDate, toDate);
 
             return documents?.Select(d => new Models.DiadocEdoDocument() { Document = d })?.ToList<Models.IEdoSystemDocument<string>>();
         }
