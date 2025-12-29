@@ -125,7 +125,7 @@ namespace HonestMarkSystem
                             {
                                 refAuthoritySignDocuments = null;
                                 selectedCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Key.Inn
-                                && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+                                /*&& cryptoUtil.IsCertificateValid(c)*/ && c.NotAfter > DateTime.Now);
                             }
                         });
 
