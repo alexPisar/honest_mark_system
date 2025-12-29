@@ -35,7 +35,7 @@ namespace HonestMarkSystem
             accountPassword.Text = ((Config)DataContext).GetDataBasePassword();
         }
 
-        private void ChangeButton_Click(object sender, RoutedEventArgs e)
+        private async void ChangeButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -100,70 +100,86 @@ namespace HonestMarkSystem
                 var myOrganizations = new List<Models.ConsignorOrganization>();
                 var mainModel = new Models.MainViewModel(dataBaseAdapter, myOrganizations);
 
-                foreach (var refOrg in refOrgs)
+                var loadWindow = new LoadWindow("Идёт загрузка сертификатов...");
+                var loadContext = loadWindow.GetLoadContext();
+                loadWindow.Show();
+
+                try
                 {
-                    X509Certificate2 selectedCert = null;
-
-                    var refAuthoritySignDocuments = dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(refOrg.Key.Id)
-                        as RefAuthoritySignDocuments;
-
-                    if(refAuthoritySignDocuments != null)
-                        selectedCert = certs?.FirstOrDefault(c => 
-                        cryptoUtil.ParseCertAttribute(c.Subject, "ИНН").TrimStart('0') == refAuthoritySignDocuments.Inn
-                        && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
-
-                    if (selectedCert == null)
+                    foreach (var refOrg in refOrgs)
                     {
-                        refAuthoritySignDocuments = null;
-                        selectedCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Key.Inn
-                        && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
-                    }
+                        loadContext.SetLoadingText("Идёт проверка сертификатов...");
+                        X509Certificate2 selectedCert = null;
 
-                    if (selectedCert == null)
-                    {
-                        _log.Log($"Не найден сертификат организации с ИНН {refOrg.Key.Inn}");
-                        continue;
-                    }
+                        var refAuthoritySignDocuments = dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(refOrg.Key.Id)
+                            as RefAuthoritySignDocuments;
 
-                    WebSystems.Systems.HonestMarkSystem markSystem;
-                    IEdoSystem edoSystem;
-
-                    if (AuthentificationByCert(selectedCert, refAuthoritySignDocuments != null ? refOrg.Key.Inn : null, out markSystem, out edoSystem))
-                    {
-                        var orgName = refOrg.Key.Name;
-
-                        var organization = new Models.ConsignorOrganization
+                        await Task.Run(() =>
                         {
-                            Certificate = selectedCert,
-                            HonestMarkSystem = markSystem,
-                            CryptoUtil = new CryptoUtil(selectedCert),
-                            EdoSystem = edoSystem,
-                            OrgInn = refOrg.Key.Inn,
-                            OrgName = orgName,
-                            ShipperOrgInns = refOrg.Value?.Where(r => !string.IsNullOrEmpty(r.Inn))?.Select(r => r.Inn)?.ToList() ?? new List<string>()
-                        };
+                            if(refAuthoritySignDocuments != null)
+                                selectedCert = certs?.FirstOrDefault(c =>
+                                cryptoUtil.ParseCertAttribute(c.Subject, "ИНН").TrimStart('0') == refAuthoritySignDocuments.Inn
+                                && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
 
-                        mainModel.SaveOrgData(organization);
+                            if (selectedCert == null)
+                            {
+                                refAuthoritySignDocuments = null;
+                                selectedCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Key.Inn
+                                && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+                            }
+                        });
 
-                        if (organization.EdoSystem != null)
+                        if (selectedCert == null)
                         {
-                            organization.EdoSystem.CurrentOrgInn = organization.OrgInn;
-                            organization.EdoSystem.CurrentRepresentativeInn = refAuthoritySignDocuments?.Inn;
+                            _log.Log($"Не найден сертификат организации с ИНН {refOrg.Key.Inn}");
+                            continue;
                         }
 
-                        if (refAuthoritySignDocuments != null)
-                        {
-                            organization.EmchdId = refAuthoritySignDocuments.EmchdId;
-                            organization.EmchdPersonSurname = refAuthoritySignDocuments.Surname;
-                            organization.EmchdPersonName = refAuthoritySignDocuments.Name;
-                            organization.EmchdPersonPatronymicSurname = refAuthoritySignDocuments.PatronymicSurname;
-                            organization.EmchdPersonPosition = refAuthoritySignDocuments.Position;
-                            organization.EmchdPersonInn = refAuthoritySignDocuments.Inn;
-                            organization.EmchdBeginDate = refAuthoritySignDocuments.EmchdBeginDate;
-                        }
+                        WebSystems.Systems.HonestMarkSystem markSystem;
+                        IEdoSystem edoSystem;
 
-                        myOrganizations.Add(organization);
+                        loadContext.SetLoadingText("Идёт авторизация");
+                        if (AuthentificationByCert(selectedCert, refAuthoritySignDocuments != null ? refOrg.Key.Inn : null, out markSystem, out edoSystem))
+                        {
+                            var orgName = refOrg.Key.Name;
+
+                            var organization = new Models.ConsignorOrganization
+                            {
+                                Certificate = selectedCert,
+                                HonestMarkSystem = markSystem,
+                                CryptoUtil = new CryptoUtil(selectedCert),
+                                EdoSystem = edoSystem,
+                                OrgInn = refOrg.Key.Inn,
+                                OrgName = orgName,
+                                ShipperOrgInns = refOrg.Value?.Where(r => !string.IsNullOrEmpty(r.Inn))?.Select(r => r.Inn)?.ToList() ?? new List<string>()
+                            };
+
+                            mainModel.SaveOrgData(organization);
+
+                            if (organization.EdoSystem != null)
+                            {
+                                organization.EdoSystem.CurrentOrgInn = organization.OrgInn;
+                                organization.EdoSystem.CurrentRepresentativeInn = refAuthoritySignDocuments?.Inn;
+                            }
+
+                            if (refAuthoritySignDocuments != null)
+                            {
+                                organization.EmchdId = refAuthoritySignDocuments.EmchdId;
+                                organization.EmchdPersonSurname = refAuthoritySignDocuments.Surname;
+                                organization.EmchdPersonName = refAuthoritySignDocuments.Name;
+                                organization.EmchdPersonPatronymicSurname = refAuthoritySignDocuments.PatronymicSurname;
+                                organization.EmchdPersonPosition = refAuthoritySignDocuments.Position;
+                                organization.EmchdPersonInn = refAuthoritySignDocuments.Inn;
+                                organization.EmchdBeginDate = refAuthoritySignDocuments.EmchdBeginDate;
+                            }
+
+                            myOrganizations.Add(organization);
+                        }
                     }
+                }
+                finally
+                {
+                    loadWindow.Close();
                 }
 
                 //((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
