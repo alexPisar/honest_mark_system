@@ -240,6 +240,7 @@
     <Compile Include="XsdClasses\ON_NSCHFDOPPOK_1_997_02_05_03_01.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOPPR_1_997_01_05_01_03.cs" />
     <Compile Include="XsdClasses\ON_NSCHFDOPPR_1_997_01_05_03_01.cs" />
+    <Compile Include="XsdClasses\ON_NSCHFDOPPR_1_997_01_05_03_05.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UtilitesLibrary\UtilitesLibrary.csproj">
@@ -292,6 +293,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="XSD\ON_NSCHFDOPPR_1_997_01_05_03_01.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="XSD\ON_NSCHFDOPPR_1_997_01_05_03_05.xsd">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
