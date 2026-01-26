@@ -1,5 +1,6 @@
-﻿<Window
+﻿<r:RibbonWindow
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:svg="clr-namespace:SharpVectors.Converters;assembly=SharpVectors.Converters.Wpf"
         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
         xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
         xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
@@ -7,6 +8,7 @@
         xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:r="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OmsQrCodesMakerApp"
         xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core" x:Class="OmsQrCodesMakerApp.OrderSingleWindow"
@@ -17,24 +19,21 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <dxr:RibbonControl Grid.Row="0" ShowApplicationButton="False" DockPanel.Dock="Top">
-            <dxr:RibbonPage Caption="Товары">
-                <dxr:RibbonPageGroup>
-                    <dxb:BarButtonItem Content="Обновить" 
-                                       RibbonStyle="Large"
-                                       LargeGlyph="{dx:DXImage SvgImages/Icon Builder/Actions_Refresh.svg}"
-                                       Command="{Binding RefreshCommand}"/>
-                    <dxb:BarButtonItem Content="Выпустить коды" 
-                                       RibbonStyle="Large" 
-                                       LargeGlyph="{dx:DXImage SvgImages/Business Objects/BO_List.svg}"
-                                       Command="{Binding ReleaseCodesCommand}"/>
-                    <dxb:BarButtonItem Content="Получить коды повторно" 
-                                       RibbonStyle="Large" 
-                                       LargeGlyph="{dx:DXImage SvgImages/Content/CheckBox.svg}"
-                                       Command="{Binding RetryGetCodesCommand}"/>
-                </dxr:RibbonPageGroup>
-            </dxr:RibbonPage>
-        </dxr:RibbonControl>
+        <r:Ribbon>
+            <r:Ribbon.ApplicationMenu>
+                <r:RibbonApplicationMenu Visibility="Collapsed"></r:RibbonApplicationMenu>
+            </r:Ribbon.ApplicationMenu>
+            <r:RibbonTab Header="Товары">
+                <r:RibbonGroup>
+                    <r:RibbonButton LargeImageSource="{svg:SvgImage Source=SvgImage/Action_Refresh.svg}"
+                                    Label="Обновить" Command="{Binding RefreshCommand}" />
+                    <r:RibbonButton LargeImageSource="{svg:SvgImage Source=SvgImage/BO_List.svg}"
+                                    Label="Выпустить коды" Command="{Binding ReleaseCodesCommand}"/>
+                    <r:RibbonButton LargeImageSource="{svg:SvgImage Source=SvgImage/CheckBox.svg}"
+                                    Label="Получить коды повторно" Command="{Binding RetryGetCodesCommand}"/>
+                </r:RibbonGroup>
+            </r:RibbonTab>
+        </r:Ribbon>
         <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
             <dxg:GridColumn FieldName="Gtin" Header="Штрих код" Width="120"/>
@@ -46,4 +45,4 @@
             <dxg:GridColumn FieldName="BufferStatus" Header="Статус буфера" Width="120"/>
         </dxg:GridControl>
     </Grid>
-</Window>
+</r:RibbonWindow>

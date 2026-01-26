@@ -17,7 +17,7 @@ namespace OmsQrCodesMakerApp
     /// <summary>
     /// Логика взаимодействия для OrderSingleWindow.xaml
     /// </summary>
-    public partial class OrderSingleWindow : Window
+    public partial class OrderSingleWindow : System.Windows.Controls.Ribbon.RibbonWindow
     {
         public OrderSingleWindow()
         {

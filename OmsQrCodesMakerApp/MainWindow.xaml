@@ -1,5 +1,6 @@
-﻿<Window
+﻿<r:RibbonWindow
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:svg="clr-namespace:SharpVectors.Converters;assembly=SharpVectors.Converters.Wpf"
         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
         xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
         xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
@@ -7,6 +8,7 @@
         xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:r="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OmsQrCodesMakerApp"
         xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core" x:Class="OmsQrCodesMakerApp.MainWindow"
@@ -17,18 +19,21 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <dxr:RibbonControl Grid.Row="0" ShowApplicationButton="False" DockPanel.Dock="Top">
-            <dxr:RibbonPage Caption="Заказы">
-                <dxr:RibbonPageGroup>
-                    <dxb:BarButtonItem Content="Обновить" RibbonStyle="Large" 
-                                       LargeGlyph="{dx:DXImage SvgImages/XAF/Action_Refresh.svg}"
-                                       Command="{Binding RefreshCommand}"/>
-                    <dxb:BarButtonItem Content="Состав заказа" RibbonStyle="Large" 
-                                       LargeGlyph="{dx:DXImage SvgImages/Outlook Inspired/Tasks.svg}" 
-                                       Command="{Binding EditCommand}"/>
-                </dxr:RibbonPageGroup>
-            </dxr:RibbonPage>
-        </dxr:RibbonControl>
+        <r:Ribbon x:Name="Ribbon">
+            <r:Ribbon.ApplicationMenu>
+                <r:RibbonApplicationMenu Visibility="Collapsed"></r:RibbonApplicationMenu>
+            </r:Ribbon.ApplicationMenu>
+            <r:RibbonTab x:Name="HomeTab" Header="Заказы">
+                <r:RibbonGroup x:Name="ActionGroup">
+                    <r:RibbonButton x:Name="RefreshButton"
+                                    LargeImageSource="{svg:SvgImage Source=SvgImage/Action_Refresh.svg}"
+                                    Label="Обновить" Command="{Binding RefreshCommand}" />
+                    <r:RibbonButton x:Name="OrderSingleButton"
+                                    LargeImageSource="{svg:SvgImage Source=SvgImage/Tasks.svg}"
+                                    Label="Состав заказа" Command="{Binding EditCommand}" />
+                </r:RibbonGroup>
+            </r:RibbonTab>
+        </r:Ribbon>
         <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
             <dxg:GridColumn FieldName="OrderId" Header="ID заказа" Width="150"/>
@@ -42,4 +47,4 @@
             </dxg:GridColumn>
         </dxg:GridControl>
     </Grid>
-</Window>
+</r:RibbonWindow>
