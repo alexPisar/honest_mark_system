@@ -17,5 +17,8 @@
     <Setting Name="UrlAddressOrderManagmentStation" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://suzgrid.crpt.ru</Value>
     </Setting>
+    <Setting Name="UrlAddressHonestMarkNewVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://markirovka.crpt.ru/api/v4/true-api</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

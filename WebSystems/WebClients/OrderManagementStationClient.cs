@@ -5,6 +5,7 @@ using Cryptography.WinApi;
 using System.Text;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace WebSystems.WebClients
 {
@@ -135,6 +136,134 @@ namespace WebSystems.WebClients
                 reportRequestAsJson, null, "application/json", headerData, "application/json");
 
             return result;
+        }
+
+        public Models.OMS.Base.FilterSearchResult<string> GetApplyLabelReportsIds(string orderId = null, int? limit = null, int? skip = null)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("clientToken", _token);
+
+            var reference = $"{Properties.Settings.Default.UrlAddressOrderManagmentStation}/api/v3/quality?omsId={_omsId}";
+
+            if (!string.IsNullOrEmpty(orderId))
+                reference = $"{reference}&orderId={orderId}";
+
+            if(limit != null)
+                reference = $"{reference}&limit={limit}";
+
+            if (skip != null)
+                reference = $"{reference}&skip={skip}";
+
+            var result = _webService.GetRequest<Models.OMS.Base.FilterSearchResult<string>>(reference, headerData, "application/json");
+
+            return result;
+        }
+
+        public Models.OMS.DocumentContent GetDocumentContent(string docId)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("clientToken", _token);
+
+            var reference = $"{Properties.Settings.Default.UrlAddressOrderManagmentStation}/api/v3/documents/content?omsId={_omsId}&docId={docId}";
+
+            var result = _webService.GetRequest<Models.OMS.DocumentContent>(reference, headerData, "application/json");
+
+            return result;
+        }
+
+        public Models.OMS.DocumentContent GetDocumentByReceipt(string resultDocId, string docId)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("clientToken", _token);
+
+            var reference = $"{Properties.Settings.Default.UrlAddressOrderManagmentStation}/api/v3/receipts/document?resultDocId={resultDocId}&docId={docId}&omsId={_omsId}";
+
+            var result = _webService.GetRequest<Models.OMS.DocumentContent>(reference, headerData, "application/json");
+
+            return result;
+        }
+
+        public Models.OMS.Receipt GetReceiptContent(string resultDocId)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("clientToken", _token);
+
+            var reference = $"{Properties.Settings.Default.UrlAddressOrderManagmentStation}/api/v3/receipts/receipt?omsId={_omsId}&resultDocId={resultDocId}";
+
+            var responseStr = _webService.GetRequest(reference, headerData, null, "application/json");
+
+            var responseJson = JsonConvert.DeserializeObject(responseStr) as Newtonsoft.Json.Linq.JObject;
+            var resultArrayJson = responseJson["results"] as Newtonsoft.Json.Linq.JArray;
+            var resultJson = resultArrayJson.FirstOrDefault(o => (o["resultDocId"] as Newtonsoft.Json.Linq.JValue)?.Value as string == resultDocId);
+
+            var result = resultJson.ToObject<Models.OMS.Receipt>();
+            return result;
+        }
+
+        public Models.OMS.Base.FilterSearchResult<Models.OMS.ResultSearch> SearchDocuments(string documentType, int? skip = null, int? limit = null)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("clientToken", _token);
+
+            var reference = $"{Properties.Settings.Default.UrlAddressOrderManagmentStation}/api/v3/documents/search?omsId={_omsId}&documentType={documentType}";
+
+            if (skip != null)
+                reference = reference + $"&skip={skip}";
+
+            if (limit != null)
+                reference = reference + $"&limit={limit}";
+
+            var result = _webService.GetRequest<Models.OMS.Base.FilterSearchResult<Models.OMS.ResultSearch>>(reference, headerData, "application/json");
+
+            return result;
+        }
+
+        public Models.OMS.Base.FilterSearchResult<Models.OMS.Receipt> SearchReceipts(string[] workFlowTypes = null, string[] productGroups = null, int[] statuses = null, string[] orderIds = null, 
+            string[] sourceDocIds = null, string[] resultDocIds = null, DateTime? startCreateDoc = null, DateTime? endCreateDoc = null, int? skip = null, int? limit = null)
+        {
+            var headerData = new Dictionary<string, string>();
+            headerData.Add("clientToken", _token);
+
+            var filter = new Models.OMS.FilterSearchReceiptsRequest
+            {
+                WorkflowTypes = workFlowTypes,
+                ProductGroups = productGroups,
+                ResultCodes = statuses,
+                OrderIds = orderIds,
+                SourceDocIds = sourceDocIds,
+                ResultDocIds = resultDocIds
+            };
+
+            if (startCreateDoc != null)
+            {
+                filter.StartCreateDocDate = (startCreateDoc.Value.Ticks - 621355968000000000) / 10000;
+
+                if (endCreateDoc == null)
+                    throw new Exception("Не указана конечная дата интервала поиска");
+
+                filter.EndCreateDocDate = (endCreateDoc.Value.Ticks - 621355968000000000) / 10000;
+
+                if (filter.EndCreateDocDate < filter.StartCreateDocDate)
+                    throw new Exception("Дата окончания интервала меньше даты начала.");
+
+                if (filter.EndCreateDocDate - filter.StartCreateDocDate > 604800000)
+                    throw new Exception("Интервал дат превышает допустимое значение");
+            }
+
+            var jsonObj = new Newtonsoft.Json.Linq.JObject();
+            jsonObj.Add("filter", Newtonsoft.Json.Linq.JObject.FromObject(filter));
+
+            if(limit != null)
+                jsonObj.Add("limit", new Newtonsoft.Json.Linq.JValue(limit.Value));
+
+            if(skip != null)
+                jsonObj.Add("skip", new Newtonsoft.Json.Linq.JValue(skip.Value));
+
+            var requestStr = JsonConvert.SerializeObject(jsonObj);
+            var response = _webService.PostRequest<Models.OMS.Base.FilterSearchResult<Models.OMS.Receipt>>($"{Properties.Settings.Default.UrlAddressOrderManagmentStation}/api/v3/receipts/receipt/search?omsId={_omsId}",
+                requestStr, null, "application/json", headerData, "application/json");
+
+            return response;
         }
 
         public bool Authorization(X509Certificate2 certificate, string omsConnection, string omsId, string emchdOrgInn = null)
