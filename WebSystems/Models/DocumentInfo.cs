@@ -43,7 +43,7 @@ namespace WebSystems.Models
         public string InvoiceNumber { get; set; }
 
         [JsonProperty(PropertyName = "invoiceDate")]
-        public DateTime InvoiceDate { get; set; }
+        public DateTime? InvoiceDate { get; set; }
 
         [JsonProperty(PropertyName = "total")]
         public int? Total { get; set; }

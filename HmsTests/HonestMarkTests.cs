@@ -137,6 +137,79 @@ namespace HmsTests
         }
 
         [TestMethod]
+        public void ApplyLabelReportTest()
+        {
+            var crypto = new WinApiCryptWrapper();
+            var cert = crypto.GetCertificateWithPrivateKey("F90869A3F18E75225DF9C3E5CAE4139F827F98CD", false);
+
+            try
+            {
+                OrderManagementStationClient.GetInstance().Authorization(cert, "omsConnection", "omsId", "2536090987");
+                HonestMarkClient.GetInstance().Authorization(cert, "2536090987");
+
+                //var applyReports = OrderManagementStationClient.GetInstance().GetApplyLabelReportsIds("f9d09b82-44e9-4baa-99ea-2a9e17ba543b", 1, 1);
+
+                //var docs = OrderManagementStationClient.GetInstance().SearchDocuments("UTILISATION_REPORT");
+                //var receipts = OrderManagementStationClient.GetInstance().SearchReceipts(null, null, null, null, null, null, new DateTime(2026, 1, 23), new DateTime(2026, 1, 30), 1, 100);
+                //var applyLabels = OrderManagementStationClient.GetInstance().GetMarkedCodesFromReport("fd4d47be-89d5-4f07-0000-000000000002");
+
+                //var documentContent = OrderManagementStationClient.GetInstance().GetDocumentContent("c1458a72-079d-406e-8707-0b39635b9de9");
+
+                var receipt = OrderManagementStationClient.GetInstance().GetReceiptContent("aae6ab8a-b8ac-4b7b-be1f-83603a767da1");//"6a3a76f7-ff47-44bd-0000-000000000095");
+                var documentContent = OrderManagementStationClient.GetInstance().GetDocumentByReceipt(receipt.ResultDocId, receipt.SourceDocId);
+
+                ////var reportString = Encoding.UTF8.GetString(Convert.FromBase64String(documentContent.Content));
+                var report = Newtonsoft.Json.JsonConvert.DeserializeObject<WebSystems.Models.OMS.ReportForApplicationRequest>(documentContent.Content);
+
+                var introducedDocument = new WebSystems.Models.IntroducedIntoTurnoverImportFcs
+                {
+                    TradeParticipantInn = "2536090987",
+                    TradeParticipantKpp = "253901001",
+                    Products = report.Sntins.Select(s => new WebSystems.Models.IntroducedIntoTurnoverImportFcsProduct
+                    {
+                        Cis = s
+                    }).ToArray(),
+                    DeclarationNumber = "",
+                    DeclarationDate = ""
+                };
+
+                var docId = HonestMarkClient.GetInstance().CreateDocument(WebSystems.ProductGroupsEnum.Chemistry, WebSystems.DocumentFormatsEnum.Manual, "LP_FTS_INTRODUCE", introducedDocument);
+            }
+            catch (System.Net.WebException webEx)
+            {
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        [TestMethod]
+        public void UploadFileTest()
+        {
+            var crypto = new WinApiCryptWrapper();
+            var cert = crypto.GetCertificateWithPrivateKey("F90869A3F18E75225DF9C3E5CAE4139F827F98CD", false);
+
+            try
+            {
+                HonestMarkClient.GetInstance().Authorization(cert, "2536090987");
+
+                var documentId = "f949e871-ae8f-479f-847e-ebc721d78d10";
+
+                var documentInfo = HonestMarkClient.GetInstance().GetDocumentInfo(WebSystems.ProductGroupsEnum.Chemistry, documentId);
+            }
+            catch (System.Net.WebException webEx)
+            {
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        [TestMethod]
         public void ConvertImageTest()
         {
             try

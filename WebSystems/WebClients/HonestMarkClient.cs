@@ -243,9 +243,9 @@ namespace WebSystems.WebClients
             var authData = new Dictionary<string, string>();
             authData.Add("Authorization", $"Bearer {_token}");
 
-            var docInfo = _webService.GetRequest<Models.DocumentInfo>($"{Properties.Settings.Default.UrlAddressHonestMark}/doc/{docId}/info?pg={productGroupStr}", authData);
+            var docInfo = _webService.GetRequest<Models.DocumentInfo[]>($"{Properties.Settings.Default.UrlAddressHonestMarkNewVersion}/doc/{docId}/info?pg={productGroupStr}", authData);
 
-            return docInfo;
+            return docInfo?.FirstOrDefault();
         }
 
         public Models.DocumentEdoProcessResultInfo GetEdoDocumentProcessInfo(string docId)
