@@ -18,6 +18,6 @@ namespace WebSystems.Models.OMS
         public string Status { get; set; }
 
         [JsonProperty(PropertyName = "createdTimestamp")]
-        public int CreatedTimestamp { get; set; }
+        public long CreatedTimestamp { get; set; }
     }
 }

@@ -7,7 +7,7 @@ using UtilitesLibrary.ModelBase;
 
 namespace OmsQrCodesMakerApp.Models
 {
-    public class OrderSingleModel : ListViewModel<ViewModels.OmsProduct>
+    public class OrderSingleModel : DataGridViewModel<ViewModels.OmsProduct>
     {
         private ViewModels.OmsOrder _order;
         private WebSystems.WebClients.OrderManagementStationClient _omsClient;
@@ -18,7 +18,8 @@ namespace OmsQrCodesMakerApp.Models
 
         public OrderSingleModel(ViewModels.OmsOrder order, WebSystems.WebClients.OrderManagementStationClient omsClient)
         {
-            ItemsList = new System.Collections.ObjectModel.ObservableCollection<ViewModels.OmsProduct>(order.Products);
+            SourceItemsList = new System.Collections.ObjectModel.ObservableCollection<ViewModels.OmsProduct>(order.Products);
+            ItemsList = new System.Collections.ObjectModel.ObservableCollection<ViewModels.OmsProduct>(SourceItemsList);
             _order = order;
             _omsClient = omsClient;
         }
@@ -39,10 +40,10 @@ namespace OmsQrCodesMakerApp.Models
                     OrderStatus = _order.OrderStatuses.FirstOrDefault(s => s.Gtin == p.Key)
                 })?.ToList();
 
-                ItemsList = new System.Collections.ObjectModel.ObservableCollection<ViewModels.OmsProduct>(_order.Products);
+                SourceItemsList = new System.Collections.ObjectModel.ObservableCollection<ViewModels.OmsProduct>(_order.Products);
                 SelectedItem = null;
-                OnPropertyChanged("ItemsList");
                 OnPropertyChanged("SelectedItem");
+                base.Refresh();
             }
             catch (Exception ex)
             {
@@ -58,13 +59,13 @@ namespace OmsQrCodesMakerApp.Models
         {
             if (SelectedItem == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не выбран товар!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("Не выбран товар!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
             if (SelectedItem.OrderStatus.TotalPassed == SelectedItem.OrderStatus.TotalCodes)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Все коды товара уже были ранее получены!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("Все коды товара уже были ранее получены!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
@@ -82,13 +83,13 @@ namespace OmsQrCodesMakerApp.Models
         {
             if (SelectedItem == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не выбран товар!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("Не выбран товар!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
             if (SelectedItem.OrderStatus.TotalPassed == 0)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Коды не были ранее получены!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("Коды не были ранее получены!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 
@@ -108,7 +109,7 @@ namespace OmsQrCodesMakerApp.Models
 
                 if (markedCodes.Count == 0)
                 {
-                    DevExpress.Xpf.Core.DXMessageBox.Show("Не удалось получить ранее сохранённые коды!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    System.Windows.MessageBox.Show("Не удалось получить ранее сохранённые коды!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                     return;
                 }
 

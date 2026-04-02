@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UtilitesLibrary</RootNamespace>
     <AssemblyName>UtilitesLibrary</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -36,6 +37,10 @@
     </Reference>
     <Reference Include="DataMatrix.net, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\DataMatrix.net.0.4.2\lib\20\DataMatrix.net.dll</HintPath>
+    </Reference>
+    <Reference Include="FilterDataGrid, Version=1.2.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Users\developer3\Desktop\SearchableComboBox\FilterDataGrid.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.7.13\lib\net45\NLog.dll</HintPath>
@@ -99,6 +104,7 @@
     <Compile Include="Interfaces\IOpenDialogsWpf.cs" />
     <Compile Include="Interfaces\IPdfFileWorker.cs" />
     <Compile Include="Interfaces\ISaveMarkedCodes.cs" />
+    <Compile Include="ModelBase\DataGridViewModel.cs" />
     <Compile Include="ModelBase\ErrorTextModel.cs" />
     <Compile Include="ModelBase\IPdfContent.cs" />
     <Compile Include="ModelBase\ListViewModel.cs" />
@@ -166,6 +172,10 @@
     <Page Include="Controls\ProxyControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

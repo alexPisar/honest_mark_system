@@ -26,11 +26,6 @@ namespace OmsQrCodesMakerApp
             (DataContext as Models.AuthModel)?.Init();
         }
 
-        private void CertificatesLookUpEdit_EditValueChanged(object sender, DevExpress.Xpf.Editors.EditValueChangedEventArgs e)
-        {
-            (DataContext as Models.AuthModel)?.SelectedCertificateChanged();
-        }
-
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             if ((DataContext as Models.AuthModel) == null)
@@ -58,7 +53,7 @@ namespace OmsQrCodesMakerApp
 
                     if (!checkConnectResult)
                     {
-                        DevExpress.Xpf.Core.DXMessageBox.Show("Не удалось пройти авторизацию Прокси.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Не удалось пройти авторизацию Прокси.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
                     else
@@ -74,20 +69,20 @@ namespace OmsQrCodesMakerApp
 
             if(authModel.SelectedCertificate?.Certificate == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не выбран сертификат!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Не выбран сертификат!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if (authModel.SelectedOrganization == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не выбрана организация!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Не выбрана организация!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if(!WebSystems.WebClients.OrderManagementStationClient.GetInstance().Authorization(authModel.SelectedCertificate.Certificate,
                 authModel.SelectedOrganization.OmsConnection, authModel.SelectedOrganization.OmsId, authModel.SelectedOrganization.Inn))
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не удалось авторизоваться в СУЗ!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Не удалось авторизоваться в СУЗ!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -103,6 +98,11 @@ namespace OmsQrCodesMakerApp
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void DataGridComboBox_SelectedItemChanged(object sender, EventArgs e)
+        {
+            (DataContext as Models.AuthModel)?.SelectedCertificateChanged();
         }
     }
 }

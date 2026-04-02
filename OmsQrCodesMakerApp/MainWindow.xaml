@@ -1,15 +1,13 @@
-﻿<Window
+﻿<r:RibbonWindow
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
-        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
-        xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
-        xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
-        xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+        xmlns:svg="clr-namespace:SharpVectors.Converters;assembly=SharpVectors.Converters.Wpf"
+        xmlns:control="clr-namespace:FilterDataGrid;assembly=FilterDataGrid"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:r="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OmsQrCodesMakerApp"
-        xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core" x:Class="OmsQrCodesMakerApp.MainWindow"
+        x:Class="OmsQrCodesMakerApp.MainWindow"
         mc:Ignorable="d"
         Title="Список заказов" Height="450" Width="800">
     <Grid>
@@ -17,29 +15,38 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <dxr:RibbonControl Grid.Row="0" ShowApplicationButton="False" DockPanel.Dock="Top">
-            <dxr:RibbonPage Caption="Заказы">
-                <dxr:RibbonPageGroup>
-                    <dxb:BarButtonItem Content="Обновить" RibbonStyle="Large" 
-                                       LargeGlyph="{dx:DXImage SvgImages/XAF/Action_Refresh.svg}"
-                                       Command="{Binding RefreshCommand}"/>
-                    <dxb:BarButtonItem Content="Состав заказа" RibbonStyle="Large" 
-                                       LargeGlyph="{dx:DXImage SvgImages/Outlook Inspired/Tasks.svg}" 
-                                       Command="{Binding EditCommand}"/>
-                </dxr:RibbonPageGroup>
-            </dxr:RibbonPage>
-        </dxr:RibbonControl>
-        <dxg:GridControl Grid.Row="1" ItemsSource="{Binding ItemsList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-            <dxg:GridColumn FieldName="OrderId" Header="ID заказа" Width="150"/>
-            <dxg:GridColumn FieldName="OrderStatus" Header="Статус заказа" Width="150"/>
-            <dxg:GridColumn FieldName="TotalCodes" Header="Заказанные коды" Width="120"/>
-            <dxg:GridColumn FieldName="ProductCount" Header="Кол-во товаров" Width="120"/>
-            <dxg:GridColumn FieldName="DateCreate" Header="Дата создания" Width="100">
-                <dxg:GridColumn.EditSettings>
-                    <dxe:DateEditSettings DisplayFormat="dd.MM.yyyy"/>
-                </dxg:GridColumn.EditSettings>
-            </dxg:GridColumn>
-        </dxg:GridControl>
+        <r:Ribbon x:Name="Ribbon">
+            <r:Ribbon.ApplicationMenu>
+                <r:RibbonApplicationMenu Visibility="Collapsed"></r:RibbonApplicationMenu>
+            </r:Ribbon.ApplicationMenu>
+            <r:RibbonTab x:Name="HomeTab" Header="Заказы">
+                <r:RibbonGroup x:Name="ActionGroup">
+                    <r:RibbonButton x:Name="RefreshButton"
+                                    LargeImageSource="{svg:SvgImage Source=SvgImage/Action_Refresh.svg}"
+                                    Label="Обновить" Command="{Binding RefreshCommand}" />
+                    <r:RibbonButton x:Name="OrderSingleButton"
+                                    LargeImageSource="{svg:SvgImage Source=SvgImage/Tasks.svg}"
+                                    Label="Состав заказа" Command="{Binding EditCommand}" />
+                </r:RibbonGroup>
+            </r:RibbonTab>
+        </r:Ribbon>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="35" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBox Grid.Row="0" Margin="5 0" Height="25" Width="150" HorizontalAlignment="Right" VerticalAlignment="Center" VerticalContentAlignment="Center" Text="{Binding Search, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <control:FilterDataGrid Grid.Row="1" ItemsSource="{Binding ItemsList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                  SelectedItem="{Binding SelectedItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Style="{StaticResource FilterDatagridStyle}">
+                <control:FilterDataGrid.Columns>
+                    <control:DataGridTextColumn Header="Id заказа" IsColumnFiltered="True" Binding="{Binding Path=OrderId, Mode=OneWay}" Width="150" />
+                    <control:DataGridTextColumn Header="Статус заказа" IsColumnFiltered="True" Binding="{Binding Path=OrderStatus, Mode=OneWay}" Width="150" />
+                    <control:DataGridTextColumn Header="Заказанные коды" Binding="{Binding Path=TotalCodes, Mode=OneWay}" Width="120" />
+                    <control:DataGridTextColumn Header="Кол-во товаров" Binding="{Binding Path=ProductCount, Mode=OneWay}" Width="120" />
+                    <control:DataGridDateTimeColumn Header="Дата создания" Binding="{Binding Path=DateCreate, Mode=OneWay}" Width="100" DateTimeStringFormat="dd.MM.yyyy" />
+                </control:FilterDataGrid.Columns>
+            </control:FilterDataGrid>
+        </Grid>
     </Grid>
-</Window>
+</r:RibbonWindow>
