@@ -7,7 +7,7 @@ using UtilitesLibrary.ModelBase;
 
 namespace OmsQrCodesMakerApp.Models
 {
-    public class MainViewModel : ListViewModel<ViewModels.OmsOrder>
+    public class MainViewModel : DataGridViewModel<ViewModels.OmsOrder>
     {
         private WebSystems.WebClients.OrderManagementStationClient _omsClient;
 
@@ -41,10 +41,10 @@ namespace OmsQrCodesMakerApp.Models
                         })?.ToList();
                     });
 
-                ItemsList = new System.Collections.ObjectModel.ObservableCollection<ViewModels.OmsOrder>(orders);
+                SourceItemsList = new System.Collections.ObjectModel.ObservableCollection<ViewModels.OmsOrder>(orders);
                 SelectedItem = null;
-                OnPropertyChanged("ItemsList");
                 OnPropertyChanged("SelectedItem");
+                base.Refresh();
             }
             catch (System.Net.WebException webEx)
             {
@@ -68,7 +68,7 @@ namespace OmsQrCodesMakerApp.Models
         {
             if (SelectedItem == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не выбран заказ!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.MessageBox.Show("Не выбран заказ!", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 return;
             }
 

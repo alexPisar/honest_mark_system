@@ -1,0 +1,48 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:UtilitesLibrary"
+    xmlns:control="clr-namespace:FilterDataGrid;assembly=FilterDataGrid">
+    <Style x:Key="FilterDatagridStyle" TargetType="{x:Type control:FilterDataGrid}">
+        <Style.Setters>
+            <Setter Property="AlternatingRowBackground" Value="WhiteSmoke" />
+            <Setter Property="RowBackground" Value="WhiteSmoke" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="MinRowHeight" Value="30" />
+            <Setter Property="HorizontalGridLinesBrush" Value="LightGray" />
+            <Setter Property="VerticalGridLinesBrush" Value="LightGray" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Visible" />
+            <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True" />
+            <Setter Property="BorderBrush" Value="LightSlateGray" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserSortColumns" Value="True" />
+            <Setter Property="CanUserDeleteRows" Value="False" />
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="FilterLanguage" Value="English" />
+            <Setter Property="RowDetailsVisibilityMode" Value="VisibleWhenSelected" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.PanningMode" Value="Both" />
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
+            <Setter Property="RowStyle" Value="{DynamicResource FilterDataGridRowStyle}" />
+        </Style.Setters>
+    </Style>
+    <Style x:Key="FilterDataGridRowStyle" TargetType="{x:Type DataGridRow}">
+        <Style.Setters>
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style.Setters>
+        <Style.Triggers>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsEnabled" Value="True" />
+                    <Condition Property="IsMouseOver" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="#FFF7D382" />
+            </MultiTrigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#FF6FB5FB" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:OmsQrCodesMakerApp"
              StartupUri="AuthWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary Source="pack://application:,,,/UtilitesLibrary;component/Themes/Generic.xaml" />
     </Application.Resources>
 </Application>

@@ -30,10 +30,10 @@ namespace OmsQrCodesMakerApp
         {
             get
             {
-                if (IndexSpinEdit?.EditValue == null)
+                if (IndexSpinEdit?.Value == null)
                     return null;
 
-                return Convert.ToInt32(IndexSpinEdit.EditValue);
+                return Convert.ToInt32(IndexSpinEdit.Value.Value);
             }
         }
 
@@ -43,13 +43,13 @@ namespace OmsQrCodesMakerApp
         {
             if((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не указан формат файла", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Не указан формат файла", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if(string.IsNullOrEmpty((DataContext as Models.SavePrintDataMatrixModel)?.FolderPath))
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не указана папка для сохранения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Не указана папка для сохранения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -63,7 +63,7 @@ namespace OmsQrCodesMakerApp
                 }
                 else
                 {
-                    DevExpress.Xpf.Core.DXMessageBox.Show("Не найдена папка для сохранения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Не найдена папка для сохранения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
             }
@@ -79,7 +79,7 @@ namespace OmsQrCodesMakerApp
                 else
                     errorMessage = "Не указан префикс!";
 
-                DevExpress.Xpf.Core.DXMessageBox.Show(errorMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(errorMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -118,7 +118,7 @@ namespace OmsQrCodesMakerApp
             (DataContext as Models.SavePrintDataMatrixModel).OnPropertyChanged("FolderPath");
         }
 
-        private void ChangeFileTypeComboBox_EditValueChanged(object sender, DevExpress.Xpf.Editors.EditValueChangedEventArgs e)
+        private void ChangeFileTypeComboBox_EditValueChanged(object sender, SelectionChangedEventArgs e)
         {
             if((DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Pdf ||
                 (DataContext as Models.SavePrintDataMatrixModel)?.SelectedFileType == UtilitesLibrary.Enums.FileTypeEnum.Csv ||

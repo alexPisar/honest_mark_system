@@ -27,8 +27,8 @@ namespace OmsQrCodesMakerApp
         {
             InitializeComponent();
             _omsClient = omsClient;
-            CodesSpinEdit.MaxValue = (decimal)maxValue;
-            CodesSpinEdit.EditValue = (decimal)editValue;
+            CodesSpinEdit.Maximum = maxValue;
+            CodesSpinEdit.Value = editValue;
         }
 
         public ViewModels.OmsOrder Order { get; set; }
@@ -36,24 +36,24 @@ namespace OmsQrCodesMakerApp
 
         private void ReleaseButton_Click(object sender, RoutedEventArgs e)
         {
-            decimal? editValue = CodesSpinEdit.EditValue as decimal?;
+            var editValue = CodesSpinEdit.Value;
             if (editValue == 0 || editValue == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Указано нулевое количество кодов!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Указано нулевое количество кодов!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            int quantity = Convert.ToInt32(editValue.Value);
+            int quantity = editValue.Value;
 
             if (Order == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не указан заказ!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Не указан заказ!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if (Product == null)
             {
-                DevExpress.Xpf.Core.DXMessageBox.Show("Не указан товар!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Не указан товар!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -78,7 +78,7 @@ namespace OmsQrCodesMakerApp
 
                 if (markedCodes?.Codes == null || markedCodes.Codes.Length == 0)
                 {
-                    DevExpress.Xpf.Core.DXMessageBox.Show("Не удалось получить коды маркировки!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Не удалось получить коды маркировки!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 

@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:SearchableComboBox="clr-namespace:SearchableComboBox;assembly=SearchableComboBox"
+        xmlns:toolkit="clr-namespace:SearchableComboBox.Toolkit;assembly=SearchableComboBox"
         xmlns:local="clr-namespace:OmsQrCodesMakerApp"
         mc:Ignorable="d" ResizeMode="NoResize"
         Title="Настройки сохранения файлов" Height="220" Width="550">
@@ -15,22 +16,22 @@
         <StackPanel Orientation="Vertical" Grid.Row="0">
             <StackPanel Orientation="Horizontal">
                 <Label Width="120" Margin="10 5" Content="Папка сохранения"/>
-                <dxe:TextEdit IsReadOnly="True" Text="{Binding FolderPath, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5 5 5" Width="300" />
+                <TextBox IsReadOnly="True" Text="{Binding FolderPath, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5 5 5" Width="300" />
                 <Button x:Name="ChangeFolderButton" Margin="2 5 5 5" Content="..." Click="ChangeFolderButton_Click" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Label Width="120" Margin="10 5" Content="Формат сохранения"/>
-                <dxe:ComboBoxEdit x:Name="ChangeFileTypeComboBox" ItemsSource="{Binding FileTypes}" DisplayMember="Value" ValueMember="Key" 
-                                  EditValue="{Binding SelectedFileType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5" Width="150" 
-                                  EditValueChanged="ChangeFileTypeComboBox_EditValueChanged"/>
+                <SearchableComboBox:SearchableComboBox x:Name="ChangeFileTypeComboBox" ItemsSource="{Binding FileTypes}" DisplayMemberPath="Value" SelectedValuePath="Key" 
+                                  SelectedValue="{Binding SelectedFileType, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" Margin="10 5" Width="150" 
+                                  SelectionChanged="ChangeFileTypeComboBox_EditValueChanged"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" x:Name="SavedFileNameStackPanel">
                 <Label x:Name="SavedFileNameLabel" Width="120" Margin="10 5" />
-                <dxe:TextEdit x:Name="SavedFileNameTextEdit" Text="{Binding SavedFileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5" Width="380" />
+                <TextBox x:Name="SavedFileNameTextEdit" Text="{Binding SavedFileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="10 5" Width="380" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" x:Name="IndexStackPanel">
                 <Label Width="120" Margin="10 5" Content="Нумерация с:" />
-                <dxe:SpinEdit x:Name="IndexSpinEdit"  Margin="10 5" EditValue="1" Increment="1" MinValue="1" Width="150" MaskType="Regular" Mask="00000" MaskUseAsDisplayFormat="True"/>
+                <toolkit:IntegerUpDown x:Name="IndexSpinEdit"  Margin="10 5" Value="1" Increment="1" Minimum="1" Width="150" FormatString="d5" />
             </StackPanel>
         </StackPanel>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
