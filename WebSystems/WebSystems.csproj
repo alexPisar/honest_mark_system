@@ -58,6 +58,7 @@
     <Compile Include="Models\AuthData.cs" />
     <Compile Include="Models\AuthRequest.cs" />
     <Compile Include="Models\AuthResult.cs" />
+    <Compile Include="Models\Base\SearchResult.cs" />
     <Compile Include="Models\Cis.cs" />
     <Compile Include="Models\DiadocEdoDocument.cs" />
     <Compile Include="Models\DocumentCreateRequest.cs" />
@@ -99,10 +100,17 @@
     <Compile Include="Models\OMS\ResultSearch.cs" />
     <Compile Include="Models\ProcessEdoOperation.cs" />
     <Compile Include="Models\ProcessEdoOperationDetail.cs" />
+    <Compile Include="Models\ProductInfo.cs" />
+    <Compile Include="Models\ProductSearchIdentifiedBy.cs" />
+    <Compile Include="Models\ProductSearchInfo.cs" />
+    <Compile Include="Models\ProductSearchResult.cs" />
     <Compile Include="Models\ReceiveDocument.cs" />
     <Compile Include="Models\ReceiveProduct.cs" />
     <Compile Include="Models\ShipmentDocument.cs" />
     <Compile Include="Models\ShipmentProduct.cs" />
+    <Compile Include="Models\TnVedInfo.cs" />
+    <Compile Include="Models\TnVedsListRequest.cs" />
+    <Compile Include="Models\TnVedsListResponse.cs" />
     <Compile Include="Models\WithdrawalFromTurnoverDetail.cs" />
     <Compile Include="Models\WithdrawalFromTurnoverDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -272,5 +272,112 @@ namespace WebSystems.WebClients
             var orgEdoId = _webService.GetRequest($"{Properties.Settings.Default.UrlAddressHonestMark}/edo/inn/{inn}");
             return orgEdoId;
         }
+
+        public Models.ProductSearchResult SearchGtin(List<string> gtins)
+        {
+            var authData = new Dictionary<string, string>();
+            authData.Add("Authorization", $"Bearer {_token}");
+
+            var gtinsStr = string.Join(";", gtins);
+            var result = _webService.GetRequest<Models.ProductSearchResult>($"{Properties.Settings.Default.UrlAddressHonestMark}/nk/product?gtins={gtinsStr}", authData);
+            return result;
+        }
+
+        public List<Models.ProductInfo> GetGtinInfo(List<string> gtins)
+        {
+            var authData = new Dictionary<string, string>();
+            authData.Add("Authorization", $"Bearer {_token}");
+
+            int block = 1000;
+            int position = 0;
+
+            var resultList = new List<Models.ProductInfo>();
+
+            while (position < gtins.Count)
+            {
+                int length = gtins.Count - position > block ? block : gtins.Count - position;
+                var gtinsStr = "{" + $"\"gtins\":[\"{string.Join("\",\"", gtins.Skip(position).Take(length))}\"]" + "}";
+                var result = _webService.PostRequest<Models.Base.SearchResult<Models.ProductInfo>>($"{Properties.Settings.Default.UrlAddressHonestMarkNewVersion}/product/info",
+                    gtinsStr, null, "application/json", authData);
+
+                if (!string.IsNullOrEmpty(result.ErrorCode))
+                    throw new Exception($"Произошла ошибка с кодом {result.ErrorCode}");
+
+                if (result.Results != null)
+                    resultList.AddRange(result.Results);
+
+                position += block;
+            }
+            return resultList;
+        }
+
+        public List<Models.TnVedInfo> GetTnVedsListForProductGroups(List<ProductGroupsEnum> productGroups)
+        {
+            var authData = new Dictionary<string, string>();
+            authData.Add("Authorization", $"Bearer {_token}");
+
+            var enumUtil = new UtilitesLibrary.Service.EnumUtil();
+            var productGroupsStr = productGroups.Select(productGroup => enumUtil.GetEnumMemberAttrValue(productGroup));
+
+            var resultList = new List<Models.TnVedInfo>();
+            int page = 0;
+            Models.TnVedsListResponse result = null;
+
+            do
+            {
+                var request = new Models.TnVedsListRequest
+                {
+                    ProductGroups = productGroupsStr.ToArray(),
+                    Limit = 1000,
+                    Page = page
+                };
+
+                var requestJson = JsonConvert.SerializeObject(request);
+
+                result = _webService.PostRequest<Models.TnVedsListResponse>($"{Properties.Settings.Default.UrlAddressHonestMarkNewVersion}/tn-ved/search",
+                    requestJson, null, "application/json", authData);
+
+                if (result != null)
+                    resultList.AddRange(result.TnVeds);
+
+                page++;
+            }
+            while (!(result?.Last ?? true));
+
+            return resultList;
+        }
+
+        public List<Models.TnVedInfo> GetTnVedsList(List<string> tnVeds)
+        {
+            var authData = new Dictionary<string, string>();
+            authData.Add("Authorization", $"Bearer {_token}");
+
+            var resultList = new List<Models.TnVedInfo>();
+            int page = 0;
+            Models.TnVedsListResponse result = null;
+
+            do
+            {
+                var request = new Models.TnVedsListRequest
+                {
+                    TnVeds = tnVeds.ToArray(),
+                    Limit = 1000,
+                    Page = page
+                };
+
+                var requestJson = JsonConvert.SerializeObject(request);
+
+                result = _webService.PostRequest<Models.TnVedsListResponse>($"{Properties.Settings.Default.UrlAddressHonestMarkNewVersion}/tn-ved/search",
+                    requestJson, null, "application/json", authData);
+
+                if (result != null)
+                    resultList.AddRange(result.TnVeds);
+
+                page++;
+            }
+            while (!(result?.Last ?? true));
+
+            return resultList;
+        }
     }
 }

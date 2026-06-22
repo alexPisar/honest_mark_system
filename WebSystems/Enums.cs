@@ -492,20 +492,6 @@ namespace WebSystems
         Return,
 
         /// <summary>
-        /// Продажа по образцам, дистанционный способ продажи
-        /// </summary>
-        [EnumMember(Value = "REMOTE_SALE")]
-        [Description("Продажа по образцам, дистанционный способ продажи")]
-        RemoteSale,
-
-        /// <summary>
-        /// Утрата или повреждение
-        /// </summary>
-        [EnumMember(Value = "DAMAGE_LOSS")]
-        [Description("Утрата или повреждение")]
-        DamageLoss,
-
-        /// <summary>
         /// Утилизация или уничтожение
         /// </summary>
         [EnumMember(Value = "DESTRUCTION")]
@@ -552,6 +538,55 @@ namespace WebSystems
         /// </summary>
         [EnumMember(Value = "UTILIZATION")]
         [Description("Утилизация")]
-        Utilization
+        Utilization,
+
+        /// <summary>
+        /// Утрата
+        /// </summary>
+        [EnumMember(Value = "LOSS")]
+        [Description("Утрата")]
+        Loss,
+
+        /// <summary>
+        /// Использование для собственных нужд
+        /// </summary>
+        [EnumMember(Value = "OWN_USE")]
+        [Description("Использование для собственных нужд")]
+        OwnUse,
+
+        /// <summary>
+        /// Истечение срока годности
+        /// </summary>
+        [EnumMember(Value = "EXPIRATION")]
+        [Description("Истечение срока годности")]
+        Expiration,
+
+        /// <summary>
+        /// Продажа по образцам
+        /// </summary>
+        [EnumMember(Value = "BY_SAMPLES")]
+        [Description("Продажа по образцам")]
+        BySamples,
+
+        /// <summary>
+        /// Дистанционная продажа
+        /// </summary>
+        [EnumMember(Value = "DISTANCE")]
+        [Description("Дистанционная продажа")]
+        Distance,
+
+        /// <summary>
+        /// Безвозмездная передача
+        /// </summary>
+        [EnumMember(Value = "DONATION")]
+        [Description("Безвозмездная передача")]
+        Donation,
+
+        /// <summary>
+        /// Использование для производственных целей
+        /// </summary>
+        [EnumMember(Value = "PRODUCTION_USE")]
+        [Description("Использование для производственных целей")]
+        ProductionUse
     }
 }

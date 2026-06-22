@@ -294,5 +294,57 @@ namespace HmsTests
 
             }
         }
+
+        [TestMethod]
+        public void CheckGtinTest()
+        {
+            var crypto = new WinApiCryptWrapper();
+            var cert = crypto.GetCertificateWithPrivateKey("439C9C0937713DEEA5334DB7228585A55B11498C", false);
+            HonestMarkClient.GetInstance().Authorization(cert, "2538150215");
+
+            var gtins = new List<string>();
+            //gtins.Add("04640018996405");
+            //gtins.Add("04640018996207");
+            //gtins.Add("08594002682736");
+            //gtins.Add("04640018991943");
+
+            //gtins.Add("04601892002187");
+            //gtins.Add("04627129909944");
+            //gtins.Add("04601892007519");
+            //gtins.Add("04607014442084");
+            //gtins.Add("06930127001427");
+            //gtins.Add("04601892008271");
+            //gtins.Add("04601892002262");
+            //gtins.Add("04601892006765");
+
+
+            gtins.Add("04657830017966");
+            gtins.Add("04657830015993");
+
+            //var result = HonestMarkClient.GetInstance().SearchGtin(gtins);
+            HonestMarkClient.GetInstance().GetGtinInfo(gtins);
+
+            var res1 = HonestMarkClient.GetInstance().GetTnVedsListForProductGroups(new List<WebSystems.ProductGroupsEnum>() { WebSystems.ProductGroupsEnum.Chemistry });
+
+            var exists1 = res1.Exists(r => r.TnVedCode == "3306100000");
+            var exists2 = res1.Exists(r => r.TnVedCode == "4015190000");
+
+            //var res2 = HonestMarkClient.GetInstance().GetTnVedsList(new List<string>() { "3306100000", "4015190000" });
+        }
+
+        [TestMethod]
+        public void WithdrawalFromTurnoverTest()
+        {
+            var fileContentAsJson = System.IO.File.ReadAllText("C:\\Users\\developer3\\Downloads\\00de445d-1eab-4b17-877f-6c9e7f0292f4.json");
+            var fileContent = Newtonsoft.Json.JsonConvert.DeserializeObject<WebSystems.Models.WithdrawalFromTurnoverDocument>(fileContentAsJson);
+
+            var crypto = new WinApiCryptWrapper();
+            var cert = crypto.GetCertificateWithPrivateKey("439C9C0937713DEEA5334DB7228585A55B11498C", false);
+            var honestMarkSystem = new WebSystems.Systems.HonestMarkSystem(cert, "2539108495");
+
+            var auth = honestMarkSystem.Authorization();
+
+            //var documentId = honestMarkSystem.SendDocument(WebSystems.ProductGroupsEnum.Perfumery, WebSystems.DocumentFormatsEnum.Manual, "LK_RECEIPT", fileContent);
+        }
     }
 }

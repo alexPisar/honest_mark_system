@@ -30,7 +30,7 @@ namespace HonestMarkSystem.Models
                     return new KeyValuePair<WebSystems.ReasonOfWithdrawalFromTurnover, string>(m, description?.Description);
                 });
 
-            SelectedReason = AllReasons.First(a => a.Key == WebSystems.ReasonOfWithdrawalFromTurnover.DamageLoss);
+            SelectedReason = AllReasons.First(a => a.Key == WebSystems.ReasonOfWithdrawalFromTurnover.Loss);
 
             _selectedProductGroup = default(KeyValuePair<WebSystems.ProductGroupsEnum, string>);
         }
