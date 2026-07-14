@@ -194,7 +194,32 @@ namespace WebSystems.WebClients
 
             while(cises.All(c => c.Cises.All(d => (d.Value?.Count() ?? 0) > 0)))
             {
-                cises = cises.SelectMany(c => c.Cises.Select(d => d.Value.ToObject<Models.Cis>()));
+                cises = cises.SelectMany(c => c.Cises.Select(d => 
+                {
+                    if (d.Value is Newtonsoft.Json.Linq.JObject)
+                        return d.Value.ToObject<Models.Cis>();
+                    else if (d.Value is Newtonsoft.Json.Linq.JArray)
+                    {
+                        var obj = ((Newtonsoft.Json.Linq.JArray)d.Value).FirstOrDefault();
+
+                        if (obj?.Type == Newtonsoft.Json.Linq.JTokenType.String)
+                        {
+                            var res = new Dictionary<string, Newtonsoft.Json.Linq.JToken>();
+                            foreach (var val in (Newtonsoft.Json.Linq.JArray)d.Value)
+                            {
+                                res.Add(val.ToObject<string>(), null);
+                            }
+                            return new Models.Cis
+                            {
+                                Cises = res
+                            };
+                        }
+                        else
+                            return obj.ToObject<Models.Cis>();
+                    }
+                    else
+                        return null;
+                })).Where(c => c != null);
             }
 
             return cises.SelectMany(c => c.Cises.Keys).ToArray();
@@ -229,7 +254,32 @@ namespace WebSystems.WebClients
 
             while (cises.All(c => c.Cises.All(d => (d.Value?.Count() ?? 0) > 0)))
             {
-                cises = cises.SelectMany(c => c.Cises.Select(d => d.Value.ToObject<Models.Cis>()));
+                cises = cises.SelectMany(c => c.Cises.Select(d => 
+                {
+                    if (d.Value is Newtonsoft.Json.Linq.JObject)
+                        return d.Value.ToObject<Models.Cis>();
+                    else if (d.Value is Newtonsoft.Json.Linq.JArray)
+                    {
+                        var obj = ((Newtonsoft.Json.Linq.JArray)d.Value).FirstOrDefault();
+
+                        if (obj?.Type == Newtonsoft.Json.Linq.JTokenType.String)
+                        {
+                            var res = new Dictionary<string, Newtonsoft.Json.Linq.JToken>();
+                            foreach (var val in (Newtonsoft.Json.Linq.JArray)d.Value)
+                            {
+                                res.Add(val.ToObject<string>(), null);
+                            }
+                            return new Models.Cis
+                            {
+                                Cises = res
+                            };
+                        }
+                        else
+                            return obj.ToObject<Models.Cis>();
+                    }
+                    else
+                        return null;
+                }));
             }
 
             return cises.SelectMany(c => c.Cises.Keys).ToArray();

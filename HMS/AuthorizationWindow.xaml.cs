@@ -119,7 +119,7 @@ namespace HonestMarkSystem
                             if(refAuthoritySignDocuments != null)
                                 selectedCert = certs?.FirstOrDefault(c =>
                                 cryptoUtil.ParseCertAttribute(c.Subject, "ИНН").TrimStart('0') == refAuthoritySignDocuments.Inn
-                                && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
+                                && string.IsNullOrEmpty(cryptoUtil.GetPersonInnFromCertificate(c)) && cryptoUtil.IsCertificateValid(c) && c.NotAfter > DateTime.Now);
 
                             if (selectedCert == null)
                             {

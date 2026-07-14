@@ -408,16 +408,52 @@ namespace WebSystems.WebClients
             if (dateFrom == null && _config.EdoLastDocDateTimeByInn.ContainsKey(_orgCertInn))
                 dateFrom = _config.EdoLastDocDateTimeByInn[_orgCertInn];
 
-            var documentsFilter = new DocumentsFilter
-            {
-                BoxId = _actualBoxId,
-                FilterCategory = filterCategory,
-                TimestampFrom = dateFrom,
-                TimestampTo = dateTo
-            };
+            var documents = new List<Document>();
+            int? totalCount = null;
+            string afterIndexKey = null;
+            bool hasNextPage = true;
 
-            var documentsList = CallApiSafe(new Func<DocumentList>(() => _api.GetDocuments(_authToken, documentsFilter)));
-            return documentsList.Documents;
+            do
+            {
+                int count;
+
+                if (totalCount == null)
+                    count = 100;
+                else
+                    count = totalCount.Value - documents.Count > 100 ? 100 : totalCount.Value - documents.Count;
+
+                var documentsFilter = new DocumentsFilter
+                {
+                    BoxId = _actualBoxId,
+                    FilterCategory = filterCategory,
+                    TimestampFrom = dateFrom,
+                    TimestampTo = dateTo,
+                    Count = count
+                };
+
+                if (!string.IsNullOrEmpty(afterIndexKey))
+                    documentsFilter.AfterIndexKey = afterIndexKey;
+
+                var documentsList = CallApiSafe(new Func<DocumentList>(() => _api.GetDocuments(_authToken, documentsFilter)));
+
+                hasNextPage = documentsList.HasMoreResults;
+
+                if (totalCount == null && !hasNextPage)
+                {
+                    totalCount = documents.Count + (documentsList?.TotalCount ?? 0);
+                }
+                else if (hasNextPage)
+                    totalCount = null;
+
+                if (documentsList?.Documents != null && documentsList.Documents.Count > 0)
+                {
+                    afterIndexKey = documentsList.Documents.LastOrDefault()?.IndexKey;
+                    documents.AddRange(documentsList.Documents);
+                }
+
+            } while (hasNextPage || documents.Count < (totalCount ?? 0));
+
+            return documents;
         }
 
         public List<Document> GetDocumentsByMessageId(string messageId)
