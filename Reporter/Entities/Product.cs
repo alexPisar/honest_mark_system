@@ -16,6 +16,10 @@ namespace Reporter.Entities
 
         public string BarCode { get; set; }
 
+        public string Gtin { get; set; }
+
+        public string QuantityMark { get; set; }
+
         public decimal? Price { get; set; }
 
         public decimal? TaxAmount { get; set; }

@@ -31,6 +31,10 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt
         public virtual decimal? IdGood { get; set; }
 
         public virtual int DetailNumber { get; set; }
+
+        public virtual string Gtin { get; set; }
+
+        public virtual decimal? QuantityMark { get; set; }
         #endregion
 
         #region Navigation Properties

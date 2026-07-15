@@ -445,8 +445,12 @@ namespace HonestMarkSystem.Implementations
                         TaxAmount = product.TaxAmount,
                         IdDocEdoPurchasing = newDoc.IdDocEdo,
                         EdoDocument = newDoc,
-                        DetailNumber = product.Number
+                        DetailNumber = product.Number,
+                        Gtin = product.Gtin
                     };
+
+                    if (!string.IsNullOrEmpty(product.QuantityMark))
+                        newDetail.QuantityMark = Convert.ToDecimal(product.QuantityMark);
 
                     var refGoods = _abt.RefBarCodes?
                                 .Where(b => b.BarCode == newDetail.BarCode && b.IsPrimary == false)?

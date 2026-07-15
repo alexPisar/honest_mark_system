@@ -49,6 +49,15 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
                 .Property(d => d.DetailNumber)
                 .HasColumnName("DETAIL_NUMBER");
 
+            this
+                .Property(d => d.Gtin)
+                .HasColumnName("GTIN")
+                .HasMaxLength(20);
+
+            this
+                .Property(d => d.QuantityMark)
+                .HasColumnName("QUANTITY_MARK");
+
             OnCreated();
         }
 
