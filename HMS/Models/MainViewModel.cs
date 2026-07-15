@@ -477,12 +477,22 @@ namespace HonestMarkSystem.Models
                                 foreach(var detail in Details ?? new List<DocEdoPurchasingDetail>())
                                 {
                                     if (string.IsNullOrEmpty(detail.BarCode))
-                                        continue;
+                                    {
+                                        if (detail.IdGood == null && !string.IsNullOrEmpty(detail.Gtin))
+                                            throw new Exception($"Для товара с ГТИН {detail.Gtin} не указан ID товара.");
+                                        else
+                                            continue;
+                                    }
 
                                     var refGoodsObj = _dataBaseAdapter?.GetRefGoodsByBarCode(detail.BarCode);
 
                                     if (refGoodsObj == null || refGoodsObj.Count() == 0)
-                                        continue;
+                                    {
+                                        if (detail.IdGood == null && !string.IsNullOrEmpty(detail.Gtin))
+                                            throw new Exception($"Для товара с ГТИН {detail.Gtin} не указан ID товара.");
+                                        else
+                                            continue;
+                                    }
 
                                     var refGoods = refGoodsObj.Cast<RefGood>();
 
@@ -491,6 +501,9 @@ namespace HonestMarkSystem.Models
 
                                     if (refGood != null)
                                         detail.IdGood = refGood.Id;
+
+                                    if (detail.IdGood == null && !string.IsNullOrEmpty(detail.Gtin))
+                                        throw new Exception($"Для товара с ГТИН {detail.Gtin} не указан ID товара.");
                                 }
 
                                 if (honestMarkSystem != null)
@@ -548,6 +561,9 @@ namespace HonestMarkSystem.Models
 
                                     if (docLine != null)
                                         detail.IdGood = docLine.IdGood;
+
+                                    if (detail.IdGood == null && !string.IsNullOrEmpty(detail.Gtin))
+                                        throw new Exception($"Для товара с ГТИН {detail.Gtin} не указан ID товара.");
                                 }
                             }
 

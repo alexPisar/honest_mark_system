@@ -232,8 +232,10 @@
                                 <dxe:ButtonEditSettings HorizontalContentAlignment="Right" DefaultButtonClick="ButtonEditSettings_DefaultButtonClick"/>
                             </dxg:GridColumn.EditSettings>
                         </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="Gtin" Header="ГТИН" Width="100"/>
                         <dxg:GridColumn FieldName="Description" Header="Наименование" Width="450"/>
                         <dxg:GridColumn FieldName="Quantity" Header="Количество" Width="75"/>
+                        <dxg:GridColumn FieldName="QuantityMark" Header="Марк. количество (ОСУ)" Width="100"/>
                         <dxg:GridColumn FieldName="Price" Header="Цена за единицу" Width="110"/>
                         <dxg:GridColumn FieldName="TaxAmount" Header="Сумма налога" Width="100"/>
                         <dxg:GridColumn FieldName="Subtotal" Header="Сумма всего" Width="110"/>
