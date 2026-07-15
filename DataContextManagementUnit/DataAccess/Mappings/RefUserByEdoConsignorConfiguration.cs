@@ -7,16 +7,12 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
         public RefUserByEdoConsignorConfiguration()
         {
             this
-                .HasKey(r => new { r.UserName, r.IdCustomerShipper, r.IdCustomerConsignor })
+                .HasKey(r => new { r.UserName, r.IdCustomerConsignor })
                 .ToTable("REF_USERS_BY_EDO_CONSIGNORS", "EDI");
 
             this
                 .Property(r => r.IdCustomerConsignor)
                 .HasColumnName("ID_CUSTOMER_CONSIGNOR");
-
-            this
-                .Property(r => r.IdCustomerShipper)
-                .HasColumnName("ID_CUSTOMER_SHIPPER");
 
             this
                 .Property(r => r.UserName)

@@ -15,7 +15,6 @@ namespace HonestMarkSystem.Models
         public string OrgKpp { get; set; }
         public string OrgName { get; set; }
         public string EdoId { get; set; }
-        public List<string> ShipperOrgInns { get; set; }
         public string EmchdId { get; set; }
         public System.DateTime? EmchdBeginDate { get; set; } 
         public string EmchdPersonSurname { get; set; }

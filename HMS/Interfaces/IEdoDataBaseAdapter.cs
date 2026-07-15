@@ -71,7 +71,7 @@ namespace HonestMarkSystem.Interfaces
 
         Dictionary<string, List<KeyValuePair<string, IEnumerable<object>>>> GetMarkedCodesByConsignors(decimal idDocReturn);
 
-        IEnumerable<KeyValuePair<TKey, TValue>> GetMyOrganisations<TKey, TValue>(string userName);
+        IEnumerable<TEntity> GetMyOrganisations<TEntity>(string userName);
 
         List<object> GetHonestMarkProductGroups();
 

@@ -95,7 +95,7 @@ namespace HonestMarkSystem
                 ((Config)DataContext).Save((Config)DataContext, Config.ConfFileName);
                 dataBaseAdapter.InitializeContext();
 
-                var refOrgs = dataBaseAdapter.GetMyOrganisations<RefCustomer, IEnumerable<RefCustomer>>(Config.GetInstance().DataBaseUser);
+                var refOrgs = dataBaseAdapter.GetMyOrganisations<RefCustomer>(Config.GetInstance().DataBaseUser);
 
                 var myOrganizations = new List<Models.ConsignorOrganization>();
                 var mainModel = new Models.MainViewModel(dataBaseAdapter, myOrganizations);
@@ -111,7 +111,7 @@ namespace HonestMarkSystem
                         loadContext.SetLoadingText("Идёт проверка сертификатов...");
                         X509Certificate2 selectedCert = null;
 
-                        var refAuthoritySignDocuments = dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(refOrg.Key.Id)
+                        var refAuthoritySignDocuments = dataBaseAdapter.GetRefAuthoritySignDocumentsByCustomer(refOrg.Id)
                             as RefAuthoritySignDocuments;
 
                         await Task.Run(() =>
@@ -124,14 +124,14 @@ namespace HonestMarkSystem
                             if (selectedCert == null)
                             {
                                 refAuthoritySignDocuments = null;
-                                selectedCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Key.Inn
+                                selectedCert = certs?.FirstOrDefault(c => cryptoUtil.GetOrgInnFromCertificate(c) == refOrg.Inn
                                 /*&& cryptoUtil.IsCertificateValid(c)*/ && c.NotAfter > DateTime.Now);
                             }
                         });
 
                         if (selectedCert == null)
                         {
-                            _log.Log($"Не найден сертификат организации с ИНН {refOrg.Key.Inn}");
+                            _log.Log($"Не найден сертификат организации с ИНН {refOrg.Inn}");
                             continue;
                         }
 
@@ -139,9 +139,9 @@ namespace HonestMarkSystem
                         IEdoSystem edoSystem;
 
                         loadContext.SetLoadingText("Идёт авторизация");
-                        if (AuthentificationByCert(selectedCert, refAuthoritySignDocuments != null ? refOrg.Key.Inn : null, out markSystem, out edoSystem))
+                        if (AuthentificationByCert(selectedCert, refAuthoritySignDocuments != null ? refOrg.Inn : null, out markSystem, out edoSystem))
                         {
-                            var orgName = refOrg.Key.Name;
+                            var orgName = refOrg.Name;
 
                             var organization = new Models.ConsignorOrganization
                             {
@@ -149,9 +149,8 @@ namespace HonestMarkSystem
                                 HonestMarkSystem = markSystem,
                                 CryptoUtil = new CryptoUtil(selectedCert),
                                 EdoSystem = edoSystem,
-                                OrgInn = refOrg.Key.Inn,
-                                OrgName = orgName,
-                                ShipperOrgInns = refOrg.Value?.Where(r => !string.IsNullOrEmpty(r.Inn))?.Select(r => r.Inn)?.ToList() ?? new List<string>()
+                                OrgInn = refOrg.Inn,
+                                OrgName = orgName
                             };
 
                             mainModel.SaveOrgData(organization);

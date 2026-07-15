@@ -42,21 +42,13 @@ namespace HonestMarkSystem.Implementations
 
         public void SetPermittedBoxIds(List<KeyValuePair<Diadoc.Api.Proto.Box, Diadoc.Api.Proto.Organization>> boxesByInn)
         {
-            var permittedSenderInnsForUser = (from refUser in _abt.RefUsersByEdoShippers
-                                              join cus in _abt.RefCustomers on refUser.IdCustomer equals cus.Id
-                                              where refUser.UserName == _dataBaseUser
-                                              select cus.Inn)?.ToList() ?? new List<string>();
-            //permittedSenderInnsForUser.Add("9652306541");
-
-            var permittedBoxes = (from box in boxesByInn
-                              where permittedSenderInnsForUser.Exists(p => p == box.Value.Inn) && box.Key?.BoxId != null && !_permittedBoxes.Any(p => p.BoxId == box.Key.BoxId)
-                                  select new Diadoc.Api.Proto.Box
-                              {
-                                  BoxId = box.Key?.BoxId,
-                                  Title = box.Key?.Title,
-                                  BoxIdGuid = box.Key?.BoxIdGuid,
-                                  Organization = box.Value
-                              }).ToList();
+            var permittedBoxes = (from box in boxesByInn select new Diadoc.Api.Proto.Box
+            {
+                BoxId = box.Key?.BoxId,
+                Title = box.Key?.Title,
+                BoxIdGuid = box.Key?.BoxIdGuid,
+                Organization = box.Value
+            }).ToList();
 
             _permittedBoxes.AddRange(permittedBoxes);
         }
@@ -70,7 +62,7 @@ namespace HonestMarkSystem.Implementations
             if (box == null)
                 return false;
 
-            return myOrganization.ShipperOrgInns.Exists(s => s == box.Organization?.Inn);
+            return true;
         }
 
         public object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo)
@@ -717,18 +709,12 @@ namespace HonestMarkSystem.Implementations
             return resultCollection;
         }
 
-        public IEnumerable<KeyValuePair<TKey, TValue>> GetMyOrganisations<TKey, TValue>(string userName)
+        public IEnumerable<TEntity> GetMyOrganisations<TEntity>(string userName)
         {
-            IEnumerable<KeyValuePair<TKey, TValue>> orgs = (from myOrg in _abt.RefUsersByEdoConsignors
-                       where myOrg.UserName == userName
-                       join refCustomerConsignor in _abt.RefCustomers
-                       on myOrg.IdCustomerConsignor equals (refCustomerConsignor.Id)
-                       join refCustomerShipper in _abt.RefCustomers
-                       on myOrg.IdCustomerShipper equals (refCustomerShipper.Id)
-                       select new { RefCustomerConsignor = refCustomerConsignor, RefCustomerShipper = refCustomerShipper })?
-                       .GroupBy(r => r.RefCustomerConsignor)?.ToList()?
-                       .Select(s => new KeyValuePair<RefCustomer, IEnumerable<RefCustomer>>(s.Key, s.Select(l => l.RefCustomerShipper)))?
-                       .Cast<KeyValuePair<TKey, TValue>>() ?? new List<KeyValuePair<TKey, TValue>>();
+            var idCustomers = (from myOrg in _abt.RefUsersByEdoConsignors where myOrg.UserName == userName select myOrg.IdCustomerConsignor).Distinct().ToList();
+
+            IEnumerable<TEntity> orgs = _abt.RefCustomers?.Where(c => idCustomers.Any(id => id == c.Id))?.ToList()?
+                .Cast<TEntity>() ?? new List<TEntity>();
 
             return orgs;
         }
@@ -749,9 +735,6 @@ namespace HonestMarkSystem.Implementations
 
             var sender = (from senderCustomer in _abt.RefCustomers
                           where senderCustomer.Inn == document.SenderInn && senderCustomer.IdContractor != null
-                          join refUser in _abt.RefUsersByEdoShippers
-                          on senderCustomer.Id equals (refUser.IdCustomer)
-                          where refUser.UserName == _dataBaseUser
                           select senderCustomer).FirstOrDefault();
 
             if (sender.IdContractor == null)

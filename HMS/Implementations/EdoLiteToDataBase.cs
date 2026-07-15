@@ -17,18 +17,12 @@ namespace HonestMarkSystem.Implementations
         private string _dataBaseUser;
         private AbtDbContext _abt;
         private List<DocEdoPurchasing> _documents;
-        private List<string> _permittedSenderInnsForUser;
 
         public void InitializeContext()
         {
             _abt = new AbtDbContext();
 
             _dataBaseUser = ConfigSet.Configs.Config.GetInstance().DataBaseUser;
-            _permittedSenderInnsForUser = (from refUser in _abt.RefUsersByEdoShippers
-                            join cus in _abt.RefCustomers
-                            on refUser.IdCustomer equals cus.Id
-                            where refUser.UserName == _dataBaseUser
-                            select cus.Inn).ToList() ?? new List<string>();
 
             _documents = _abt.DocEdoPurchasings
                 .Where(d => d.EdoProviderName == providerName)
@@ -39,7 +33,7 @@ namespace HonestMarkSystem.Implementations
         {
             var doc = (EdoLiteDocuments)document;
 
-            return _permittedSenderInnsForUser.Exists(p => p == (doc?.Sender?.Inn.ToString() ?? ""));
+            return true;
         }
 
         public object AddDocumentToDataBase(Reporter.IReport report, Models.ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, WebSystems.DocumentInOutType inOutType = WebSystems.DocumentInOutType.None)
@@ -175,7 +169,7 @@ namespace HonestMarkSystem.Implementations
 
         public object[] GetAllDocuments(DateTime dateFrom, DateTime dateTo)
         {
-            return _documents.Where(d => _permittedSenderInnsForUser.FirstOrDefault(c => c == d.SenderInn) != null && d.CreateDate > dateFrom && d.CreateDate <= dateTo)
+            return _documents.Where(d => d.CreateDate > dateFrom && d.CreateDate <= dateTo)
                 .ToArray();
         }
 
@@ -417,18 +411,12 @@ namespace HonestMarkSystem.Implementations
             return null;
         }
 
-        public IEnumerable<KeyValuePair<TKey, TValue>> GetMyOrganisations<TKey, TValue>(string userName)
+        public IEnumerable<TEntity> GetMyOrganisations<TEntity>(string userName)
         {
-            IEnumerable<KeyValuePair<TKey, TValue>> orgs = (from myOrg in _abt.RefUsersByEdoConsignors
-                                                            where myOrg.UserName == userName
-                                                            join refCustomerConsignor in _abt.RefCustomers
-                                                            on myOrg.IdCustomerConsignor equals (refCustomerConsignor.Id)
-                                                            join refCustomerShipper in _abt.RefCustomers
-                                                            on myOrg.IdCustomerShipper equals (refCustomerShipper.Id)
-                                                            select new { RefCustomerConsignor = refCustomerConsignor, RefCustomerShipper = refCustomerShipper })?
-                       .GroupBy(r => r.RefCustomerConsignor)?.ToList()?
-                       .Select(s => new KeyValuePair<RefCustomer, IEnumerable<RefCustomer>>(s.Key, s.Select(l => l.RefCustomerShipper)))?
-                       .Cast<KeyValuePair<TKey, TValue>>() ?? new List<KeyValuePair<TKey, TValue>>();
+            var idCustomers = (from myOrg in _abt.RefUsersByEdoConsignors where myOrg.UserName == userName select myOrg.IdCustomerConsignor).Distinct().ToList();
+
+            IEnumerable<TEntity> orgs = _abt.RefCustomers?.Where(c => idCustomers.Any(id => id == c.Id))?.ToList()?
+                .Cast<TEntity>() ?? new List<TEntity>();
 
             return orgs;
         }
@@ -449,9 +437,6 @@ namespace HonestMarkSystem.Implementations
 
             var sender = (from senderCustomer in _abt.RefCustomers
                           where senderCustomer.Inn == document.SenderInn && senderCustomer.IdContractor != null
-                          join refUser in _abt.RefUsersByEdoShippers
-                          on senderCustomer.Id equals (refUser.IdCustomer)
-                          where refUser.UserName == _dataBaseUser
                           select senderCustomer).FirstOrDefault();
 
             if (sender.IdContractor == null)

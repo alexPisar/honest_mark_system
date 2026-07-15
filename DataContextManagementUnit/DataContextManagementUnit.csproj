@@ -136,7 +136,6 @@
     <Compile Include="DataAccess\Entities\RefOrderStatus.cs" />
     <Compile Include="DataAccess\Entities\RefShoppingStore.cs" />
     <Compile Include="DataAccess\Entities\RefUserByEdoConsignor.cs" />
-    <Compile Include="DataAccess\Entities\RefUserByEdoShipper.cs" />
     <Compile Include="DataAccess\Entities\ViewInvoicDetail.cs" />
     <Compile Include="DataAccess\Entities\ViewInvoicHead.cs" />
     <Compile Include="DataAccess\Entities\ViewRefContractor.cs" />
@@ -183,7 +182,6 @@
     <Compile Include="DataAccess\Mappings\RefPriceTypeConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefShoppingStoreConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\RefUserByEdoConsignorConfiguration.cs" />
-    <Compile Include="DataAccess\Mappings\RefUserByEdoShipperConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\ViewInvoicDetailConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\ViewInvoicHeadConfiguration.cs" />
     <Compile Include="DataAccess\Mappings\ViewRefContractorConfiguration.cs" />

@@ -178,7 +178,7 @@ namespace HonestMarkSystem.Models
                 }
 
                 var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>()
-                    .Where(d => d.ReceiverInn == myOrganization.OrgInn && myOrganization.ShipperOrgInns.Exists(s => s == d.SenderInn));
+                    .Where(d => d.ReceiverInn == myOrganization.OrgInn);
 
                 try
                 {
@@ -2904,7 +2904,7 @@ namespace HonestMarkSystem.Models
             }
 
             var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>()
-                .Where(d => d.ReceiverInn == SelectedMyOrganization.OrgInn && SelectedMyOrganization.ShipperOrgInns.Exists(s => s == d.SenderInn));
+                .Where(d => d.ReceiverInn == SelectedMyOrganization.OrgInn);
 
             var result = SelectedMyOrganization.EdoSystem?.Authorization() ?? false;
 
