@@ -12,17 +12,19 @@
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="Name" Header="Название/код маркировки товара" Width="5*"/>
                 <dxg:GridColumn FieldName="BarCode" Header="Код товара" Width="*"/>
+                <dxg:GridColumn FieldName="Gtin" Header="ГТИН" Width="*"/>
                 <dxg:GridColumn FieldName="Quantity" Header="Количество" Width="*"/>
+                <dxg:GridColumn FieldName="QuantityMark" Header="Марк. количество (ОСУ)" Width="*"/>
                 <dxg:GridColumn FieldName="NotAllDocumentsMarked" Visible="False"/>
                 <dxg:GridColumn FieldName="NotMarked" Visible="False"/>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
                 <dxg:TreeListView Name="treeList" AllowEditing="False" NavigationStyle="Row" ShowSearchPanelMode="Always">
                     <dxg:TreeListView.FormatConditions>
-                        <dxg:FormatCondition ApplyToRow="True"  Expression="[NotAllDocumentsMarked] and ![NotMarked]" FieldName="NotAllDocumentsMarked">
+                        <dxg:FormatCondition ApplyToRow="True"  Expression="[Gtin] == NULL and [NotAllDocumentsMarked] and ![NotMarked]" FieldName="NotAllDocumentsMarked">
                             <dxg:Format Background="#e69c9c"/>
                         </dxg:FormatCondition>
-                        <dxg:FormatCondition ApplyToRow="True"  Expression="[NotMarked]" FieldName="NotMarked">
+                        <dxg:FormatCondition ApplyToRow="True"  Expression="[NotMarked] And [Gtin] == NULL" FieldName="NotMarked">
                             <dxg:Format Background="Gray"/>
                         </dxg:FormatCondition>
                     </dxg:TreeListView.FormatConditions>

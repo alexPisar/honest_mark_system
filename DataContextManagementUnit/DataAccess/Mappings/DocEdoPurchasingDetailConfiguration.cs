@@ -23,7 +23,7 @@ namespace DataContextManagementUnit.DataAccess.Contexts.Abt.Mapping
             this
                 .Property(d => d.Description)
                 .HasColumnName("DESCRIPTION")
-                .HasMaxLength(500);
+                .HasMaxLength(2000);
 
             this
                 .Property(d => d.Quantity)

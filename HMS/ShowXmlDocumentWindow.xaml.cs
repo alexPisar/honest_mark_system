@@ -105,7 +105,9 @@ namespace HonestMarkSystem
             {
                 Name = product.Description,
                 Quantity = Convert.ToInt32(product.Quantity),
+                QuantityMark = product.QuantityMark,
                 BarCode = product.BarCode,
+                Gtin = string.IsNullOrEmpty(product?.Gtin) ? null : product.Gtin,
                 NotMarked = productMarkedCodes.Count() == 0,
                 NotAllDocumentsMarked = productMarkedCodes.Count() > 0 && productMarkedCodes.Count() < product.Quantity
             };

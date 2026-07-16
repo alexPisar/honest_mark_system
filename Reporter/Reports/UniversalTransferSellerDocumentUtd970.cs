@@ -339,7 +339,7 @@ namespace Reporter.Reports
                     if (!string.IsNullOrEmpty(good?.ДопСведТов?.ГТИН))
                         product.Gtin = good?.ДопСведТов?.ГТИН;
 
-                    if (!string.IsNullOrEmpty(good?.ДопСведТов?.НомСредИдентТов[0]?.КолВедМарк))
+                    if (!string.IsNullOrEmpty(good?.ДопСведТов?.НомСредИдентТов?.FirstOrDefault()?.КолВедМарк))
                         product.QuantityMark = good?.ДопСведТов?.НомСредИдентТов[0]?.КолВедМарк;
 
                     Products.Add(product);

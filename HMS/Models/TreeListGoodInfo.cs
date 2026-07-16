@@ -15,7 +15,9 @@ namespace HonestMarkSystem.Models
 
         public string Name { get; set; }
         public int? Quantity { get; set; } = null;
+        public string QuantityMark { get; set; }
         public string BarCode { get; set; }
+        public string Gtin { get; set; }
         public bool NotAllDocumentsMarked { get; set; }
         public bool NotMarked { get; set; }
         public List<TreeListGoodInfo> Children { get; set; }
