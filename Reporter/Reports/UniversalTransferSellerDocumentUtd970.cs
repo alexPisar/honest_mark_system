@@ -323,12 +323,26 @@ namespace Reporter.Reports
 
                             if (code.Items != null)
                             {
-                                product.MarkedCodes.AddRange(code.Items);
+                                if (code.Items.Count() == 1 && code.ItemsElementName.FirstOrDefault() == ItemsChoiceType.НомУпак)
+                                {
+                                    var regex = new System.Text.RegularExpressions.Regex("020\\d{13}37\\d*");
+                                    var gtinItem = code.Items.First();
 
-                                string markedCodeExample = code.Items?.FirstOrDefault();
-                                if (string.IsNullOrEmpty(product.BarCode) && !string.IsNullOrEmpty(markedCodeExample))
-                                    if (markedCodeExample.Length == 31)
-                                        product.BarCode = markedCodeExample.Substring(0, 16).TrimStart('0', '1').TrimStart('0');
+                                    if (regex.IsMatch(gtinItem))
+                                    {
+                                        product.Gtin = gtinItem.Substring(2, 14);
+                                        product.QuantityMark = gtinItem.Substring(18);
+                                    }
+                                }
+                                else
+                                {
+                                    product.MarkedCodes.AddRange(code.Items);
+
+                                    string markedCodeExample = code.Items?.FirstOrDefault();
+                                    if (string.IsNullOrEmpty(product.BarCode) && !string.IsNullOrEmpty(markedCodeExample))
+                                        if (markedCodeExample.Length == 31)
+                                            product.BarCode = markedCodeExample.Substring(0, 16).TrimStart('0', '1').TrimStart('0');
+                                }
                             }
                         }
                     }
