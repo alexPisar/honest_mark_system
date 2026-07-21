@@ -81,220 +81,6 @@ namespace HonestMarkSystem.Models
                 {
                     myOrganization.HonestMarkSystem = null;
                 }
-
-                object[] parameters = null;
-
-                List<IEdoSystemDocument<string>> documents = new List<IEdoSystemDocument<string>>();
-                try
-                {
-                    documents = GetNewDocuments(myOrganization, out parameters);
-                }
-                catch (System.Net.WebException webEx)
-                {
-                    string errorMessage = _log.GetRecursiveInnerException(webEx);
-                    _log.Log(errorMessage);
-
-                    var errorsWindow = new ErrorsWindow("Произошла ошибка получения документов на удалённом сервере.", new List<string>(new string[] { errorMessage }));
-                    errorsWindow.ShowDialog();
-                }
-                catch (Exception ex)
-                {
-                    string errorMessage = _log.GetRecursiveInnerException(ex);
-                    _log.Log(errorMessage);
-
-                    var errorsWindow = new ErrorsWindow("Произошла ошибка получения документов.", new List<string>(new string[] { errorMessage }));
-                    errorsWindow.ShowDialog();
-                }
-
-                if (documents.Count > 0)
-                {
-                    using (var newDocsTransaction = _dataBaseAdapter.BeginTransaction())
-                    {
-                        try
-                        {
-                            foreach (var doc in documents)
-                            {
-                                if (!_dataBaseAdapter.DocumentCanBeAddedByUser(myOrganization, doc))
-                                    continue;
-
-                                byte[] docContentBytes;
-
-                                if (!SaveNewDocument(myOrganization, doc, out docContentBytes))
-                                    continue;
-
-                                var docFromDb = (DocEdoPurchasing)_dataBaseAdapter.GetDocumentFromDb(doc);
-
-                                if (docFromDb == null)
-                                {
-                                    Reporter.IReport report = null;
-                                    var reporterDll = new Reporter.ReporterDll();
-                                    List<Reporter.Entities.Product> products = null;
-
-                                    if (doc as DiadocEdoDocument != null)
-                                    {
-                                        var diadocEdoDocument = doc as DiadocEdoDocument;
-
-                                        if (diadocEdoDocument.Version == "utd820_05_01_02_hyphen")
-                                        {
-                                            report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docContentBytes);
-                                            products = (report as Reporter.Reports.UniversalTransferSellerDocument)?.Products;
-                                        }
-                                        else if (diadocEdoDocument.Version == "utd970_05_03_01")
-                                        {
-                                            report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocumentUtd970>(docContentBytes);
-                                            products = (report as Reporter.Reports.UniversalTransferSellerDocumentUtd970)?.Products;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        report = reporterDll.ParseDocument<Reporter.Reports.UniversalTransferSellerDocument>(docContentBytes);
-                                        products = (report as Reporter.Reports.UniversalTransferSellerDocument)?.Products;
-                                    }
-
-                                    if (products != null && myOrganization?.HonestMarkSystem != null)
-                                    {
-                                        if (products.Exists(p => p.TransportPackingIdentificationCode != null &&
-                                        (string.IsNullOrEmpty(p.BarCode) || p.BarCode.Length < 13) && p.TransportPackingIdentificationCode.Count > 0))
-                                            products = Task.Run<List<Reporter.Entities.Product>>(() => SetBarCodesForProductsFromTransportCode(myOrganization.HonestMarkSystem, products)).Result;
-                                    }
-
-                                    myOrganization.EdoSystem.SendReceivingConfirmationEventHandler?.Invoke(this, new WebSystems.EventArgs.SendReceivingConfirmationEventArgs { Document = doc });
-                                    _dataBaseAdapter.AddDocumentToDataBase(report, myOrganization, doc, DocumentInOutType.Inbox);
-                                }
-                            }
-                            _dataBaseAdapter.Commit(newDocsTransaction);
-                            SaveParameters(myOrganization, parameters);
-                        }
-                        catch (Exception ex)
-                        {
-                            newDocsTransaction.Rollback();
-                            string errorMessage = _log.GetRecursiveInnerException(ex);
-                            _log.Log(errorMessage);
-
-                            var errorsWindow = new ErrorsWindow("Произошла ошибка.", new List<string>(new string[] { errorMessage }));
-                            errorsWindow.ShowDialog();
-                        }
-                    }
-                }
-
-                var docs = _dataBaseAdapter.GetAllDocuments(DateFrom, DateTo).Cast<DocEdoPurchasing>()
-                    .Where(d => d.ReceiverInn == myOrganization.OrgInn);
-
-                try
-                {
-                    var errorsList = new List<string>();
-                    var processingDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.Sent).ToList() ?? new List<DocEdoPurchasing>();
-
-                    if (myOrganization.HonestMarkSystem != null)
-                    {
-                        var honestMarkSystem = myOrganization.HonestMarkSystem;
-
-                        using (var transaction = _dataBaseAdapter.BeginTransaction())
-                        {
-                            int i = 1;
-                            foreach (var processingDocument in processingDocuments)
-                            {
-                                try
-                                {
-                                    ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Save($"ProcessingDocumentPoint_{i}");
-                                    if (honestMarkSystem != null)
-                                    {
-                                        var docProcessingInfo = honestMarkSystem.GetEdoDocumentProcessInfo(processingDocument.FileName);
-
-                                        if (docProcessingInfo.Code == EdoLiteProcessResultStatus.SUCCESS)
-                                        {
-                                            processingDocument.DocStatus = (int)DocEdoStatus.Processed;
-                                            LoadStatus(processingDocument);
-
-                                            if (processingDocument.IdDocJournal != null)
-                                                _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(processingDocument.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
-
-                                            _dataBaseAdapter.Commit();
-                                        }
-                                        else if (docProcessingInfo.Code == EdoLiteProcessResultStatus.FAILED)
-                                        {
-                                            processingDocument.DocStatus = (int)DocEdoStatus.ProcessingError;
-
-                                            var failedOperations = docProcessingInfo?.Operations?.Select(o => o.Details)?.Where(o => o.Successful == false);
-
-                                            var errors = failedOperations.SelectMany(f => f.Errors);
-
-                                            var errorsListStr = new List<string>();
-                                            foreach (var error in errors)
-                                            {
-                                                if (!string.IsNullOrEmpty(error.Text))
-                                                    errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
-                                                else if (!string.IsNullOrEmpty(error?.Error?.Detail))
-                                                    errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nДетали:{error?.Error?.Detail}\n");
-                                                else
-                                                    errorsListStr.Add($"Произошла ошибка с кодом:{error.Code}\n");
-                                            }
-                                            processingDocument.ErrorMessage = string.Join("\n\n", errorsListStr);
-                                            LoadStatus(processingDocument);
-                                            _dataBaseAdapter.Commit();
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    ((Oracle.ManagedDataAccess.Client.OracleTransaction)transaction.UnderlyingTransaction).Rollback($"ProcessingDocumentPoint_{i}");
-                                    _dataBaseAdapter.ReloadEntry(processingDocument);
-                                    string errorMessage = _log.GetRecursiveInnerException(ex);
-                                    _log.Log(errorMessage);
-
-                                    //var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов.", new List<string>(new string[] { errorMessage }));
-                                    //errorsWindow.ShowDialog();
-                                }
-
-                                i++;
-                            }
-
-                            if (processingDocuments.Exists(p => p.DocStatus != (int)DocEdoStatus.Sent))
-                                transaction.Commit();
-                        }
-                    }
-
-                    var newDocuments = docs.Where(d => d.DocStatus == (int)DocEdoStatus.New || d.DocStatus == (int)DocEdoStatus.RevokeRequested).ToList() ?? new List<DocEdoPurchasing>();
-
-                    using (var transaction = _dataBaseAdapter.BeginTransaction())
-                    {
-                        foreach (var newDocument in newDocuments)
-                        {
-                            try
-                            {
-                                if (myOrganization.EdoSystem.GetType() == typeof(DiadocEdoSystem))
-                                    newDocument.DocStatus = (int)myOrganization.EdoSystem.GetCurrentStatus(newDocument.DocStatus, newDocument.IdDocEdo, newDocument.ParentEntityId);
-
-                                _dataBaseAdapter.Commit();
-                            }
-                            catch (Exception ex)
-                            {
-                                _dataBaseAdapter.ReloadEntry(newDocument);
-                                string errorMessage = _log.GetRecursiveInnerException(ex);
-                                _log.Log(errorMessage);
-
-                                errorsList.Add(errorMessage);
-                            }
-                        }
-
-                        transaction.Commit();
-                    }
-
-                    if (errorsList.Count > 0)
-                    {
-                        var errorsWindow = new ErrorsWindow("Произошли ошибки.", errorsList);
-                        errorsWindow.ShowDialog();
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    string errorMessage = _log.GetRecursiveInnerException(ex);
-                    _log.Log(errorMessage);
-
-                    var errorsWindow = new ErrorsWindow("Произошла ошибка обновления статусов документов.", new List<string>(new string[] { errorMessage }));
-                    errorsWindow.ShowDialog();
-                }
             }
 
             ItemsList = new System.Collections.ObjectModel.ObservableCollection<DocEdoPurchasing>();
@@ -511,29 +297,8 @@ namespace HonestMarkSystem.Models
                                     loadContext.SetLoadingText("Сохранение кодов");
                                     var sellerXmlDocument = new XmlDocument();
 
-                                    if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
-                                    {
-                                        if(SelectedMyOrganization?.EdoSystem?.GetType() == typeof(DiadocEdoSystem))
-                                        {
-                                            var diadocEdoSystem = SelectedMyOrganization.EdoSystem as DiadocEdoSystem;
-
-                                            byte[] signature;
-                                            byte[] content = diadocEdoSystem.GetDocumentContent(SelectedItem.IdDocEdo, SelectedItem.ParentEntityId, SelectedItem.IdDocType,
-                                                out signature, DocumentInOutType.Inbox);
-
-                                            if (!Directory.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}"))
-                                                Directory.CreateDirectory($"{edoFilesPath}//{SelectedItem.IdDocEdo}");
-
-                                            var xml = Encoding.GetEncoding(1251).GetString(content);
-                                            var xmlDocument = new XmlDocument();
-                                            xmlDocument.LoadXml(xml);
-
-                                            xmlDocument.Save($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
-                                            File.WriteAllBytes($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml.sig", signature);
-                                        }
-                                        else
-                                            throw new Exception("Не найден XML файл документооборота.");
-                                    }
+                                    if(!SaveXmlDocument(SelectedItem.IdDocEdo, SelectedItem.FileName, SelectedItem.ParentEntityId, SelectedItem.IdDocType))
+                                        throw new Exception("Не найден XML файл документооборота.");
 
                                     sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
                                     var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
@@ -749,8 +514,11 @@ namespace HonestMarkSystem.Models
                 }
                 else
                 {
-                    System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    return;
+                    if (!SaveXmlDocument(SelectedItem.IdDocEdo, SelectedItem.FileName, SelectedItem.ParentEntityId, SelectedItem.IdDocType))
+                    {
+                        System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        return;
+                    }
                 }
             }
 
@@ -1014,8 +782,11 @@ namespace HonestMarkSystem.Models
                 }
                 else
                 {
-                    System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    return;
+                    if (!SaveXmlDocument(SelectedItem.IdDocEdo, SelectedItem.FileName, SelectedItem.ParentEntityId, SelectedItem.IdDocType))
+                    {
+                        System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        return;
+                    }
                 }
             }
 
@@ -1675,6 +1446,40 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
+            var edoSystem = SelectedMyOrganization.EdoSystem;
+
+            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
+            {
+                if (edoSystem?.HasZipContent ?? false)
+                {
+                    try
+                    {
+                        using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                        {
+                            var entry = zipArchive.Entries.FirstOrDefault(x => x.Name == $"{SelectedItem.FileName}.xml");
+                            entry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorMessage = _log.GetRecursiveInnerException(ex);
+                        _log.Log(errorMessage);
+
+                        var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла xml из архива.", new List<string>(new string[] { errorMessage }));
+                        errorsWindow.ShowDialog();
+                        return;
+                    }
+                }
+                else
+                {
+                    if (!SaveXmlDocument(SelectedItem.IdDocEdo, SelectedItem.FileName, SelectedItem.ParentEntityId, SelectedItem.IdDocType))
+                    {
+                        System.Windows.MessageBox.Show("Не найден xml файл документа продавца.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        return;
+                    }
+                }
+            }
+
             var rejectWindow = new RejectWindow();
             if (rejectWindow.ShowDialog() == true)
             {
@@ -1688,7 +1493,6 @@ namespace HonestMarkSystem.Models
 
                 var loadContext = loadWindow.GetLoadContext();
                 var report = rejectWindow.Report;
-                var edoSystem = SelectedMyOrganization.EdoSystem;
                 var cryptoUtil = SelectedMyOrganization.CryptoUtil;
 
                 loadWindow.Show();
@@ -1877,6 +1681,39 @@ namespace HonestMarkSystem.Models
 
             var edoSystem = SelectedMyOrganization.EdoSystem;
             var cryptoUtil = SelectedMyOrganization.CryptoUtil;
+
+            if (!File.Exists($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml"))
+            {
+                if (edoSystem?.HasZipContent ?? false)
+                {
+                    try
+                    {
+                        using (ZipArchive zipArchive = ZipFile.Open($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.zip", ZipArchiveMode.Read))
+                        {
+                            var entry = zipArchive.Entries.FirstOrDefault(x => x.Name == $"{SelectedItem.FileName}.xml");
+                            entry?.ExtractToFile($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorMessage = _log.GetRecursiveInnerException(ex);
+                        _log.Log(errorMessage);
+
+                        var errorsWindow = new ErrorsWindow("Произошла ошибка извлечения файла xml из архива.", new List<string>(new string[] { errorMessage }));
+                        errorsWindow.ShowDialog();
+                        return;
+                    }
+                }
+                else
+                {
+                    if (!SaveXmlDocument(SelectedItem.IdDocEdo, SelectedItem.FileName, SelectedItem.ParentEntityId, SelectedItem.IdDocType))
+                    {
+                        System.Windows.MessageBox.Show("Не найден xml файл документа продавца.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        return;
+                    }
+                }
+            }
+
             LoadWindow loadWindow = new LoadWindow("Подождите, идёт загрузка данных");
 
             if (SelectedItem.DocStatus == (int)DocEdoStatus.RevokeRequired)
@@ -2396,9 +2233,12 @@ namespace HonestMarkSystem.Models
                 }
                 else
                 {
-                    loadWindow.Close();
-                    System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    return;
+                    if (!SaveXmlDocument(SelectedItem.IdDocEdo, SelectedItem.FileName, SelectedItem.ParentEntityId, SelectedItem.IdDocType))
+                    {
+                        loadWindow.Close();
+                        System.Windows.MessageBox.Show("Не найден xml файл документа.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        return;
+                    }
                 }
             }
 
@@ -2709,128 +2549,35 @@ namespace HonestMarkSystem.Models
             edoSystem?.SaveParameters(parameters);
         }
 
-        public List<IEdoSystemDocument<string>> GetNewDocuments(ConsignorOrganization myOrganization, out object[] parameters)
+        public bool SaveXmlDocument(string edoId, string fileName, params object[] parameters)
         {
-            if (myOrganization.EdoSystem == null)
+            if (!File.Exists($"{edoFilesPath}//{edoId}//{fileName}.xml"))
             {
-                parameters = null;
-                return null;
-            }
-
-            var edoSystem = myOrganization.EdoSystem;
-            if (edoSystem.GetType() == typeof(EdoLiteSystem))
-            {
-                var docCount = edoSystem.GetDocumentsCount();
-                var edoDocCount = ConfigSet.Configs.Config.GetInstance()?.EdoDocCount ?? 0;
-
-                parameters = new object[2] { docCount, DateTime.Now };
-                if (edoDocCount < docCount)
+                if (SelectedMyOrganization?.EdoSystem?.GetType() == typeof(DiadocEdoSystem))
                 {
-                    var documentList = edoSystem.GetDocuments(DocumentInOutType.Inbox, docCount - edoDocCount,
-                        ConfigSet.Configs.Config.GetInstance().EdoLastDocDateTimeByInn[myOrganization.OrgInn]);
+                    var entityId = (string)parameters[0];
+                    var docType = parameters[1] as int?;
+                    var diadocEdoSystem = SelectedMyOrganization.EdoSystem as DiadocEdoSystem;
 
-                    return documentList ?? new List<IEdoSystemDocument<string>>();
-                }
-                else
-                    return new List<IEdoSystemDocument<string>>();
-            }
-            else if(edoSystem.GetType() == typeof(DiadocEdoSystem))
-            {
-                parameters = new object[1] { DateTime.Now };
+                    byte[] signature;
+                    byte[] content = diadocEdoSystem.GetDocumentContent(edoId, entityId, docType,
+                        out signature, DocumentInOutType.Inbox);
 
-                var newDocuments = edoSystem.GetDocuments(DocumentInOutType.Inbox);
-                return newDocuments;
-            }
-            else
-            {
-                parameters = null;
-                return null;
-            }
-        }
+                    if (!Directory.Exists($"{edoFilesPath}//{edoId}"))
+                        Directory.CreateDirectory($"{edoFilesPath}//{edoId}");
 
-        public bool SaveNewDocument(ConsignorOrganization myOrganization, IEdoSystemDocument<string> document, out byte[] fileBytes)
-        {
-            if(!Directory.Exists(edoFilesPath))
-                Directory.CreateDirectory(edoFilesPath);
-
-            string dirPath = $"{edoFilesPath}//{document.EdoId}";
-            Directory.CreateDirectory(dirPath);
-
-            byte[] signature = null;
-
-            var edoSystem = myOrganization.EdoSystem;
-            if (edoSystem.HasZipContent)
-                fileBytes = edoSystem.GetDocumentContent(document, DocumentInOutType.Inbox);
-            else
-                fileBytes = edoSystem.GetDocumentContent(document, out signature, DocumentInOutType.Inbox);
-
-            byte[] zipBytes;
-            try
-            {
-                zipBytes = edoSystem.GetZipContent(document.EdoId, DocumentInOutType.Inbox);
-            }
-            catch
-            {
-                zipBytes = null;
-            }
-
-            if (edoSystem.GetType() == typeof(EdoLiteSystem))
-            {
-                if (document.DocType == (int)EdoLiteDocumentType.DpUkdDis || document.DocType == (int)EdoLiteDocumentType.DpUkdDisInfoBuyer
-                    || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoice || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoiceDis
-                    || document.DocType == (int)EdoLiteDocumentType.DpUkdInvoiceDisInfoBuyer || document.DocType == (int)EdoLiteDocumentType.DpUpdDop
-                    || document.DocType == (int)EdoLiteDocumentType.DpUpdDopInfoBuyer || document.DocType == (int)EdoLiteDocumentType.DpUpdInvoiceDop
-                    || document.DocType == (int)EdoLiteDocumentType.DpUpdInvoiceDopInfoBuyer || document.DocType == (int)EdoLiteDocumentType.DpUpdiDop
-                    || document.DocType == (int)EdoLiteDocumentType.DpUpdiDopInfoBuyer || document.DocType == (int)EdoLiteDocumentType.DpUpdiInvoiceDop
-                    || document.DocType == (int)EdoLiteDocumentType.DpUpdiInvoiceDopInfoBuyer)
-                {
-                    var xml = Encoding.GetEncoding(1251).GetString(fileBytes);
+                    var xml = Encoding.GetEncoding(1251).GetString(content);
                     var xmlDocument = new XmlDocument();
                     xmlDocument.LoadXml(xml);
-                    string docName = xmlDocument.LastChild.Attributes["ИдФайл"].Value;
-                    string filePath = $"{dirPath}//{docName}.xml";
-                    xmlDocument.Save(filePath);
 
-                    if (zipBytes != null)
-                        File.WriteAllBytes($"{dirPath}//{docName}.zip", zipBytes);
-
-                    return true;
+                    xmlDocument.Save($"{edoFilesPath}//{edoId}//{fileName}.xml");
+                    File.WriteAllBytes($"{edoFilesPath}//{edoId}//{fileName}.xml.sig", signature);
                 }
                 else
                     return false;
             }
-            else if (edoSystem.GetType() == typeof(DiadocEdoSystem))
-            {
-                var doc = document as DiadocEdoDocument;
 
-                if (string.IsNullOrEmpty(doc?.FileName))
-                    return false;
-
-                if (doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlAcceptanceCertificate && doc.DocumentType != Diadoc.Api.Proto.DocumentType.Invoice && 
-                    doc.DocumentType != Diadoc.Api.Proto.DocumentType.XmlTorg12 && doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocument
-                    && doc.DocumentType != Diadoc.Api.Proto.DocumentType.UniversalTransferDocumentRevision)
-                    return false;
-
-                var xml = Encoding.GetEncoding(1251).GetString(fileBytes);
-                var xmlDocument = new XmlDocument();
-                xmlDocument.LoadXml(xml);
-
-                var fileNameLength = doc.FileName.LastIndexOf('.');
-
-                if(fileNameLength < 0)
-                    fileNameLength = doc.FileName.Length;
-
-                var fileName = doc.FileName.Substring(0, fileNameLength);
-
-                string filePath = $"{dirPath}//{fileName}.xml";
-                string signatureFilePath = $"{dirPath}//{fileName}.xml.sig";
-                xmlDocument.Save(filePath);
-                File.WriteAllBytes(signatureFilePath, signature);
-
-                return true;
-            }
-            else
-                return false;
+            return true;
         }
 
         public void SaveOrgData(ConsignorOrganization myOrganization)
