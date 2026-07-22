@@ -117,5 +117,10 @@ namespace WebSystems.Systems
         {
             return HonestMarkClient.GetInstance().GetEdoIdByInn(inn);
         }
+
+        public List<Models.ProductInfo> GetGtinInfo(List<string> gtins)
+        {
+            return HonestMarkClient.GetInstance().GetGtinInfo(gtins);
+        }
     }
 }

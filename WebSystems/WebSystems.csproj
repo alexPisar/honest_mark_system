@@ -74,6 +74,7 @@
     <Compile Include="Models\EdoProcessingErrorDescription.cs" />
     <Compile Include="Models\FileParameter.cs" />
     <Compile Include="Models\FinDb\FinDbDocumentComissionInfo.cs" />
+    <Compile Include="Models\FinDb\VolumetricGradeAccounting.cs" />
     <Compile Include="Models\IDocument.cs" />
     <Compile Include="Models\IEdoSystemDocument.cs" />
     <Compile Include="Models\IntroducedIntoTurnoverImportFcs.cs" />

@@ -23,6 +23,7 @@ namespace HonestMarkSystem.Models
 
         
         private Interfaces.IEdoDataBaseAdapter<AbtDbContext> _dataBaseAdapter;
+        private WebSystems.Models.FinDb.VolumetricGradeAccounting[] _volumetricGradeAccounting = null;
 
         public string EdoProgramVersion => $"{_applicationName} {currentVersion}";
 
@@ -68,6 +69,9 @@ namespace HonestMarkSystem.Models
         {
             _dataBaseAdapter.Dispose();
             _dataBaseAdapter.InitializeContext();
+
+            var finDbWebClient = WebSystems.WebClients.FinDbWebClient.GetInstance();
+            _volumetricGradeAccounting = finDbWebClient.GetApplicationConfigParameter<WebSystems.Models.FinDb.VolumetricGradeAccounting[]>("SendEdoDocumentsProcessingUnit", "VolumetricGradeAccounting");
 
             foreach (var myOrganization in MyOrganizations)
             {
@@ -254,6 +258,17 @@ namespace HonestMarkSystem.Models
                         decimal? oldIdDoc = SelectedItem?.IdDocJournal;
                         try
                         {
+                            if (honestMarkSystem != null && docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
+                            {
+                                var gtins = Details?.Where(d => d.Gtin != null)?.Where(d => d.Gtin.Length > 0)?.Select(g => g.Gtin)?.ToList() ?? new List<string>();
+
+                                if (gtins.Count > 0)
+                                {
+                                    if (!CheckGtins(honestMarkSystem, gtins))
+                                        throw new Exception("Проверка GTIN не пройдена.");
+                                }
+                            }
+
                             SelectedItem.IdDocJournal = docPurchasingModel.SelectedItem.Id;
 
                             if (docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
@@ -800,6 +815,17 @@ namespace HonestMarkSystem.Models
                 {
                     try
                     {
+                        if(honestMarkSystem != null)
+                        {
+                            var gtins = Details?.Where(d => d.Gtin != null)?.Where(d => d.Gtin.Length > 0)?.Select(g => g.Gtin)?.ToList() ?? new List<string>();
+
+                            if (gtins.Count > 0)
+                            {
+                                if (!CheckGtins(honestMarkSystem, gtins))
+                                    throw new Exception("Проверка GTIN не пройдена.");
+                            }
+                        }
+
                         var sellerXmlDocument = new XmlDocument();
                         sellerXmlDocument.Load($"{edoFilesPath}//{SelectedItem.IdDocEdo}//{SelectedItem.FileName}.xml");
                         var docSellerContent = Encoding.GetEncoding(1251).GetBytes(sellerXmlDocument.OuterXml);
@@ -2534,6 +2560,31 @@ namespace HonestMarkSystem.Models
             //    updatedCodes = _dataBaseAdapter.UpdateCodes(idDoc.Value, markedCodesByGoods.SelectMany(s => s.Value), oldIdDoc);
 
             _dataBaseAdapter.AddMarkedCodes(idDoc.Value, markedCodesByGoods);//, updatedCodes);
+        }
+
+        private bool CheckGtins(WebSystems.Systems.HonestMarkSystem honestMarkSystem, List<string> gtins)
+        {
+            if ((gtins?.Count ?? 0) == 0)
+                return true;
+
+            if (honestMarkSystem == null)
+                return true;
+
+            var gtinInfos = honestMarkSystem.GetGtinInfo(gtins).ToList();
+
+            if(gtinInfos.Count < gtins.Count)
+            {
+                var errorGtins = gtins.Where(g => !gtinInfos.Any(i => i.Gtin == g)).ToList();
+                throw new Exception("Данные ГТИНы не найдены в базе нац. каталога: " + string.Join(", ", errorGtins));
+            }
+
+            if (gtinInfos.Exists(gtinInfo => !_volumetricGradeAccounting.Any(gr => gr.ProductGroupId == gtinInfo.productGroupId)))
+            {
+                var errorGtins = gtinInfos.Where(gtinInfo => !_volumetricGradeAccounting.Any(gr => gr.ProductGroupId == gtinInfo.productGroupId)).Select(e => e.Gtin);
+                throw new Exception("Данные ГТИНы не принадлежат товарным группам для ОСУ: " + string.Join(", ", errorGtins));
+            }
+
+            return true;
         }
 
         private void UpdateProperties()
