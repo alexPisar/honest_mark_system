@@ -2428,7 +2428,7 @@ namespace HonestMarkSystem.Models
 
                 if (product.MarkedCodes != null && product.MarkedCodes.Count > 0)
                 {
-                    if(product.MarkedCodes.All(m => m?.Length == 31))
+                    if(product.MarkedCodes.All(m => m?.Length == 31 || m?.Length == 24))
                         markedCodes = honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes, false);
                     else
                         markedCodes = honestMarkSystem.GetCodesByThePiece(product.MarkedCodes, markedCodes);

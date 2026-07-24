@@ -373,7 +373,7 @@ namespace Reporter.Reports
 
                                 string markedCodeExample = code.Items?.FirstOrDefault();
                                 if (string.IsNullOrEmpty(product.BarCode) && !string.IsNullOrEmpty(markedCodeExample))
-                                    if (markedCodeExample.Length == 31)
+                                    if (markedCodeExample.Length == 31 || markedCodeExample.Length == 24)
                                         product.BarCode = markedCodeExample.Substring(0, 16).TrimStart('0', '1').TrimStart('0');
                             }
                         }

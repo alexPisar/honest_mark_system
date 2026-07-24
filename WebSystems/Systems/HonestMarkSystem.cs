@@ -42,7 +42,7 @@ namespace WebSystems.Systems
 
             Func<string, KeyValuePair<string, string>> predicate = s =>
             {
-                if (s.Length == 31)
+                if (s.Length == 31 || s.Length == 24)
                 {
                     var barCode = s.Substring(0, 16).TrimStart('0', '1').TrimStart('0');
                     return new KeyValuePair<string, string>(s, barCode);
@@ -74,7 +74,7 @@ namespace WebSystems.Systems
 
             Func<string, KeyValuePair<string, string>> predicate = s =>
             {
-                if (s.Length == 31)
+                if (s.Length == 31 || s.Length == 24)
                 {
                     var barCode = s.Substring(0, 16).TrimStart('0', '1').TrimStart('0');
                     return new KeyValuePair<string, string>(s, barCode);
