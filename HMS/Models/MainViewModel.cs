@@ -2383,7 +2383,7 @@ namespace HonestMarkSystem.Models
 
             var productsWithTransportCodes = products?.Where(p => p.TransportPackingIdentificationCode != null && p.TransportPackingIdentificationCode.Count > 0);
 
-            if (idGoods == null)
+            if (idGoods == null || productsWithTransportCodes.Any(p => string.IsNullOrEmpty(p.BarCode) || p.BarCode.Length < 13))
             {
                 productsWithTransportCodes = productsWithTransportCodes.ToList();
                 foreach (var pr in productsWithTransportCodes)
