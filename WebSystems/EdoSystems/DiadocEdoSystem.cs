@@ -369,6 +369,30 @@ namespace WebSystems.EdoSystems
             }
         }
 
+        public Models.IEdoSystemDocument<string> GetDocumentByMessageId(string messageId, int? documentType, string documentName = null)
+        {
+            var documents = ((WebClients.DiadocEdoClient)_webClient).GetDocumentsByMessageId(messageId);
+            Diadoc.Api.Proto.Documents.Document result = null;
+
+            if (documentType != null)
+                documents = documents.Where(d => (int)d.Type == documentType.Value).ToList();
+
+            if (string.IsNullOrEmpty(documentName))
+            {
+                result = documents.FirstOrDefault();
+                return new Models.DiadocEdoDocument() { Document = result };
+            }
+
+            if (documentType == (int)Diadoc.Api.Com.DocumentType.UniversalTransferDocument)
+                result = documents.FirstOrDefault(d => d.DocumentNumber == documentName);
+            else if (documentType == (int)Diadoc.Api.Com.DocumentType.UniversalTransferDocumentRevision)
+                result = documents.FirstOrDefault(d => d?.UniversalTransferDocumentRevisionMetadata?.OriginalInvoiceNumber == documentName);
+            else
+                result = documents.FirstOrDefault();
+
+            return new Models.DiadocEdoDocument() { Document = result };
+        }
+
         public override void SaveParameters(params object[] parameters)
         {
             ((WebClients.DiadocEdoClient)_webClient).SaveEdoLastDateTime((DateTime)parameters[0]);

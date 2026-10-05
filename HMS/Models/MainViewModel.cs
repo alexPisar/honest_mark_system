@@ -253,11 +253,64 @@ namespace HonestMarkSystem.Models
                 loadWindow.Show();
                 await Task.Run(() =>
                 {
+                    IEdoSystemDocument<string> edoDocument = null;
+                    if (SelectedItem.DocStatus == (int)DocEdoStatus.New && SelectedMyOrganization.EdoSystem as DiadocEdoSystem != null)
+                    {
+                        string documentName = null;
+
+                        if (SelectedItem.IdDocType == (int)Diadoc.Api.Com.DocumentType.UniversalTransferDocumentRevision)
+                        {
+                            var baseDocEdoPurchasing = SelectedItem.Parent;
+
+                            if (baseDocEdoPurchasing != null)
+                                documentName = baseDocEdoPurchasing.Name;
+                        }
+                        else
+                            documentName = SelectedItem.Name;
+
+                        if (!string.IsNullOrEmpty(documentName))
+                            edoDocument = ((DiadocEdoSystem)SelectedMyOrganization.EdoSystem).GetDocumentByMessageId(SelectedItem.IdDocEdo, SelectedItem.IdDocType, documentName);
+                    }
+
                     using (var transaction = _dataBaseAdapter.BeginTransaction())
                     {
                         decimal? oldIdDoc = SelectedItem?.IdDocJournal;
                         try
                         {
+                            if (SelectedItem.DocStatus == (int)DocEdoStatus.New && edoDocument != null)
+                            {
+                                if(edoDocument is WebSystems.Models.DiadocEdoDocument)
+                                {
+                                    var doc = ((WebSystems.Models.DiadocEdoDocument)edoDocument).Document;
+
+                                    if(doc?.RecipientResponseStatus == Diadoc.Api.Proto.Documents.RecipientResponseStatus.WithRecipientSignature)
+                                    {
+                                        var lastDocFlow = doc.LastOuterDocflows?.FirstOrDefault(l => l?.OuterDocflow?.DocflowNamedId == "TtGis" && l.OuterDocflow?.Status?.Type != null);
+                                        Diadoc.Api.Proto.OuterDocflows.OuterStatusType? statusDocFlow = lastDocFlow?.OuterDocflow?.Status?.Type;
+
+                                        if (statusDocFlow == Diadoc.Api.Proto.OuterDocflows.OuterStatusType.Success)
+                                            SelectedItem.DocStatus = (int)DocEdoStatus.Processed;
+                                        else if(statusDocFlow == Diadoc.Api.Proto.OuterDocflows.OuterStatusType.Error)
+                                        {
+                                            SelectedItem.DocStatus = (int)DocEdoStatus.ProcessingError;
+
+                                            var errors = lastDocFlow.OuterDocflow.Status?.Details ?? new List<Diadoc.Api.Proto.OuterDocflows.StatusDetail>();
+
+                                            var errorsListStr = new List<string>();
+                                            foreach (var error in errors)
+                                                errorsListStr.Add($"Произошла ошибка с кодом:{error.Code} \nОписание:{error.Text}\n");
+
+                                            var honestMarkErrorMessage = string.Join("\n\n", errorsListStr);
+
+                                            if (honestMarkErrorMessage.Length > 500)
+                                                honestMarkErrorMessage = honestMarkErrorMessage.Substring(0, 500);
+
+                                            SelectedItem.ErrorMessage = honestMarkErrorMessage;
+                                        }
+                                    }
+                                }
+                            }
+
                             if (honestMarkSystem != null && docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt)
                             {
                                 var gtins = Details?.Where(d => d.Gtin != null)?.Where(d => d.Gtin.Length > 0)?.Select(g => g.Gtin)?.ToList() ?? new List<string>();

@@ -118,6 +118,15 @@ namespace WebSystems
         [EnumMember(Value = "bio")]
         Bio,
 
+        /// <summary>
+        ///Антисептики и дезинфицирующие средства
+        /// </summary>
+        [EnumMember(Value = "antiseptic")]
+        Antiseptic = 19,
+
+        /// <summary>
+        ///Косметика, бытовая химия и товары личной гигиены
+        /// </summary>
         [EnumMember(Value = "chemistry")]
         Chemistry = 35
     }
