@@ -553,7 +553,7 @@ namespace HonestMarkSystem.Models
                 return;
             }
 
-            if (Details.Where(d => d.IdGood != null).GroupBy(d => d.IdGood).Any(g => g.Count() > 1))
+            if (Details.Where(d => d.IdGood != null).GroupBy(d => d.IdGood).Any(g => g.Count() > 1 && (g?.Select(s => s.BarCode)?.Distinct()?.Count() ?? 1) > 1))
             {
                 System.Windows.MessageBox.Show(
                     "В списке товаров есть одинаковые ID товаров.", "", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
