@@ -50,6 +50,7 @@ namespace HonestMarkSystem.Models
         public RelayCommand RejectDocumentCommand => new RelayCommand((o) => { RejectDocument(); });
         public RelayCommand RevokeDocumentCommand => new RelayCommand((o) => { RevokeDocument(); });
         public RelayCommand SaveDocumentFileCommand => new RelayCommand((o) => { SaveDocumentFile(); });
+        public RelayCommand SaveDocumentToExcelCommand => new RelayCommand((o) => { SaveDocumentToExcel(); });
         public RelayCommand ShowXmlDocumentCommand => new RelayCommand((o) => { ShowXmlDocument(); });
 
         public MainViewModel(Interfaces.IEdoDataBaseAdapter<AbtDbContext> dataBaseAdapter, List<ConsignorOrganization> myOrganizations)
@@ -2253,6 +2254,75 @@ namespace HonestMarkSystem.Models
                 _log.Log(errorMessage);
 
                 var errorsWindow = new ErrorsWindow("Произошла ошибка сохранения документа в файл.", new List<string>(new string[] { errorMessage }));
+                errorsWindow.ShowDialog();
+            }
+        }
+
+        private void SaveDocumentToExcel()
+        {
+            if (SelectedMyOrganization == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбрана своя организация.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            if (SelectedItem == null)
+            {
+                System.Windows.MessageBox.Show(
+                    "Не выбран документ.", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+
+                saveFileDialog.Filter = "Excel Files(.xlsx)|*.xlsx";
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    FileWorker.ExcelColumnCollection columnCollection = new FileWorker.ExcelColumnCollection();
+                    string sheetName = "Лист1";
+
+                    columnCollection.AddColumn("DetailNumber", "Номер позиции", FileWorker.ExcelType.Int32);
+                    columnCollection.AddColumn("BarCode", "Код товара", FileWorker.ExcelType.String);
+                    columnCollection.AddColumn("IdGood", "ID товара", FileWorker.ExcelType.String);
+                    columnCollection.AddColumn("Description", "Описание", FileWorker.ExcelType.String);
+                    columnCollection.AddColumn("Gtin", "ГТИН", FileWorker.ExcelType.String);
+                    columnCollection.AddColumn("Quantity", "Количество", FileWorker.ExcelType.Int32);
+                    columnCollection.AddColumn("QuantityMark", "Марк. количество", FileWorker.ExcelType.Int32);
+                    columnCollection.AddColumn("Price", "Стоимость единицы товара", FileWorker.ExcelType.Double);
+                    columnCollection.AddColumn("TaxAmount", "Сумма НДС", FileWorker.ExcelType.Double);
+                    columnCollection.AddColumn("Subtotal", "Сумма с НДС", FileWorker.ExcelType.Double);
+
+                    var docLines = SelectedItem.Details.OrderBy(d => d.DetailNumber).ToList();
+
+                    var docLinesData = new FileWorker.ExcelDocumentData(columnCollection, docLines.ToArray());
+                    docLinesData.SheetName = sheetName;
+
+                    var excelDocs = new List<FileWorker.ExcelDocumentData>();
+                    excelDocs.Add(docLinesData);
+
+                    var worker = new FileWorker.ExcelFileWorker(saveFileDialog.FileName, excelDocs);
+
+                    worker.ExportRow(
+                        $"Номер документа: {SelectedItem.Name}, " +
+                        $"Поставщик: {SelectedItem.SenderName}(ИНН: {SelectedItem.SenderInn}), " +
+                        $"Покупатель: {SelectedItem.ReceiverName}(ИНН: {SelectedItem.ReceiverInn})", sheetName);
+
+                    worker.ExportData();
+                    worker.SaveFile();
+
+                    LoadWindow loadWindow = new LoadWindow();
+                    loadWindow.GetLoadContext().SetSuccessFullLoad("Документ успешно выгружен.");
+                    loadWindow.ShowDialog();
+                }
+            }
+            catch(Exception ex)
+            {
+                var errorMessage = _log.GetRecursiveInnerException(ex);
+                var errorsWindow = new ErrorsWindow("Произошла ошибка выгрузки документа.", new List<string>(new string[] { errorMessage }));
                 errorsWindow.ShowDialog();
             }
         }

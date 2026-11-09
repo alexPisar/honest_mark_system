@@ -366,6 +366,10 @@
       <Project>{05620572-ab35-4f90-99e7-5504bb4b7d57}</Project>
       <Name>DataContextManagementUnit</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FileWorker\FileWorker.csproj">
+      <Project>{1103a09d-f341-4c1e-8e5d-234f79936190}</Project>
+      <Name>FileWorker</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Reporter\Reporter.csproj">
       <Project>{e2d943fa-8f50-4de9-80bb-b91b4fad8de2}</Project>
       <Name>Reporter</Name>

@@ -132,6 +132,17 @@
                     </DataTemplate>
                 </dxb:BarButtonItem.ContentTemplate>
             </dxb:BarButtonItem>
+            <dxb:BarButtonItem ToolTip="Выгрузить документ в Excel" Command="{Binding SaveDocumentToExcelCommand}">
+                <dxb:BarButtonItem.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="{dx:DXImage SvgImages/Export/ExportToXLS.svg}"></Image>
+                            <TextBlock Text="Выгрузить" />
+                            <TextBlock Text="Документ" />
+                        </StackPanel>
+                    </DataTemplate>
+                </dxb:BarButtonItem.ContentTemplate>
+            </dxb:BarButtonItem>
             <dxb:BarButtonItem ToolTip="Отклонить документ" Command="{Binding RejectDocumentCommand}">
                 <dxb:BarButtonItem.ContentTemplate>
                     <DataTemplate>
