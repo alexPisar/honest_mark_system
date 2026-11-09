@@ -49,7 +49,7 @@ namespace HonestMarkSystem.Interfaces
 
         List<object> GetRefGoodsByBarCode(string barCode);
 
-        string GetBarCodeByIdGood(decimal idGood);
+        IEnumerable<string> GetBarCodesByIdGood(decimal idGood);
 
         IEnumerable<object> GetRefBarCodesByBarCodes(IEnumerable<string> barCodes);
 

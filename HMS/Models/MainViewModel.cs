@@ -963,7 +963,7 @@ namespace HonestMarkSystem.Models
                             int i = 0;
                             foreach (var detail in docJournal.Details)
                             {
-                                var barCode = _dataBaseAdapter?.GetBarCodeByIdGood(detail.IdGood);
+                                var barCode = _dataBaseAdapter?.GetBarCodesByIdGood(detail.IdGood)?.FirstOrDefault();
 
                                 var product = new Reporter.Entities.Product()
                                 {
@@ -2506,6 +2506,11 @@ namespace HonestMarkSystem.Models
 
             var productsWithTransportCodes = products?.Where(p => p.TransportPackingIdentificationCode != null && p.TransportPackingIdentificationCode.Count > 0);
 
+            var nullIdGoodProductsWithTransportCodes = productsWithTransportCodes?.Where(pr => SelectedItem.Details.Any(d => pr.Number == d.DetailNumber && d.IdGood == null))?.ToList() ?? new List<Reporter.Entities.Product>();
+
+            if (nullIdGoodProductsWithTransportCodes.Count > 0)
+                throw new Exception("Не сопоставлены товары с транспортными упаковками.");
+
             if (idGoods == null || productsWithTransportCodes.Any(p => string.IsNullOrEmpty(p.BarCode) || p.BarCode.Length < 13))
             {
                 productsWithTransportCodes = productsWithTransportCodes.ToList();
@@ -2519,7 +2524,24 @@ namespace HonestMarkSystem.Models
 
                     if (productMarkedCodes.Count > 0)
                     {
-                        string barCode = productMarkedCodes.First().Value;
+                        string barCode = null;
+                        var detail = SelectedItem.Details.First(d => d.DetailNumber == pr.Number);
+
+                        if (detail?.IdGood == null)
+                            throw new Exception($"Не найден товар {detail.Description}");
+
+                        var barCodesByGoods = _dataBaseAdapter.GetBarCodesByIdGood(detail.IdGood.Value) ?? new List<string>();
+                        if (barCodesByGoods.Count() > 0)
+                        {
+                            barCode = barCodesByGoods.FirstOrDefault();
+
+                            productMarkedCodes = productMarkedCodes.Where(prMark => barCodesByGoods.Any(br => br == prMark.Value)).ToList();
+                        }
+                        else
+                        {
+                            barCode = productMarkedCodes.First().Value;
+                        }
+
                         markedCodes.AddRange(productMarkedCodes);
 
                         if (!string.IsNullOrEmpty(barCode))

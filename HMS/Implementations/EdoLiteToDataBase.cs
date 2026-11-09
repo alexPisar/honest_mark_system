@@ -314,13 +314,13 @@ namespace HonestMarkSystem.Implementations
             return refGoods;
         }
 
-        public string GetBarCodeByIdGood(decimal idGood)
+        public IEnumerable<string> GetBarCodesByIdGood(decimal idGood)
         {
             var barCodes = from refBarCode in _abt.RefBarCodes
                            where refBarCode.IdGood == idGood && refBarCode.IsPrimary == false && refBarCode.BarCode != null
                            select refBarCode.BarCode;
 
-            return barCodes.FirstOrDefault();
+            return barCodes;
         }
 
         public IEnumerable<object> GetRefBarCodesByBarCodes(IEnumerable<string> barCodes)
