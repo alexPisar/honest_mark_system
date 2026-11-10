@@ -401,15 +401,7 @@ namespace HonestMarkSystem.Models
                                 }
                             }
 
-                            if (docPurchasingModel.SelectedItem?.IdDocType == (int?)DataContextManagementUnit.DataAccess.DocJournalType.Receipt && SelectedItem.DocStatus == (int?)DocEdoStatus.Processed)
-                            {
-                                _dataBaseAdapter.UpdateMarkedCodeIncomingStatuses(SelectedItem.IdDocJournal.Value, MarkedCodeComingStatus.Accepted);
-                                _dataBaseAdapter.Commit(transaction);
-                            }
-                            else
-                            {
-                                _dataBaseAdapter.Commit(transaction);
-                            }
+                            _dataBaseAdapter.Commit(transaction);
 
                             OnPropertyChanged("SelectedItem");
                             loadContext.SetSuccessFullLoad("Документ был успешно сопоставлен.");
